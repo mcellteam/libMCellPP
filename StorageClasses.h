@@ -97,6 +97,10 @@ template <class T> class MapStore {
     return item_array[index];
   }
 
+  bool contains ( const char *key ) {
+    return ( find_index_of_key(key) >= 0 );
+  }
+
   int get_num_items() {
     return ( num_items );
   }

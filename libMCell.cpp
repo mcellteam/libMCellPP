@@ -47,6 +47,10 @@ void MCellSimulation::add_molecule_release_site ( MCellReleaseSite *site ) {
   molecule_release_sites.append ( site );
 }
 
+void MCellSimulation::add_reaction ( MCellReaction *rxn ) {
+  reactions.append ( rxn );
+}
+
 MCellMoleculeSpecies *MCellSimulation::get_molecule_species_by_name ( char *mol_name ) {
   MCellMoleculeSpecies *found = NULL;
   found = this->molecule_species[mol_name];
@@ -229,17 +233,21 @@ void MCellSimulation::run_simulation ( char *proj_path ) {
 
     fclose(f);
     
-    // Perform "reactions" ... just randomly delete the first molecule for now
+    // Perform "reactions" ... for now, just randomly delete the first molecule of any single reactants
 
-    for (int sp_num=0; sp_num<this->molecule_species.get_num_items(); sp_num++) {
-      this_species = this->molecule_species[this->molecule_species.get_key(sp_num)];
-      if (this_species->instance_list != NULL) {
-        if ( mcell_random->rng_gauss() < 0.0 ) { // Delete the molecule about half the time.
-          cout << "Default Decay Reaction removing an instance of " << this_species->name << endl;
-          MCellMoleculeInstance *first = this_species->instance_list;
-          this_species->instance_list = this_species->instance_list->next;
-          this_species->num_instances += -1;
-          delete ( first );
+    for (int rx_num=0; rx_num<this->reactions.get_size(); rx_num++) {
+      if ( this->molecule_species.contains ( this->reactions[rx_num]->reactants.c_str() ) ) {
+        this_species = this->molecule_species[this->reactions[rx_num]->reactants.c_str()];
+        if (this_species != NULL) {
+          if (this_species->instance_list != NULL) {
+            if ( mcell_random->rng_gauss() < 0.0 ) { // Delete the molecule about half the time.
+              cout << "Default Decay Reaction removing an instance of " << this_species->name << endl;
+              MCellMoleculeInstance *first = this_species->instance_list;
+              this_species->instance_list = this_species->instance_list->next;
+              this_species->num_instances += -1;
+              delete ( first );
+            }
+          }
         }
       }
     }

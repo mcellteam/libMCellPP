@@ -48,6 +48,15 @@ class MCellReleaseSite {
   MCellReleaseSite *next;
 };
 
+class MCellReaction {
+ public:
+  string reactants;
+  string products;
+  double forward_rate;
+  double backward_rate;
+  MCellReaction *next;
+};
+
 class MCellEvent {
  public:
   double time;
@@ -94,6 +103,7 @@ class MCellSimulation {
 
   MapStore<MCellMoleculeSpecies *> molecule_species;
   ArrayStore<MCellReleaseSite *> molecule_release_sites;
+  ArrayStore<MCellReaction *> reactions;
 
   MCellSimulation() {
     num_simulations++;
@@ -107,6 +117,7 @@ class MCellSimulation {
 
   void add_molecule_species ( MCellMoleculeSpecies *species );
   void add_molecule_release_site ( MCellReleaseSite *site );
+  void add_reaction ( MCellReaction *rxn );
   MCellMoleculeSpecies *get_molecule_species_by_name ( char *mol_name );
   void run_simulation ( char *proj_path );
 };

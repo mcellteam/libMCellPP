@@ -118,6 +118,7 @@ int main ( int argc, char *argv[] ) {
   if (dump_data_model != 0) {
     dump_json_element_tree ( dm, 80, 0 ); printf ( "\n\n" );
   }
+// dump_json_element_tree ( dm, 80, 0 ); printf ( "\n\n" );
 
 
   // Extract various dictionaries and fields from the data model needed to run a minimal simulation:
@@ -148,12 +149,15 @@ int main ( int argc, char *argv[] ) {
   double time_step = json_get_float_value ( json_get_element_with_key ( dm_init, "time_step" ) );
   //mcell_set_time_step ( time_step );
 
-  
+
   data_model_element *dm_define_molecules = json_get_element_with_key ( mcell, "define_molecules" );
   data_model_element *mols = json_get_element_with_key ( dm_define_molecules, "molecule_list" );
-  
+
   data_model_element *dm_release_sites = json_get_element_with_key ( mcell, "release_sites" );
   data_model_element *rels = json_get_element_with_key ( dm_release_sites, "release_site_list" );
+
+  data_model_element *dm_reactions = json_get_element_with_key ( mcell, "define_reactions" );
+  data_model_element *rxns = json_get_element_with_key ( dm_reactions, "reaction_list" );
   
 
   // Finally build the actual simulation from the data extracted from the data model
@@ -170,6 +174,7 @@ int main ( int argc, char *argv[] ) {
     mol = new MCellMoleculeSpecies();
     mol->name = json_get_string_value ( json_get_element_with_key ( this_mol, "mol_name" ) );
     mol->diffusion_constant = json_get_float_value ( json_get_element_with_key ( this_mol, "diffusion_constant" ) );
+    cout << "Molecule " << mol->name << " has diffusion constant of " << mol->diffusion_constant << endl;
     // This allows the molecule to be referenced by name when needed:
     mcell_sim->molecule_species[mol->name.c_str()] = mol;
     mol_num++;
@@ -196,6 +201,29 @@ int main ( int argc, char *argv[] ) {
   }
   int total_rels = rel_num;
   printf ( "Total release sites = %d\n", total_rels );
+
+
+  // Define the reactions for this simulation from the data model
+
+  int rxn_num = 0;
+  data_model_element *this_rxn;
+  MCellReaction *rxn;
+  while ((this_rxn=json_get_element_by_index(rxns,rxn_num)) != NULL) {
+    cout << "Reaction" << endl;
+    rxn = new MCellReaction();
+    rxn->reactants = json_get_string_value ( json_get_element_with_key ( this_rxn, "reactants" ) );
+    rxn->products  = json_get_string_value ( json_get_element_with_key ( this_rxn, "products"  ) );
+    rxn->forward_rate  = strtod ( json_get_string_value ( json_get_element_with_key ( this_rxn, "fwd_rate"  ) ), NULL );
+    rxn->backward_rate = strtod ( json_get_string_value ( json_get_element_with_key ( this_rxn, "bkwd_rate" ) ), NULL );
+    cout << "  Reactants: " << rxn->reactants << endl;
+    cout << "  Products: " << rxn->products << endl;
+    cout << "  Forward Rate: " << rxn->forward_rate << endl;
+    cout << "  Backward Rate: " << rxn->backward_rate << endl;
+    mcell_sim->reactions.append ( rxn );
+    rxn_num++;
+  }
+  int total_rxns = rxn_num;
+  cout << "Total reactions = " << total_rxns << endl;
 
 
   // Set final parameters needed to run simulation and Run it

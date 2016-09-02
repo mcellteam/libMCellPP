@@ -1,12 +1,12 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cstdint>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <math.h>
 
 #include "libMCell.h"
@@ -57,6 +57,8 @@ int main ( int argc, char *argv[] ) {
   
   int dump_data_model = 0;
 
+  uint32_t seed = 1;
+
   // Process the command line arguments
 
   for (int i=1; i<argc; i++) {
@@ -66,6 +68,9 @@ int main ( int argc, char *argv[] ) {
     }
     if (strncmp("data_model=",argv[i],11) == 0) {
       data_model_file_name = &argv[i][11];
+    }
+    if (strncmp("seed=",argv[i],5) == 0) {
+      seed = std::stoul ( &argv[i][5] );
     }
     if (strcmp("dump",argv[i]) == 0) {
       dump_data_model = 1;
@@ -156,7 +161,7 @@ int main ( int argc, char *argv[] ) {
   MCellSimulation *mcell_sim = new MCellSimulation();
 
 
-  // Define the molecules for this simulation
+  // Define the molecules for this simulation from the data model
 
   int mol_num = 0;
   data_model_element *this_mol;
@@ -173,7 +178,7 @@ int main ( int argc, char *argv[] ) {
   printf ( "Total molecules = %d\n", total_mols );
 
 
-  // Define the release sites for this simulation
+  // Define the release sites for this simulation from the data model
 
   int rel_num = 0;
   data_model_element *this_rel;
@@ -195,12 +200,13 @@ int main ( int argc, char *argv[] ) {
 
   // Set final parameters needed to run simulation and Run it
 
+  mcell_sim->seed = seed;
   mcell_sim->num_iterations = iterations;
   mcell_sim->time_step = time_step;
 
   mcell_sim->run_simulation(proj_path);
 
-  printf ( "\nMay need to free some things ...\n\n" );
+  cout << "\nMay still need to free some things ...\n\n";
 
   return ( 0 );
 }

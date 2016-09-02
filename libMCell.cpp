@@ -65,6 +65,7 @@ void MCellSimulation::run_simulation ( char *proj_path ) {
   int iteration;
 
   printf ( "Project path = \"%s\"\n", proj_path );
+  printf ( "Running with seed = \"%ld\"\n", seed );
 
   // ##### Clear out the old data
 
@@ -147,9 +148,9 @@ void MCellSimulation::run_simulation ( char *proj_path ) {
   // Run the actual simulation
 
   printf ( "Begin libMCell simulation (printf).\n" );
-  cout << "Begin libMCell simulation (cout)." << endl;
+  cout << "Begin libMCell simulation (cout) with seed " << seed << "." << endl;
   
-  MCellRandomNumber_mrng *mcell_random = new MCellRandomNumber_mrng((uint32_t)12345);
+  MCellRandomNumber_mrng *mcell_random = new MCellRandomNumber_mrng(seed);
 
   int print_every = exp10(floor(log10((num_iterations/10))));
   if (print_every < 1) print_every = 1;

@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cstdint>
 #include "StorageClasses.h"
 
 using namespace std;
@@ -83,6 +84,8 @@ class MCellSimulation {
  public:
   static int num_simulations;
 
+  uint32_t seed;
+
   int num_iterations;
   double time_step;
 
@@ -94,13 +97,14 @@ class MCellSimulation {
 
   MCellSimulation() {
     num_simulations++;
+    seed = 1;
     num_iterations = 0;
     time_step = 0.0;
   }
   virtual ~MCellSimulation() {
     num_simulations--;
   }
-  
+
   void add_molecule_species ( MCellMoleculeSpecies *species );
   void add_molecule_release_site ( MCellReleaseSite *site );
   MCellMoleculeSpecies *get_molecule_species_by_name ( char *mol_name );

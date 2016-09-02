@@ -31,6 +31,7 @@ MCellRandomNumber_mrng::MCellRandomNumber_mrng ( uint32_t seed ) {
   for (int i = 0; i < 20; ++i) {
     (void)generate();
   }
+  srand48(seed);
 };
 
 uint32_t MCellRandomNumber_mrng::generate() {

@@ -23,5 +23,5 @@ class MCellRandomNumber_mrng : public MCellRandomNumber {
  public:
   MCellRandomNumber_mrng ( uint32_t seed );
   uint32_t generate();
-  //double rng_gauss();
+  // double rng_gauss();
 };

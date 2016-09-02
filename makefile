@@ -7,21 +7,7 @@ INSTALL_DIR = ~/.config/blender/2.77/scripts/addons/
 #INSTALL_DIR = ~/Library/Application\ Support/Blender/2.74/scripts/addons/
 
 
-all: mcell_pipe_cpp mcell_pipe_c mcell_main_c _libMCell.so mcell_main mcell_main_c StorageClasses mcell_simple mcell_simple_count
-
-
-mcell_pipe_cpp: mcell_pipe_cpp.o JSON.o makefile
-	g++ -lm -o mcell_pipe_cpp mcell_pipe_cpp.o JSON.o
-
-mcell_pipe_cpp.o: mcell_pipe_cpp.cpp JSON.h makefile
-	g++ -c -std=c++11 -Wno-write-strings mcell_pipe_cpp.cpp
-
-
-mcell_pipe_c: mcell_pipe_c.o JSON.o makefile
-	gcc -lm -o mcell_pipe_c mcell_pipe_c.o JSON.o
-
-mcell_pipe_c.o: mcell_pipe_c.c JSON.h makefile
-	gcc -c mcell_pipe_c.c
+all: mcell_main_c _libMCell.so mcell_main mcell_main_c StorageClasses mcell_simple mcell_simple_count
 
 
 mcell_main_c: mcell_main_c.o JSON.o makefile
@@ -76,8 +62,6 @@ mcell_simple_count: mcell_simple_count.o rng.o JSON.o libMCell.o makefile
 
 
 clean:
-	rm -f mcell_pipe_cpp
-	rm -f mcell_pipe_c
 	rm -f mcell_main
 	rm -f mcell_main_c
 	rm -f StorageClasses

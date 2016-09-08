@@ -196,7 +196,7 @@ int main ( int argc, char *argv[] ) {
     rel->z = json_get_float_value ( json_get_element_with_key ( this_rel, "location_z" ) );
     rel->quantity = json_get_float_value ( json_get_element_with_key ( this_rel, "quantity" ) );
     rel->molecule_species = mcell_sim->molecule_species[mname];
-    mcell_sim->molecule_release_sites.append ( rel );
+    mcell_sim->molecule_release_sites.push_back ( rel );
     rel_num++;
   }
   int total_rels = rel_num;
@@ -219,7 +219,7 @@ int main ( int argc, char *argv[] ) {
     cout << "  Products: " << rxn->products << endl;
     cout << "  Forward Rate: " << rxn->forward_rate << endl;
     cout << "  Backward Rate: " << rxn->backward_rate << endl;
-    mcell_sim->reactions.append ( rxn );
+    mcell_sim->reactions.push_back ( rxn );
     rxn_num++;
   }
   int total_rxns = rxn_num;

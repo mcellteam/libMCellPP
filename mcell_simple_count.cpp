@@ -21,7 +21,7 @@ class time_ticker : public MCellTimerEvent {
   // This constructor adds this event's handler to the timer events list
   time_ticker(MCellSimulation *sim) {
     t = 0;
-    sim->timer_event_handlers.append ( this );
+    sim->timer_event_handlers.push_back ( this );
   }
   // This is the callback that's called whenever the iteration is changed
   void execute() {
@@ -43,7 +43,7 @@ class mol_counter : public MCellMolCreationEvent {
     count = 0;
     name = "";
     named = false;
-    sim->mol_creation_event_handlers.append ( this );
+    sim->mol_creation_event_handlers.push_back ( this );
   }
   // This constructor will only count the molecule species specified
   mol_counter(MCellSimulation *sim, MCellMoleculeSpecies *mol) {
@@ -51,7 +51,7 @@ class mol_counter : public MCellMolCreationEvent {
     count = 0;
     name = mol->name;
     named = true;
-    sim->mol_creation_event_handlers.append ( this );
+    sim->mol_creation_event_handlers.push_back ( this );
   }
   // This is the callback function that libMCell calls whenever it creates any molecule
   void execute(MCellMoleculeInstance *mol) {

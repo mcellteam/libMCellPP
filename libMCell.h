@@ -91,19 +91,19 @@ class MCellSimulation {
   char *join_path ( char *p1, char sep, char *p2 );
   //void pick_displacement( MCellMoleculeInstance *mol, double scale /*, struct rng_state *rng */ );
  public:
-  static int num_simulations;
+  static int num_simulations; // Tracks number of simulations that have been created.
 
   uint32_t seed;
 
   int num_iterations;
   double time_step;
 
-  ArrayStore<MCellTimerEvent *>timer_event_handlers;
-  ArrayStore<MCellMolCreationEvent *>mol_creation_event_handlers;
+  vector<MCellTimerEvent *>timer_event_handlers;
+  vector<MCellMolCreationEvent *>mol_creation_event_handlers;
 
   MapStore<MCellMoleculeSpecies *> molecule_species;
-  ArrayStore<MCellReleaseSite *> molecule_release_sites;
-  ArrayStore<MCellReaction *> reactions;
+  vector<MCellReleaseSite *> molecule_release_sites;
+  vector<MCellReaction *> reactions;
 
   MCellSimulation() {
     num_simulations++;

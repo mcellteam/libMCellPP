@@ -44,11 +44,11 @@ void MCellSimulation::add_molecule_species ( MCellMoleculeSpecies *species ) {
 }
 
 void MCellSimulation::add_molecule_release_site ( MCellReleaseSite *site ) {
-  molecule_release_sites.append ( site );
+  molecule_release_sites.push_back ( site );
 }
 
 void MCellSimulation::add_reaction ( MCellReaction *rxn ) {
-  reactions.append ( rxn );
+  reactions.push_back ( rxn );
 }
 
 MCellMoleculeSpecies *MCellSimulation::get_molecule_species_by_name ( char *mol_name ) {
@@ -95,7 +95,7 @@ void MCellSimulation::run_simulation ( char *proj_path ) {
 
   MCellReleaseSite *this_site;
 
-  for (int rs_num=0; rs_num<this->molecule_release_sites.get_size(); rs_num++) {
+  for (int rs_num=0; rs_num<this->molecule_release_sites.size(); rs_num++) {
     cout << "Release Site " << rs_num << endl;
     this_site = this->molecule_release_sites[rs_num];
     cout << "  Releasing " << this_site->quantity << " molecules of type " << this_site->molecule_species->name << endl;
@@ -109,7 +109,7 @@ void MCellSimulation::run_simulation ( char *proj_path ) {
       new_mol_instance->x = this_site->x;
       new_mol_instance->y = this_site->y;
       new_mol_instance->z = this_site->z;
-      for (int i=0; i<this->mol_creation_event_handlers.get_size(); i++) {
+      for (int i=0; i<this->mol_creation_event_handlers.size(); i++) {
         this->mol_creation_event_handlers[i]->execute(new_mol_instance);
       }
     }
@@ -151,17 +151,18 @@ void MCellSimulation::run_simulation ( char *proj_path ) {
 
   // Run the actual simulation
 
-  printf ( "Begin libMCell simulation (printf).\n" );
-  cout << "Begin libMCell simulation (cout) with seed " << seed << "." << endl;
+  printf ( "Begin libMCell simulation (printf).\n" );                           // C
+  cout << "Begin libMCell simulation (cout) with seed " << seed << "." << endl; // C++
   
   MCellRandomNumber_mrng *mcell_random = new MCellRandomNumber_mrng(seed);
 
   int print_every = exp10(floor(log10((num_iterations/10))));
   if (print_every < 1) print_every = 1;
+
   for (iteration=0; iteration<=num_iterations; iteration++) {
     cout << "Iteration " << iteration << ", t=" << (time_step*iteration) << endl;
     
-    for (int i=0; i<this->timer_event_handlers.get_size(); i++) {
+    for (int i=0; i<this->timer_event_handlers.size(); i++) {
       this->timer_event_handlers[i]->execute();
     }
 
@@ -235,7 +236,7 @@ void MCellSimulation::run_simulation ( char *proj_path ) {
     
     // Perform "reactions" ... for now, just randomly delete the first molecule of any single reactants
 
-    for (int rx_num=0; rx_num<this->reactions.get_size(); rx_num++) {
+    for (int rx_num=0; rx_num<this->reactions.size(); rx_num++) {
       if ( this->molecule_species.contains ( this->reactions[rx_num]->reactants.c_str() ) ) {
         this_species = this->molecule_species[this->reactions[rx_num]->reactants.c_str()];
         if (this_species != NULL) {

@@ -60,6 +60,30 @@ class ScheduleWindow {  // Previously called a "struct schedule_helper"
     indent(depth); cout << "  count=" << count << endl;
     indent(depth); cout << "  buf_len=" << buf_len << endl;
     indent(depth); cout << "  index=" << index << endl;
+
+    int i;
+    indent(depth); printf ( "  count array: " );
+    for (i=0; i<this->buf_len; i++) {
+      printf ( " %d", this->circ_buf_count[i] );
+    }
+    printf ( "\n" );
+    indent(depth); printf ( "  circ buffer: " );
+    for (i=0; i<2*(this->buf_len); i++) {
+      SchedulableItem *item;
+      item = this->circ_buf_head[i];
+      if (item == NULL) {
+        printf ( "[_]" );
+      } else {
+        printf ( "[ " );
+        do {
+          printf ( "%g ", item->t );
+          item = item->next;
+        } while (item != NULL);
+        printf ( "]" );
+      }
+    }
+    printf ( "\n" );
+
     if (this->next_coarser_window != NULL) {
       this->next_coarser_window->dump(depth+1);
     }
@@ -215,10 +239,17 @@ int main ( int argc, char *argv[] ) {
   timestep_window->insert_item ( new SchedulableItem(5.0), put_neg_in_current );
   timestep_window->insert_item ( new SchedulableItem(10.0), put_neg_in_current );
   timestep_window->insert_item ( new SchedulableItem(20.0), put_neg_in_current );
+  timestep_window->insert_item ( new SchedulableItem(21.0), put_neg_in_current );
+  timestep_window->insert_item ( new SchedulableItem(22.0), put_neg_in_current );
+  timestep_window->insert_item ( new SchedulableItem(23.0), put_neg_in_current );
   timestep_window->insert_item ( new SchedulableItem(50.0), put_neg_in_current );
   timestep_window->insert_item ( new SchedulableItem(100.0), put_neg_in_current );
   timestep_window->insert_item ( new SchedulableItem(200.0), put_neg_in_current );
   timestep_window->insert_item ( new SchedulableItem(500.0), put_neg_in_current );
+  timestep_window->insert_item ( new SchedulableItem(501.0), put_neg_in_current );
+  timestep_window->insert_item ( new SchedulableItem(502.0), put_neg_in_current );
+  timestep_window->insert_item ( new SchedulableItem(503.0), put_neg_in_current );
+  timestep_window->insert_item ( new SchedulableItem(504.0), put_neg_in_current );
   timestep_window->insert_item ( new SchedulableItem(1000.0), put_neg_in_current );
   timestep_window->insert_item ( new SchedulableItem(2000.0), put_neg_in_current );
   timestep_window->insert_item ( new SchedulableItem(5000.0), put_neg_in_current );

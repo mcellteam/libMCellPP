@@ -10,7 +10,6 @@
 #include <math.h>
 
 #include "libMCell.h"
-// #include "StorageClasses.h"
 
 using namespace std;
 

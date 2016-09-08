@@ -11,7 +11,6 @@
 #include <string>
 #include <vector>
 
-#include "StorageClasses.h"
 #include "libMCell.h"
 
 #include "rng.h"
@@ -136,17 +135,25 @@ void MCellSimulation::run_simulation ( char *proj_path ) {
   // Create the count files for each molecule species
 
   FILE **count_files;
-  count_files = (FILE **) malloc ( this->molecule_species.get_num_items() * sizeof(FILE *) );
+  count_files = (FILE **) malloc ( this->molecule_species.size() * sizeof(FILE *) );
+
+  map<string,int>count_file_index;
+  int next_count_file_index = 0;
 
   MCellMoleculeSpecies *this_species;
-  cout << "Set up count files for " << this->molecule_species.get_num_items() << " species." << endl;
-  for (int sp_num=0; sp_num<this->molecule_species.get_num_items(); sp_num++) {
+  cout << "Set up count files for " << this->molecule_species.size() << " species." << endl;
+  //for (int sp_num=0; sp_num<this->molecule_species.size(); sp_num++) {
+  for ( map<string,MCellMoleculeSpecies *>::iterator species_iterator=this->molecule_species.begin(); species_iterator!=this->molecule_species.end(); ++species_iterator ) {
     char *react_file_name;
-    this_species = this->molecule_species[this->molecule_species.get_key(sp_num)];
+    // this_species = this->molecule_species[this->molecule_species.get_key(sp_num)];
+    this_species = species_iterator->second;
     react_file_name = (char *) malloc ( strlen(react_dir) + 1 + strlen ( "/seed_00001/" ) + strlen ( this_species->name.c_str() ) + strlen ( ".World.dat" ) + 10 );
     sprintf ( react_file_name, "%s/seed_00001/%s.World.dat", react_dir, this_species->name.c_str() );
     cout << "Setting up count file for species " << this_species->name << " at " << react_file_name << endl;
-    count_files[sp_num] = fopen ( react_file_name, "w" );
+    count_file_index[this_species->name] = next_count_file_index++;
+    count_files[count_file_index[this_species->name]] = fopen ( react_file_name, "w" );
+    // count_files[sp_num] = fopen ( react_file_name, "w" );
+    //count_files[this_species->name] = fopen ( react_file_name, "w" );
   }
 
   // Run the actual simulation
@@ -160,7 +167,7 @@ void MCellSimulation::run_simulation ( char *proj_path ) {
   if (print_every < 1) print_every = 1;
 
   for (iteration=0; iteration<=num_iterations; iteration++) {
-    cout << "Iteration " << iteration << ", t=" << (time_step*iteration) << endl;
+    // cout << "Iteration " << iteration << ", t=" << (time_step*iteration) << endl;
     
     for (int i=0; i<this->timer_event_handlers.size(); i++) {
       this->timer_event_handlers[i]->execute();
@@ -168,16 +175,20 @@ void MCellSimulation::run_simulation ( char *proj_path ) {
 
     // Count the molecules
 
-    // cout << "Count molecules for " << this->molecule_species.get_num_items() << " species." << endl;
-    for (int sp_num=0; sp_num<this->molecule_species.get_num_items(); sp_num++) {
-      this_species = this->molecule_species[this->molecule_species.get_key(sp_num)];
+    // cout << "Count molecules for " << this->molecule_species.size() << " species." << endl;
+    // for (int sp_num=0; sp_num<this->molecule_species.size(); sp_num++) {
+    for ( map<string,MCellMoleculeSpecies *>::iterator species_iterator=this->molecule_species.begin(); species_iterator!=this->molecule_species.end(); ++species_iterator ) {
+      // this_species = this->molecule_species[this->molecule_species.get_key(sp_num)];
+      this_species = species_iterator->second;
       MCellMoleculeInstance *this_mol_instance = this_species->instance_list;
       long count = 0;
       while (this_mol_instance != NULL) {
         count++;
         this_mol_instance = this_mol_instance->next;
       }
-      fprintf ( count_files[sp_num], "%g %ld\n", iteration*time_step, count );
+      // fprintf ( count_files[sp_num], "%g %ld\n", iteration*time_step, count );
+      //fprintf ( count_files[this_species->name], "%g %ld\n", iteration*time_step, count );
+      fprintf ( count_files[count_file_index[this_species->name]], "%g %ld\n", iteration*time_step, count );
     }
 
     // Create the viz output file for this iteration
@@ -194,9 +205,11 @@ void MCellSimulation::run_simulation ( char *proj_path ) {
     // Move all molecules and produce viz output
 
     MCellMoleculeSpecies *this_species;
-    // cout << "Iterate over " << this->molecule_species.get_num_items() << " species." << endl;
-    for (int sp_num=0; sp_num<this->molecule_species.get_num_items(); sp_num++) {
-      this_species = this->molecule_species[this->molecule_species.get_key(sp_num)];
+    // cout << "Iterate over " << this->molecule_species.size() << " species." << endl;
+    // for (int sp_num=0; sp_num<this->molecule_species.size(); sp_num++) {
+    for ( map<string,MCellMoleculeSpecies *>::iterator species_iterator=this->molecule_species.begin(); species_iterator!=this->molecule_species.end(); ++species_iterator ) {
+      // this_species = this->molecule_species[this->molecule_species.get_key(sp_num)];
+      this_species = species_iterator->second;
       // cout << "Simulating for species " << this_species->name << endl;
 
       // Output the header of the mol viz file
@@ -237,30 +250,35 @@ void MCellSimulation::run_simulation ( char *proj_path ) {
     // Perform "reactions" ... for now, just randomly delete the first molecule of any single reactants
 
     for (int rx_num=0; rx_num<this->reactions.size(); rx_num++) {
-      if ( this->molecule_species.contains ( this->reactions[rx_num]->reactants.c_str() ) ) {
+      //if ( this->molecule_species.contains ( this->reactions[rx_num]->reactants.c_str() ) ) {
         this_species = this->molecule_species[this->reactions[rx_num]->reactants.c_str()];
-        if (this_species != NULL) {
+        //if (this_species != NULL) {
           if (this_species->instance_list != NULL) {
             if ( mcell_random->rng_gauss() < 0.0 ) { // Delete the molecule about half the time.
-              cout << "Default Decay Reaction removing an instance of " << this_species->name << endl;
+              // cout << "Default Decay Reaction removing an instance of " << this_species->name << endl;
               MCellMoleculeInstance *first = this_species->instance_list;
               this_species->instance_list = this_species->instance_list->next;
               this_species->num_instances += -1;
               delete ( first );
             }
           }
-        }
-      }
+        //}
+      //}
     }
 
   }
 
   // Close the count files for each molecule species
 
-  for (int sp_num=0; sp_num<this->molecule_species.get_num_items(); sp_num++) {
-    fclose ( count_files[sp_num] );
-  }
+  //for (int sp_num=0; sp_num<this->molecule_species.size(); sp_num++) {
+  //  fclose ( count_files[sp_num] );
+  //}
 
+  for ( map<string,MCellMoleculeSpecies *>::iterator species_iterator=this->molecule_species.begin(); species_iterator!=this->molecule_species.end(); ++species_iterator ) {
+    this_species = species_iterator->second;
+    fclose ( count_files[count_file_index[this_species->name]] );
+    //fclose ( count_files[this_species->name] );
+  }
 
 }
 

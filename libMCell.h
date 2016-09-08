@@ -3,8 +3,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <map>
 #include <cstdint>
-#include "StorageClasses.h"
 
 using namespace std;
 
@@ -101,9 +101,9 @@ class MCellSimulation {
   vector<MCellTimerEvent *>timer_event_handlers;
   vector<MCellMolCreationEvent *>mol_creation_event_handlers;
 
-  MapStore<MCellMoleculeSpecies *> molecule_species;
-  vector<MCellReleaseSite *> molecule_release_sites;
-  vector<MCellReaction *> reactions;
+  map<string, MCellMoleculeSpecies *>molecule_species;
+  vector<MCellReleaseSite *>molecule_release_sites;
+  vector<MCellReaction *>reactions;
 
   MCellSimulation() {
     num_simulations++;

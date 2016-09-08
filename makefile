@@ -7,7 +7,7 @@ INSTALL_DIR = ~/.config/blender/2.77/scripts/addons/
 #INSTALL_DIR = ~/Library/Application\ Support/Blender/2.74/scripts/addons/
 
 
-all: mcell_main_c _libMCell.so mcell_main mcell_main_c StorageClasses mcell_simple mcell_simple_count
+all: mcell_main_c _libMCell.so mcell_main mcell_main_c mcell_simple mcell_simple_count
 
 
 mcell_main_c: mcell_main_c.o JSON.o makefile
@@ -25,13 +25,6 @@ rng.o: rng.cpp rng.h makefile
 	g++ -o rng.o -c rng.cpp -fPIC -I$(PYTHON_INCLUDE)
 
 
-StorageClasses.o: StorageClasses.cpp StorageClasses.h makefile
-	g++ -g -c StorageClasses.cpp -o StorageClasses.o
-
-StorageClasses: StorageClasses.o makefile
-	g++ -g -lm -o StorageClasses StorageClasses.o
-
-
 _libMCell.so: libMCell.cpp rng.cpp libMCell.h rng.h libMCell.i makefile
 	swig -python -c++ -o libMCell_wrap.cpp libMCell.i
 	g++ -c -std=c++11 -Wno-write-strings -fpic -I. -I/usr/include libMCell_wrap.cpp rng.cpp libMCell.cpp -I/usr/include/python2.7 -I/usr/lib/python2.7/config
@@ -40,7 +33,7 @@ _libMCell.so: libMCell.cpp rng.cpp libMCell.h rng.h libMCell.i makefile
 libMCell.o: libMCell.cpp libMCell.h makefile
 	g++ -c -std=c++11 -Wno-write-strings libMCell.cpp -o libMCell.o
 
-mcell_main.o: mcell_main.cpp libMCell.h StorageClasses.h makefile
+mcell_main.o: mcell_main.cpp libMCell.h makefile
 	g++ -c -std=c++11 -Wno-write-strings mcell_main.cpp -o mcell_main.o
 
 mcell_main: mcell_main.o rng.o JSON.o libMCell.o makefile
@@ -64,7 +57,6 @@ mcell_simple_count: mcell_simple_count.o rng.o JSON.o libMCell.o makefile
 clean:
 	rm -f mcell_main
 	rm -f mcell_main_c
-	rm -f StorageClasses
 	rm -f mcell_simple
 	rm -f mcell_simple_count
 	rm -f *_wrap* *.pyc
@@ -79,9 +71,6 @@ cleansubs:
 	rm -rf viz_data
 	rm -f __pycache__/*
 	rmdir __pycache__
-
-test_storage: StorageClasses
-	./StorageClasses
 
 # Alternate Implementation Test Cases (may not be part of final libMCell)
 

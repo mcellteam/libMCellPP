@@ -717,6 +717,13 @@ void dump ( struct schedule_helper *helper, int depth ) {
 }
 
 int main ( int argc, char *argv[] ) {
+
+  printf( "\n\n" );
+  printf( "*****************************\n" );
+  printf( "*  Toy MCell Scheduler (C)  *\n" );
+  printf( "*****************************\n" );
+  printf( "\n" );
+
   double dt_min = 1.0;
   double dt_max = 100.0;
   int maxlen = 10;

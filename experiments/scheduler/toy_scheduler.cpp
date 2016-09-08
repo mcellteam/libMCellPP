@@ -67,7 +67,7 @@ class ScheduleWindow {  // Previously called a "struct schedule_helper"
 
   ScheduleWindow ( double dt_min, double dt_max, int maxlen, double start_iterations ) {
 
-    cout << "Top of ScheduleWindow constructor with " << dt_min << " " << dt_max << " " << maxlen << " " << start_iterations << endl;
+    // cout << "Top of ScheduleWindow constructor with " << dt_min << " " << dt_max << " " << maxlen << " " << start_iterations << endl;
 
     double n_slots = dt_max / dt_min;
     int len;
@@ -97,14 +97,14 @@ class ScheduleWindow {  // Previously called a "struct schedule_helper"
       this->next_coarser_window->depth = this->depth + 1;
     }
 
-    cout << "Bottom of ScheduleWindow constructor" << endl;
+    // cout << "Bottom of ScheduleWindow constructor" << endl;
 
   }
 
 
   int insert_item ( SchedulableItem *item, bool put_neg_in_current ) {
 
-    cout << "Top of insert_item" << endl;
+    // cout << "Top of insert_item" << endl;
     if (put_neg_in_current && item->t < this->now) {
       /* insert item into current list */
 
@@ -117,7 +117,7 @@ class ScheduleWindow {  // Previously called a "struct schedule_helper"
         this->current_tail = item;
         item->next = NULL;
       }
-      cout << "Return from insert_item after putting negative in current" << endl;
+      // cout << "Return from insert_item after putting negative in current" << endl;
       return 0;
     }
 
@@ -127,7 +127,7 @@ class ScheduleWindow {  // Previously called a "struct schedule_helper"
 
     if (nsteps < ((double)this->buf_len)) {
       /* item fits in array for this scale */
-      cout << "Put item in current time scale" << endl;
+      // cout << "Put item in current time scale" << endl;
 
       int i;
       if (nsteps < 0.0)
@@ -159,7 +159,7 @@ class ScheduleWindow {  // Previously called a "struct schedule_helper"
       }
     } else {
       /* item fits in array for coarser scale */
-      cout << "Put item in coarser time scale" << endl;
+      // cout << "Put item in coarser time scale" << endl;
 
       if (this->next_coarser_window == NULL) {
         /*
@@ -175,11 +175,11 @@ class ScheduleWindow {  // Previously called a "struct schedule_helper"
 
       /* insert item at coarser scale and insist that item is not placed in
        * "current" list */
-      cout << "Return from insert_item after scheduling coarser" << endl;
+      // cout << "Return from insert_item after scheduling coarser" << endl;
       return this->next_coarser_window->insert_item(item, false);
     }
 
-    cout << "Return from insert_item at very end" << endl;
+    // cout << "Return from insert_item at very end" << endl;
     return 0;
   }
 
@@ -190,9 +190,9 @@ class ScheduleWindow {  // Previously called a "struct schedule_helper"
 int main ( int argc, char *argv[] ) {
 
   cout << "\n\n" << endl;
-  cout << "***************************" << endl;
-  cout << "*   Toy MCell Scheduler   *" << endl;
-  cout << "***************************" << endl;
+  cout << "*******************************" << endl;
+  cout << "*  Toy MCell Scheduler (C++)  *" << endl;
+  cout << "*******************************" << endl;
   cout << endl;
 
   //This is a hard-coded simulation as a simple example of the API

@@ -99,7 +99,7 @@ int main ( int argc, char *argv[] ) {
   fread ( file_text, 1, file_length, f );
 
   fclose(f);
-  
+
   printf ( "Done loading CellBlender model.\n" );
 
   file_text[file_length] = '\0'; // Be sure to null terminate!!
@@ -133,7 +133,7 @@ int main ( int argc, char *argv[] ) {
   printf ( ".%ld", json_get_int_value ( vn ) );
   vn = json_get_element_by_index ( blender_ver, 2 );
   printf ( ".%ld\n", json_get_int_value ( vn ) );
-  
+
   // API version = ['mcell']['api_version']
   data_model_element *api_ver = json_get_element_with_key ( mcell, "api_version" );
 
@@ -157,7 +157,7 @@ int main ( int argc, char *argv[] ) {
 
   data_model_element *dm_reactions = json_get_element_with_key ( mcell, "define_reactions" );
   data_model_element *rxns = json_get_element_with_key ( dm_reactions, "reaction_list" );
-  
+
 
   // Finally build the actual simulation from the data extracted from the data model
 

@@ -247,12 +247,16 @@ void MCellSimulation::run_simulation ( char *proj_path ) {
 
     fclose(f);
     
-    // Perform "reactions" ... for now, just randomly delete the first molecule of any single reactants
+    // Perform "reactions" ... for now, just randomly delete the first instance for mol->NULL reactions only
 
     for (int rx_num=0; rx_num<this->reactions.size(); rx_num++) {
-      //if ( this->molecule_species.contains ( this->reactions[rx_num]->reactants.c_str() ) ) {
+      if ( this->reactions[rx_num]->products != "NULL" ) {
+        cout << "Error: Current Simulator cannot perform reaction with non-NULL products:" << this->reactions[rx_num]->products << endl;
+      } else if ( this->molecule_species.count ( this->reactions[rx_num]->reactants.c_str() ) <= 0 ) {
+        cout << "Error: Current Simulator cannot perform reaction with reactants:" << this->reactions[rx_num]->reactants << endl;
+      } else {
         this_species = this->molecule_species[this->reactions[rx_num]->reactants.c_str()];
-        //if (this_species != NULL) {
+        if (this_species != NULL) {
           if (this_species->instance_list != NULL) {
             if ( mcell_random->rng_gauss() < 0.0 ) { // Delete the molecule about half the time.
               // cout << "Default Decay Reaction removing an instance of " << this_species->name << endl;
@@ -262,17 +266,13 @@ void MCellSimulation::run_simulation ( char *proj_path ) {
               delete ( first );
             }
           }
-        //}
-      //}
+        }
+      }
     }
 
   }
 
   // Close the count files for each molecule species
-
-  //for (int sp_num=0; sp_num<this->molecule_species.size(); sp_num++) {
-  //  fclose ( count_files[sp_num] );
-  //}
 
   for ( map<string,MCellMoleculeSpecies *>::iterator species_iterator=this->molecule_species.begin(); species_iterator!=this->molecule_species.end(); ++species_iterator ) {
     this_species = species_iterator->second;

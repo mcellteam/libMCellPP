@@ -690,6 +690,12 @@ void delete_scheduler(struct schedule_helper *sh) {
   }
 }
 
+void insert_item_at_time ( struct schedule_helper *my_helper, double t, int put_neg_in_current ) {
+  struct abstract_element *ae = (struct abstract_element *) malloc ( sizeof(struct abstract_element) );
+  ae->t = t;
+  schedule_insert(my_helper, (void *)ae, put_neg_in_current);
+}
+
 int main ( int argc, char *argv[] ) {
   double dt_min = 1.0;
   double dt_max = 100.0;
@@ -698,16 +704,36 @@ int main ( int argc, char *argv[] ) {
   int put_neg_in_current = 0;
 
   struct abstract_element *ae;
-  ae = (struct abstract_element *) malloc ( sizeof(struct abstract_element) );
-  ae->t = 0.3;
-
-
   struct schedule_helper *my_helper;
+
+  printf ( "Make a new timestep_window\n" );
   my_helper = create_scheduler(dt_min, dt_max, maxlen, start_iterations);
-  schedule_insert(my_helper, (void *)ae, put_neg_in_current);
 
-  printf ( "Hello\n" );
-
+  printf ( "Insert items\n" );
+  insert_item_at_time ( my_helper, 0.3, put_neg_in_current );
+  insert_item_at_time ( my_helper, 0.9, put_neg_in_current );
+  insert_item_at_time ( my_helper, 1.3, put_neg_in_current );
+  insert_item_at_time ( my_helper, 2.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 3.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 5.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 10.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 20.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 50.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 100.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 200.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 500.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 1000.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 2000.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 5000.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 10000.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 20000.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 50000.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 100000.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 200000.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 500000.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 1000000.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 2000000.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 5000000.0, put_neg_in_current );
 
   return ( 0 );
 }

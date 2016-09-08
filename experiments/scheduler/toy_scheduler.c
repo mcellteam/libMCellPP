@@ -696,6 +696,26 @@ void insert_item_at_time ( struct schedule_helper *my_helper, double t, int put_
   schedule_insert(my_helper, (void *)ae, put_neg_in_current);
 }
 
+void indent ( int depth ) {
+  int i;
+  for (i=0; i<depth; i++) {
+    printf ( "  " );
+  }
+}
+
+void dump ( struct schedule_helper *helper, int depth ) {
+  indent(depth); printf ( "ScheduleWindow at depth %d\n", helper->depth );
+  indent(depth); printf ( "  dt=%g\n", helper->dt );
+  indent(depth); printf ( "  dt_1=%g\n", helper->dt_1 );
+  indent(depth); printf ( "  now=%g\n", helper->now );
+  indent(depth); printf ( "  count=%d\n", helper->count );
+  indent(depth); printf ( "  buf_len=%d\n", helper->buf_len );
+  indent(depth); printf ( "  index=%d\n", helper->index );
+  if (helper->next_scale != NULL) {
+    dump ( helper->next_scale, depth+1 );
+  }
+}
+
 int main ( int argc, char *argv[] ) {
   double dt_min = 1.0;
   double dt_max = 100.0;
@@ -734,6 +754,8 @@ int main ( int argc, char *argv[] ) {
   insert_item_at_time ( my_helper, 1000000.0, put_neg_in_current );
   insert_item_at_time ( my_helper, 2000000.0, put_neg_in_current );
   insert_item_at_time ( my_helper, 5000000.0, put_neg_in_current );
+
+  dump ( my_helper, 0 );
 
   return ( 0 );
 }

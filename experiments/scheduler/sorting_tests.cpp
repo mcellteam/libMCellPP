@@ -1,12 +1,13 @@
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <vector>
 #include <forward_list>
 #include <algorithm>
 #include <map>
 #include <cstdint>
+#include <time.h>
 #include <ctime>
-#include <chrono>
 #include <random>
 
 using namespace std;
@@ -279,9 +280,22 @@ SchedulableItem *ae_object_sort(SchedulableItem *ae) {
 
 ////////// End of C++ version
 
+long num_vec_out_of_order ( vector<SchedulableItem *> ae_vec ) {
+  auto num = ae_vec.size();
+  auto i = num;
+  long num_bad = 0;
+  for (i=0; i<num-1; i++) {
+    if ( ae_vec.at(i)->t > ae_vec.at(i+1)->t ) {
+      num_bad += 1;
+    }
+  }
+  return ( num_bad );
+}
 
 
 int main ( int argc, char *argv[] ) {
+
+  cout.precision(15); // This is just enough to round 1.3899999999999999 to 1.39
 
   cout << "\n\n" << endl;
   cout << "*******************************" << endl;
@@ -351,7 +365,7 @@ int main ( int argc, char *argv[] ) {
 
   ////// Time with large arrays
 
-  long num_to_test = 2000000;
+  long num_to_test = 2000000; // 14
   
   cout << endl << "Sorting " << num_to_test << " values ..." << endl << endl;
 
@@ -359,8 +373,9 @@ int main ( int argc, char *argv[] ) {
 
   SchedulableItem *ae_item = NULL, *new_ae_item = NULL, *ae_item_temp = NULL;
 
-  auto t_start = chrono::system_clock::now();
-  auto t_stop = chrono::system_clock::now();
+  // Call these at definition time to benefit from auto typing.
+  auto t_start = clock();
+  auto t_stop = clock();
 
   unsigned seed;
   
@@ -379,7 +394,7 @@ int main ( int argc, char *argv[] ) {
   for (int i=0; i<num_to_test; i++) {
     rand_t = distribution(generator);
     if (num_to_test < 20) {
-      cout << "  " << rand_t;
+      cout << "  " << setprecision(5) << rand_t;
     }
 
     ae_new = (struct abstract_element *)calloc(1, sizeof(struct abstract_element));
@@ -400,45 +415,51 @@ int main ( int argc, char *argv[] ) {
     cout << endl;
   }
 
-  t_start = chrono::system_clock::now();
+  t_start = clock();
   ae = ae_list_sort ( ae );
-  t_stop = chrono::system_clock::now();
-  std::chrono::duration<double> diff = t_stop-t_start;
-  std::cout << "Elapsed time for Merge Struct Sorting: " << diff.count() << " s\n";
+  t_stop = clock();
+  cout << "Elapsed time for Merge Struct Sorting: " << ((double)(t_stop-t_start))/CLOCKS_PER_SEC << " s\n";
   if (num_to_test < 20) {
     ae_temp = ae;
     while (ae_temp != NULL) {
-      cout << "  " << ae_temp->t;
+      cout << "  " << setprecision(5) << ae_temp->t;
       ae_temp = ae_temp->next;
     }
     cout << endl;
   }
 
-  t_start = chrono::system_clock::now();
+  t_start = clock();
   ae_item = ae_object_sort ( ae_item );
-  t_stop = chrono::system_clock::now();
-  diff = t_stop-t_start;
-  std::cout << "Elapsed time for Merge Object Sorting: " << diff.count() << " s\n";
+  t_stop = clock();
+  cout << "Elapsed time for Merge Object Sorting: " << ((double)(t_stop-t_start))/CLOCKS_PER_SEC << " s\n";
   if (num_to_test < 20) {
     ae_item_temp = ae_item;
     while (ae_item_temp != NULL) {
-      cout << "  " << ae_item_temp->t;
+      cout << "  " << setprecision(5) << ae_item_temp->t;
       ae_item_temp = ae_item_temp->next;
     }
     cout << endl;
   }
 
-  t_start = chrono::system_clock::now();
+  cout << "Num out of order (before sorting) = " << num_vec_out_of_order ( ae_vec ) << endl;
+  t_start = clock();
   sort ( ae_vec.begin(), ae_vec.end(), [] (SchedulableItem *i, SchedulableItem *j) { return ( i->t < j->t ); } );
-  t_stop = chrono::system_clock::now();
-  diff = t_stop-t_start;
-  std::cout << "Elapsed time for Vector Sorting: " << diff.count() << " s\n";
+  t_stop = clock();
+  cout << "Num out of order (after sorting) = " << num_vec_out_of_order ( ae_vec ) << endl;
+  if (num_to_test < 20) {
+    auto num = ae_vec.size();
+    auto i = num;
+    for (i=0; i<num-1; i++) {
+      cout << "  " << setprecision(5) << ae_vec.at(i)->t;
+    }
+    cout << endl;
+  }
+  cout << "Elapsed time for Vector Sorting: " << ((double)(t_stop-t_start))/CLOCKS_PER_SEC << " s\n";
 
-  t_start = chrono::system_clock::now();
+  t_start = clock();
   ae_list.sort ( [] (SchedulableItem *i, SchedulableItem *j) { return ( i->t < j->t ); } );
-  t_stop = chrono::system_clock::now();
-  diff = t_stop-t_start;
-  std::cout << "Elapsed time for List Sorting: " << diff.count() << " s\n";
+  t_stop = clock();
+  cout << "Elapsed time for List Sorting: " << ((double)(t_stop-t_start))/CLOCKS_PER_SEC << " s\n";
 
 
 

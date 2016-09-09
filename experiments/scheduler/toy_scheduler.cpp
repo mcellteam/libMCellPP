@@ -1,5 +1,3 @@
-/* File : libMCell.h */
-
 #include <iostream>
 #include <string>
 #include <vector>
@@ -45,10 +43,13 @@ class ScheduleWindow {  // Previously called a "struct schedule_helper"
   int error=0;         /* Error code (1 - on error, 0 - no errors) */
   int depth=0;         /* "Tier" of scheduler in timescale hierarchy, 0-based */
 
+
+
+  /*************************************************************************
+    indent and dump display a text view of this scheduler
+  *************************************************************************/
   void indent ( int depth ) {
-    for (int i=0; i<depth; i++) {
-      cout << "  ";
-    }
+    for (int i=0; i<depth; i++) { cout << "  "; }
   }
   void dump ( int depth ) {
     indent(depth); cout << "ScheduleWindow at depth " << depth << endl;
@@ -87,6 +88,14 @@ class ScheduleWindow {  // Previously called a "struct schedule_helper"
     }
   }
 
+
+  /*************************************************************************
+    ScheduleWindow constructor:
+      In: timestep per slot in this scheduler  ... is this correct?
+          time for all slots in this scheduler ... is this correct?
+          maximum number of slots in this scheduler
+          the current time
+  *************************************************************************/
   ScheduleWindow ( double dt_min, double dt_max, int maxlen, double start_iterations ) {
 
     double n_slots = dt_max / dt_min;
@@ -119,6 +128,13 @@ class ScheduleWindow {  // Previously called a "struct schedule_helper"
   }
 
 
+  /*************************************************************************
+    insert_item:
+    In: item to schedule
+        flag to indicate whether times in the "past" go into the list
+           of current events (if false, go into next event, not current).
+    Out: 0 on success, not sure if errors should throw an exception
+  *************************************************************************/
   int insert_item ( SchedulableItem *item, bool put_neg_in_current ) {
 
     if (put_neg_in_current && item->t < this->now) {

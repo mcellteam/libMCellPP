@@ -211,6 +211,15 @@ class ScheduleWindow {  // Previously called a "struct schedule_helper"
 
 
 // This function creates a compatible interface with the C version
+//
+// Normal C++:
+//    timestep_window->insert_item ( new SchedulableItem(t), true );
+//
+// Normal C:
+//    struct abstract_element *ae = (struct abstract_element *) malloc ( sizeof(struct abstract_element) );
+//    ae->t = t;
+//    schedule_insert(my_helper, (void *)ae, true);
+//
 void insert_item_at_time ( ScheduleWindow *timestep_window, double t, int put_neg_in_current ) {
   SchedulableItem *ae = new SchedulableItem(t);
   timestep_window->insert_item(ae, put_neg_in_current!=0);

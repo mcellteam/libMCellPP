@@ -210,6 +210,14 @@ class ScheduleWindow {  // Previously called a "struct schedule_helper"
 };
 
 
+// This function creates a compatible interface with the C version
+void insert_item_at_time ( ScheduleWindow *my_helper, double t, int put_neg_in_current ) {
+  SchedulableItem *ae = new SchedulableItem(t);
+  my_helper->insert_item(ae, put_neg_in_current!=0);
+}
+
+
+
 
 int main ( int argc, char *argv[] ) {
 
@@ -225,43 +233,50 @@ int main ( int argc, char *argv[] ) {
   double dt_max = 100.0;
   int maxlen = 10;
   double start_iterations = 0;
-  bool put_neg_in_current = false;
+  int put_neg_in_current = 0;
 
   cout << "Make a new timestep_window" << endl;
   ScheduleWindow *timestep_window = new ScheduleWindow ( dt_min, dt_max, maxlen, start_iterations );
 
+  // Define an alias named "my_helper" to make the following list compatible with the C version
+  ScheduleWindow *my_helper;
+  my_helper = timestep_window;
+
   cout << "Insert items" << endl;
-  timestep_window->insert_item ( new SchedulableItem(0.3), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(0.9), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(1.3), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(2.0), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(3.0), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(5.0), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(10.0), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(20.0), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(21.0), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(22.0), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(23.0), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(50.0), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(100.0), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(200.0), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(500.0), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(501.0), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(502.0), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(503.0), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(504.0), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(1000.0), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(2000.0), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(5000.0), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(10000.0), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(20000.0), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(50000.0), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(100000.0), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(200000.0), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(500000.0), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(1000000.0), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(2000000.0), put_neg_in_current );
-  timestep_window->insert_item ( new SchedulableItem(5000000.0), put_neg_in_current );
+  insert_item_at_time ( my_helper, 0.1, put_neg_in_current );
+  insert_item_at_time ( my_helper, 0.3, put_neg_in_current );
+  insert_item_at_time ( my_helper, 0.9, put_neg_in_current );
+  insert_item_at_time ( my_helper, 1.3, put_neg_in_current );
+  insert_item_at_time ( my_helper, 2.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 3.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 5.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 10.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 20.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 21.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 22.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 23.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 50.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 100.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 200.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 201.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 202.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 500.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 501.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 502.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 503.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 504.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 1000.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 2000.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 5000.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 10000.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 20000.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 50000.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 100000.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 200000.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 500000.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 1000000.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 2000000.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 5000000.0, put_neg_in_current );
 
   timestep_window->dump(0);
 

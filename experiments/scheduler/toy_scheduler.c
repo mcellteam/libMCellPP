@@ -761,6 +761,7 @@ int main ( int argc, char *argv[] ) {
   my_helper = create_scheduler(dt_min, dt_max, maxlen, start_iterations);
 
   printf ( "Insert items\n" );
+  insert_item_at_time ( my_helper, 0.1, put_neg_in_current );
   insert_item_at_time ( my_helper, 0.3, put_neg_in_current );
   insert_item_at_time ( my_helper, 0.9, put_neg_in_current );
   insert_item_at_time ( my_helper, 1.3, put_neg_in_current );
@@ -775,6 +776,8 @@ int main ( int argc, char *argv[] ) {
   insert_item_at_time ( my_helper, 50.0, put_neg_in_current );
   insert_item_at_time ( my_helper, 100.0, put_neg_in_current );
   insert_item_at_time ( my_helper, 200.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 201.0, put_neg_in_current );
+  insert_item_at_time ( my_helper, 202.0, put_neg_in_current );
   insert_item_at_time ( my_helper, 500.0, put_neg_in_current );
   insert_item_at_time ( my_helper, 501.0, put_neg_in_current );
   insert_item_at_time ( my_helper, 502.0, put_neg_in_current );

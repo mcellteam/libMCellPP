@@ -704,7 +704,7 @@ void indent ( int depth ) {
 }
 
 void dump ( struct schedule_helper *helper, int depth ) {
-  indent(depth); printf ( "ScheduleWindow at depth %d\n", helper->depth );
+  indent(depth); printf ( "ScheduleWindow at depth %d\n", depth );
   indent(depth); printf ( "  dt=%g\n", helper->dt );
   indent(depth); printf ( "  dt_1=%g\n", helper->dt_1 );
   indent(depth); printf ( "  now=%g\n", helper->now );
@@ -748,55 +748,63 @@ int main ( int argc, char *argv[] ) {
   printf( "*****************************\n" );
   printf( "\n" );
 
+  // struct abstract_element *ae;
+  struct schedule_helper *timestep_window;
+
+  printf ( "Make a new timestep_window and insert items\n" );
+
+
+  // The following code is the same in C or C++
+
   double dt_min = 1.0;
   double dt_max = 100.0;
-  int maxlen = 10;
+  int maxlen = 5;
   double start_iterations = 0;
   int put_neg_in_current = 0;
 
-  struct abstract_element *ae;
-  struct schedule_helper *my_helper;
+  timestep_window = create_scheduler(dt_min, dt_max, maxlen, start_iterations);
 
-  printf ( "Make a new timestep_window\n" );
-  my_helper = create_scheduler(dt_min, dt_max, maxlen, start_iterations);
+  insert_item_at_time ( timestep_window, 0.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 0.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 0.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 0.1, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 0.3, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 0.3, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 0.9, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 1.3, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 2.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 3.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 5.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 10.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 20.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 21.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 22.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 23.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 50.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 100.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 200.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 201.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 202.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 500.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 501.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 502.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 503.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 504.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 1000.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 2000.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 5000.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 10000.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 20000.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 50000.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 100000.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 200000.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 500000.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 1000000.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 2000000.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 5000000.0, put_neg_in_current );
 
-  printf ( "Insert items\n" );
-  insert_item_at_time ( my_helper, 0.1, put_neg_in_current );
-  insert_item_at_time ( my_helper, 0.3, put_neg_in_current );
-  insert_item_at_time ( my_helper, 0.9, put_neg_in_current );
-  insert_item_at_time ( my_helper, 1.3, put_neg_in_current );
-  insert_item_at_time ( my_helper, 2.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 3.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 5.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 10.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 20.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 21.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 22.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 23.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 50.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 100.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 200.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 201.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 202.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 500.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 501.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 502.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 503.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 504.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 1000.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 2000.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 5000.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 10000.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 20000.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 50000.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 100000.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 200000.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 500000.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 1000000.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 2000000.0, put_neg_in_current );
-  insert_item_at_time ( my_helper, 5000000.0, put_neg_in_current );
 
-  dump ( my_helper, 0 );
+  dump ( timestep_window, 0 );
 
   return ( 0 );
 }

@@ -8,8 +8,6 @@
 
 using namespace std;
 
-class SchedulableItem; // Forward declaration needed?
-
 class SchedulableItem {
  public:
   SchedulableItem ( double t ) {
@@ -62,27 +60,27 @@ class ScheduleWindow {  // Previously called a "struct schedule_helper"
     indent(depth); cout << "  index=" << index << endl;
 
     int i;
-    indent(depth); printf ( "  count array: " );
+    indent(depth); cout << "  count array: ";
     for (i=0; i<this->buf_len; i++) {
-      printf ( " %d", this->circ_buf_count[i] );
+      cout << " " << this->circ_buf_count[i];
     }
-    printf ( "\n" );
-    indent(depth); printf ( "  circ buffer: " );
+    cout << endl;
+    indent(depth); cout << "  circ buffer: ";
     for (i=0; i<2*(this->buf_len); i++) {
       SchedulableItem *item;
       item = this->circ_buf_head[i];
       if (item == NULL) {
-        printf ( "[_]" );
+        cout << "[_]";
       } else {
-        printf ( "[ " );
+        cout << "[ ";
         do {
-          printf ( "%g ", item->t );
+          cout << item->t << " ";
           item = item->next;
         } while (item != NULL);
-        printf ( "]" );
+        cout << "]";
       }
     }
-    printf ( "\n" );
+    cout << endl;
 
     if (this->next_coarser_window != NULL) {
       this->next_coarser_window->dump(depth+1);
@@ -90,8 +88,6 @@ class ScheduleWindow {  // Previously called a "struct schedule_helper"
   }
 
   ScheduleWindow ( double dt_min, double dt_max, int maxlen, double start_iterations ) {
-
-    // cout << "Top of ScheduleWindow constructor with " << dt_min << " " << dt_max << " " << maxlen << " " << start_iterations << endl;
 
     double n_slots = dt_max / dt_min;
     int len;
@@ -120,18 +116,13 @@ class ScheduleWindow {  // Previously called a "struct schedule_helper"
       this->next_coarser_window = new ScheduleWindow ( dt_min * len, dt_max, maxlen, this->now + dt_min * len);
       this->next_coarser_window->depth = this->depth + 1;
     }
-
-    // cout << "Bottom of ScheduleWindow constructor" << endl;
-
   }
 
 
   int insert_item ( SchedulableItem *item, bool put_neg_in_current ) {
 
-    // cout << "Top of insert_item" << endl;
     if (put_neg_in_current && item->t < this->now) {
       /* insert item into current list */
-
       this->current_count++;
       if (this->current_tail == NULL) {
         this->current = this->current_tail = item;
@@ -141,7 +132,6 @@ class ScheduleWindow {  // Previously called a "struct schedule_helper"
         this->current_tail = item;
         item->next = NULL;
       }
-      // cout << "Return from insert_item after putting negative in current" << endl;
       return 0;
     }
 
@@ -151,8 +141,6 @@ class ScheduleWindow {  // Previously called a "struct schedule_helper"
 
     if (nsteps < ((double)this->buf_len)) {
       /* item fits in array for this scale */
-      // cout << "Put item in current time scale" << endl;
-
       int i;
       if (nsteps < 0.0)
         i = this->index;
@@ -183,27 +171,17 @@ class ScheduleWindow {  // Previously called a "struct schedule_helper"
       }
     } else {
       /* item fits in array for coarser scale */
-      // cout << "Put item in coarser time scale" << endl;
-
       if (this->next_coarser_window == NULL) {
-        /*
-        this->next_coarser_window = create_scheduler(
-            this->dt * this->buf_len, this->dt * this->buf_len * this->buf_len, this->buf_len,
-            this->now + this->dt * (this->buf_len - this->index));
-        */
         this->next_coarser_window = new ScheduleWindow (
             this->dt * this->buf_len, this->dt * this->buf_len * this->buf_len, this->buf_len,
             this->now + this->dt * (this->buf_len - this->index));
         this->next_coarser_window->depth = this->depth + 1;
       }
 
-      /* insert item at coarser scale and insist that item is not placed in
-       * "current" list */
-      // cout << "Return from insert_item after scheduling coarser" << endl;
+      /* insert item at coarser scale and insist that item is not placed in "current" list */
       return this->next_coarser_window->insert_item(item, false);
     }
 
-    // cout << "Return from insert_item at very end" << endl;
     return 0;
   }
 

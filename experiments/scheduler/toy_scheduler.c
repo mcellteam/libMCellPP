@@ -820,7 +820,7 @@ int main ( int argc, char *argv[] ) {
   // struct abstract_element *ae;
   struct schedule_helper *timestep_window = NULL;
 
-  printf ( "Make a new timestep_window and insert items\n" );
+  printf ( "Use \"h\" for help.\n" );
 
 
   double dt_min = 1.0;
@@ -837,16 +837,16 @@ int main ( int argc, char *argv[] ) {
   char input[1000];
 
   do {
-  printf ( "\n-> " );
+    printf ( "\n-> " );
     scanf ( "%s", input );
-    if (input[0] == '?') {
-      printf ( "  h[elp]\n" );
-      printf ( "  c[reate]\n" );
-      printf ( "  i[nsert]t\n" );
-      printf ( "  s[tep]\n" );
-      printf ( "  n[ext]\n" );
-      printf ( "  d[ump]\n" );
-      printf ( "  q[uit]\n" );
+    if ((input[0] == 'h')||(input[0] == '?')) {
+      printf ( "  h  = Help\n" );
+      printf ( "  c  = Create a new scheduler (delete old if it exists)\n" );
+      printf ( "  d  = Dump scheduler internal structures\n" );
+      printf ( "  it = Insert at time t (no space between \"i\" and time)\n" );
+      printf ( "  s  = Step and Dump\n" );
+      printf ( "  n  = Next (no dump)\n" );
+      printf ( "  q  = Quit\n" );
     } else if (input[0] == 'c') {
       if (timestep_window != NULL) {
         printf ( "Deleting old scheduler\n" );

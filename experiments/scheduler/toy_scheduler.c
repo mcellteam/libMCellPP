@@ -754,6 +754,7 @@ void full_dump ( struct schedule_helper *helper, int depth ) {
   printf ( "\n" );
   indent(depth); printf ( "  circ buffer: " );
   for (i=0; i<2*(helper->buf_len); i++) {
+    if (i == helper->buf_len) printf ( " ### " );
     struct abstract_element *item;
     item = helper->circ_buf_head[i];
     if (item == NULL) {
@@ -775,10 +776,10 @@ void full_dump ( struct schedule_helper *helper, int depth ) {
 }
 
 void dump ( struct schedule_helper *helper, int depth ) {
-  indent(depth); printf ( "ScheduleWindow at depth %d, current=%d, dt=%g, now=%g\n", depth, helper->current != NULL, helper->dt, helper->now );
+  indent(depth); printf ( "ScheduleWindow at depth %d, current=%d, dt=%g, now=%g: [%g %g)\n", depth, helper->current != NULL, helper->dt, helper->now, helper->now, helper->now+(helper->buf_len*helper->dt) );
   int i;
   indent(depth); printf ( "  circ buffer: " );
-  for (i=0; i<2*(helper->buf_len); i++) {
+  for (i=0; i<1*(helper->buf_len); i++) {   // Only dump the first half (second is duplicates)
     struct abstract_element *item;
     item = helper->circ_buf_head[i];
     if (item == NULL) {
@@ -802,7 +803,7 @@ void dump ( struct schedule_helper *helper, int depth ) {
 
 void list ( struct schedule_helper *helper ) {
   int i;
-  for (i=0; i<1*(helper->buf_len); i++) {
+  for (i=0; i<1*(helper->buf_len); i++) {   // Only dump the first half (second is duplicates)
     struct abstract_element *item;
     item = helper->circ_buf_head[i];
     if (item != NULL) {
@@ -937,8 +938,10 @@ int main ( int argc, char *argv[] ) {
   double start_iterations = 0;
   int put_neg_in_current = 0;
 
-  char **scheduler_names;
-  struct schedule_helper **schedulers;
+  int next_element_index = 0;
+  int element_list_length = 0;
+  struct abstract_element **element_list = NULL;
+  double *element_time_list = NULL;
 
   timestep_window = create_scheduler(dt_min, dt_max, maxlen, start_iterations);
 
@@ -952,12 +955,15 @@ int main ( int argc, char *argv[] ) {
       printf ( "  l  = List all times in scheduler\n" );
       printf ( "  d  = Dump scheduler internal structures\n" );
       printf ( "  f  = Full dump of scheduler internal structures\n" );
-      printf ( "  it = Insert at time t (no space between \"i\" and time)\n" );
+      printf ( "  i# = Insert at time t=# (no space between \"i\" and time)\n" );
       printf ( "  s  = Step and Dump\n" );
       printf ( "  n  = Next (no dump)\n" );
-      printf ( "  rn = Run n steps (no dump)\n" );
+      printf ( "  r# = Run n steps (no dump)\n" );
       printf ( "  -  = Toggle \"put negative in current\" flag\n" );
+      printf ( "  w# = Window buffer width\n" );
       printf ( "  t  = Test case creation\n" );
+      printf ( "  v  = Show all assigned values\n" );
+      printf ( "  x# = Remove element #\n" );
       printf ( "  u  = Clean Up\n" );
       printf ( "  q  = Quit\n" );
     } else if (input[0] == 'c') {
@@ -966,13 +972,76 @@ int main ( int argc, char *argv[] ) {
         delete_scheduler ( timestep_window );
         timestep_window = NULL;
       }
+      if (element_list != NULL) {
+        free(element_list);
+        element_list = NULL;
+      }
+      if (element_time_list != NULL) {
+        free(element_time_list);
+        element_time_list = NULL;
+      }
       timestep_window = create_scheduler(dt_min, dt_max, maxlen, start_iterations);
+      next_element_index = 0;
       printf ( "Created a new scheduler" );
     } else if (input[0] == 'i') {
       double t;
       sscanf ( &input[1], "%lg", &t );
-      insert_item_at_time ( timestep_window, t, put_neg_in_current );
-      printf ( "Inserted at time %lg", t );
+
+      // Do the actual insertion
+      struct abstract_element *ae = new_element_at_time ( t );
+      schedule_insert(timestep_window, (void *)ae, put_neg_in_current);
+
+      // Keep track of items by ID for deletion
+      if (element_list == NULL) {
+        element_list_length = 1;
+        element_list = (struct abstract_element **) calloc ( element_list_length, sizeof(struct abstract_element *) );
+        element_time_list = (double *) calloc ( element_list_length, sizeof(double) );
+        int i;
+        for (i=0; i<element_list_length; i++) {
+          element_list[i] = NULL;
+          element_time_list[i] = -1;
+        }
+        next_element_index = 0;
+      }
+      if (next_element_index >= element_list_length) {
+        // printf ( "Expanding values list ...\n" );
+        // Allocate new arrays
+        int new_element_list_length = element_list_length*2;
+        struct abstract_element **new_element_list = (struct abstract_element **) calloc ( new_element_list_length, sizeof(struct abstract_element *) );
+        double *new_element_time_list = (double *) calloc ( new_element_list_length, sizeof(double) );
+        // Copy data into new arrays
+        int i;
+        for (i=0; i<element_list_length; i++) {
+          new_element_list[i] = element_list[i];
+          new_element_time_list[i] = element_time_list[i];
+        }
+        for (i=element_list_length; i<new_element_list_length; i++) {
+          new_element_list[i] = NULL;
+          new_element_time_list[i] = -1;
+        }
+        // Free old arrays and assign new arrays to pointers
+        free(element_list);
+        element_list = new_element_list;
+        free(element_time_list);
+        element_time_list = new_element_time_list;
+        element_list_length = new_element_list_length;
+      }
+      element_list[next_element_index] = ae;
+      element_time_list[next_element_index] = t;
+
+      printf ( "Inserted item #%d at time %lg", next_element_index, t );
+      next_element_index += 1;
+    } else if (input[0] == 'v') {
+      if (element_list == NULL) {
+        printf ( "No assigned value indexes" );
+      } else {
+        int i;
+        for (i=0; i<next_element_index; i++) {
+          //if (element_list[i]!=NULL) {
+            printf ( "  index %d stores t=%g at %p\n", i, element_time_list[i], (void *)(element_list[i]) );
+          //}
+        }
+      }
     } else if (input[0] == 's') {
         schedule_next ( timestep_window );
         dump ( timestep_window, 0 );
@@ -992,6 +1061,44 @@ int main ( int argc, char *argv[] ) {
         full_dump ( timestep_window, 0 );
     } else if (input[0] == 't') {
         create_test_case ( timestep_window, put_neg_in_current );
+    } else if (input[0] == 'w') {
+      sscanf ( &input[1], "%d", &maxlen );
+      printf ( "Window width will be %d for NEW schedulers", maxlen );
+    } else if (input[0] == 'x') {
+      int v_index;
+      sscanf ( &input[1], "%d", &v_index );
+      if ( (v_index<0) || (v_index>=next_element_index) ) {
+        printf ( "Index %d is outside of range: 0 <= i <= %d\n", v_index, next_element_index-1 );
+      } else {
+        if (element_list[v_index] == NULL) {
+          printf ( "Item %d is already deleted.", v_index );
+        } else {
+          schedule_deschedule ( timestep_window, (void *)(element_list[v_index]) );
+          element_list[v_index] = NULL;
+          printf ( "Removed item at time %g.\n", element_time_list[v_index] );
+          element_time_list[v_index] = -1.0;
+          int i;
+          int empty = 1;
+          for (i=0; i<next_element_index; i++) {
+            if (element_time_list[i] >= 0) {
+              empty = 0;
+              break;
+            }
+          }
+          if (empty==1) {
+            printf ( "All value indexes are empty, so remove the arrays.\n" );
+            if (element_list != NULL) {
+              free(element_list);
+              element_list = NULL;
+            }
+            if (element_time_list != NULL) {
+              free(element_time_list);
+              element_time_list = NULL;
+            }
+            next_element_index = 0;
+          }
+        }
+      }
     } else if (input[0] == 'u') {
         struct abstract_element *removed_items, *next_removed;
         removed_items = schedule_cleanup ( timestep_window, *is_defunct_element );
@@ -1009,7 +1116,6 @@ int main ( int argc, char *argv[] ) {
       printf ( "Unknown command: %s", input );
     }
   } while ( strcmp(input,"q") != 0 );
-
 
   return ( 0 );
 }

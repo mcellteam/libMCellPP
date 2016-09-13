@@ -705,6 +705,16 @@ void delete_scheduler(struct schedule_helper *sh) {
 ////////////////////////////////////
 ////////////////////////////////////
 
+/*
+int is_defunct_molecule(struct abstract_element *e) {
+  return ((struct abstract_molecule *)e)->properties == NULL;
+}
+*/
+
+int is_defunct_element (struct abstract_element *e) {
+  return 1;
+}
+
 
 struct abstract_element * new_element_at_time ( double t ) {
   struct abstract_element *ae = (struct abstract_element *) malloc ( sizeof(struct abstract_element) );
@@ -732,7 +742,7 @@ void full_dump ( struct schedule_helper *helper, int depth ) {
   indent(depth); printf ( "  dt=%g\n", helper->dt );
   indent(depth); printf ( "  dt_1=%g\n", helper->dt_1 );
   indent(depth); printf ( "  now=%g\n", helper->now );
-  indent(depth); printf ( "  count=%d (total here and afterward\n", helper->count );
+  indent(depth); printf ( "  count=%d (total here and afterward)\n", helper->count );
   indent(depth); printf ( "  buf_len=%d (number of slots in this buffer)\n", helper->buf_len );
   indent(depth); printf ( "  index=%d\n", helper->index );
 
@@ -790,94 +800,27 @@ void dump ( struct schedule_helper *helper, int depth ) {
 }
 
 
+void list ( struct schedule_helper *helper ) {
+  int i;
+  for (i=0; i<1*(helper->buf_len); i++) {
+    struct abstract_element *item;
+    item = helper->circ_buf_head[i];
+    if (item != NULL) {
+      do {
+        printf ( "  t = %g\n", item->t );
+        item = item->next;
+      } while (item != NULL);
+    }
+  }
 
-int main ( int argc, char *argv[] ) {
+  if (helper->next_scale != NULL) {
+    list ( helper->next_scale );
+  }
+}
 
-  printf( "\n\n" );
-  printf( "*****************************\n" );
-  printf( "*  Toy MCell Scheduler (C)  *\n" );
-  printf( "*****************************\n" );
-  printf( "\n" );
-
-  /*
-  // Scheduler functions:
-
-  struct abstract_element *ae_list_sort(struct abstract_element *ae);
-  struct schedule_helper *create_scheduler(double dt_min, double dt_max, int maxlen, double start_iterations);
-  int schedule_insert(struct schedule_helper *sh, void *data, int put_neg_in_current);
-  int schedule_deschedule(struct schedule_helper *sh, void *data);
-  int schedule_reschedule(struct schedule_helper *sh, void *data, double new_t);
-  //void schedule_excert(struct schedule_helper *sh,void *data,void *blank,int * size);
-  int schedule_advance(struct schedule_helper *sh, struct abstract_element **head,struct abstract_element **tail);
-  void *schedule_next(struct schedule_helper *sh);
-  void *schedule_peak(struct schedule_helper *sh);
-  #define schedule_add(x, y) schedule_insert((x), (y), 1)
-  int schedule_anticipate(struct schedule_helper *sh, double *t);
-  struct abstract_element *schedule_cleanup(struct schedule_helper *sh, int (*is_defunct)(struct abstract_element *e));
-  void delete_scheduler(struct schedule_helper *sh);
-  */
-
-  // struct abstract_element *ae;
-  struct schedule_helper *timestep_window = NULL;
-
-  printf ( "Use \"h\" for help.\n" );
-
-
-  double dt_min = 1.0;
-  double dt_max = 100.0;
-  int maxlen = 5;
-  double start_iterations = 0;
-  int put_neg_in_current = 0;
+void create_test_case (  struct schedule_helper *timestep_window, int put_neg_in_current ) {
 
   struct abstract_element *item_00, *item_01, *item_02, *item_03;
-
-  char **scheduler_names;
-  struct schedule_helper **schedulers;
-
-  char input[1000];
-
-  do {
-    printf ( "\n-> " );
-    scanf ( "%s", input );
-    if ((input[0] == 'h')||(input[0] == '?')) {
-      printf ( "  h  = Help\n" );
-      printf ( "  c  = Create a new scheduler (delete old if it exists)\n" );
-      printf ( "  d  = Dump scheduler internal structures\n" );
-      printf ( "  it = Insert at time t (no space between \"i\" and time)\n" );
-      printf ( "  s  = Step and Dump\n" );
-      printf ( "  n  = Next (no dump)\n" );
-      printf ( "  q  = Quit\n" );
-    } else if (input[0] == 'c') {
-      if (timestep_window != NULL) {
-        printf ( "Deleting old scheduler\n" );
-        delete_scheduler ( timestep_window );
-        timestep_window = NULL;
-      }
-      timestep_window = create_scheduler(dt_min, dt_max, maxlen, start_iterations);
-      printf ( "Created a new scheduler" );
-    } else if (input[0] == 'i') {
-      double t;
-      sscanf ( &input[1], "%lg", &t );
-        insert_item_at_time ( timestep_window, t, put_neg_in_current );
-      printf ( "Inserted at time %lg", t );
-    } else if (input[0] == 's') {
-        schedule_next ( timestep_window );
-        dump ( timestep_window, 0 );
-    } else if (input[0] == 'n') {
-        schedule_next ( timestep_window );
-    } else if (input[0] == 'd') {
-        dump ( timestep_window, 0 );
-    } else if (input[0] == 'q') {
-      printf ( "Exiting..." );
-    } else {
-      printf ( "Unknown command: %s", input );
-    }
-  } while ( strcmp(input,"q") != 0 );
-
-
-
-
-  timestep_window = create_scheduler(dt_min, dt_max, maxlen, start_iterations);
 
   insert_item_at_time ( timestep_window, 0.0, put_neg_in_current );
   insert_item_at_time ( timestep_window, 0.0, put_neg_in_current );
@@ -943,30 +886,130 @@ int main ( int argc, char *argv[] ) {
   insert_item_at_time ( timestep_window, 2000000.0, put_neg_in_current );
   insert_item_at_time ( timestep_window, 5000000.0, put_neg_in_current );
 
-
-  dump ( timestep_window, 0 );
+  // dump ( timestep_window, 0 );
 
   schedule_deschedule(timestep_window, item_00);
 
-  dump ( timestep_window, 0 );
+  // dump ( timestep_window, 0 );
 
   schedule_deschedule(timestep_window, item_02);
 
-  dump ( timestep_window, 0 );
+  // dump ( timestep_window, 0 );
+}
 
-  int step_num = 0;
-  for (step_num=0; step_num<0; step_num++) {
-    /*
-    struct abstract_element *saved_current = timestep_window->current;
-    if ( schedule_peak ( timestep_window ) == NULL ) {
-      printf ( "Schedule is empty\n" );
-      break;
+
+
+int main ( int argc, char *argv[] ) {
+
+  printf( "\n\n" );
+  printf( "*****************************\n" );
+  printf( "*  Toy MCell Scheduler (C)  *\n" );
+  printf( "*****************************\n" );
+  printf( "\n" );
+
+  /*
+  // Scheduler functions:
+
+  struct abstract_element *ae_list_sort(struct abstract_element *ae);
+  struct schedule_helper *create_scheduler(double dt_min, double dt_max, int maxlen, double start_iterations);
+  int schedule_insert(struct schedule_helper *sh, void *data, int put_neg_in_current);
+  int schedule_deschedule(struct schedule_helper *sh, void *data);
+  int schedule_reschedule(struct schedule_helper *sh, void *data, double new_t);
+  //void schedule_excert(struct schedule_helper *sh,void *data,void *blank,int * size);
+  int schedule_advance(struct schedule_helper *sh, struct abstract_element **head,struct abstract_element **tail);
+  void *schedule_next(struct schedule_helper *sh);
+  void *schedule_peak(struct schedule_helper *sh);
+  #define schedule_add(x, y) schedule_insert((x), (y), 1)
+  int schedule_anticipate(struct schedule_helper *sh, double *t);
+  struct abstract_element *schedule_cleanup(struct schedule_helper *sh, int (*is_defunct)(struct abstract_element *e));
+  void delete_scheduler(struct schedule_helper *sh);
+  */
+
+  // struct abstract_element *ae;
+  struct schedule_helper *timestep_window = NULL;
+
+  printf ( "Use \"h\" for help.\n" );
+
+
+  double dt_min = 1.0;
+  double dt_max = 100.0;
+  int maxlen = 5;
+  double start_iterations = 0;
+  int put_neg_in_current = 0;
+
+  char **scheduler_names;
+  struct schedule_helper **schedulers;
+
+  timestep_window = create_scheduler(dt_min, dt_max, maxlen, start_iterations);
+
+  char input[1000];
+  do {
+    printf ( "\n-> " );
+    scanf ( "%s", input );
+    if ((input[0] == 'h')||(input[0] == '?')) {
+      printf ( "  h  = Help\n" );
+      printf ( "  c  = Create a new scheduler (delete old if it exists)\n" );
+      printf ( "  l  = List all times in scheduler\n" );
+      printf ( "  d  = Dump scheduler internal structures\n" );
+      printf ( "  f  = Full dump of scheduler internal structures\n" );
+      printf ( "  it = Insert at time t (no space between \"i\" and time)\n" );
+      printf ( "  s  = Step and Dump\n" );
+      printf ( "  n  = Next (no dump)\n" );
+      printf ( "  rn = Run n steps (no dump)\n" );
+      printf ( "  -  = Toggle \"put negative in current\" flag\n" );
+      printf ( "  t  = Test case creation\n" );
+      printf ( "  u  = Clean Up\n" );
+      printf ( "  q  = Quit\n" );
+    } else if (input[0] == 'c') {
+      if (timestep_window != NULL) {
+        printf ( "Deleting old scheduler\n" );
+        delete_scheduler ( timestep_window );
+        timestep_window = NULL;
+      }
+      timestep_window = create_scheduler(dt_min, dt_max, maxlen, start_iterations);
+      printf ( "Created a new scheduler" );
+    } else if (input[0] == 'i') {
+      double t;
+      sscanf ( &input[1], "%lg", &t );
+      insert_item_at_time ( timestep_window, t, put_neg_in_current );
+      printf ( "Inserted at time %lg", t );
+    } else if (input[0] == 's') {
+        schedule_next ( timestep_window );
+        dump ( timestep_window, 0 );
+    } else if (input[0] == 'n') {
+        schedule_next ( timestep_window );
+    } else if (input[0] == 'r') {
+      long n, i;
+      sscanf ( &input[1], "%ld", &n );
+      for (i=0; i<n; i++) {
+        schedule_next ( timestep_window );
+      }
+    } else if (input[0] == 'd') {
+        dump ( timestep_window, 0 );
+    } else if (input[0] == 'l') {
+        list ( timestep_window );
+    } else if (input[0] == 'f') {
+        full_dump ( timestep_window, 0 );
+    } else if (input[0] == 't') {
+        create_test_case ( timestep_window, put_neg_in_current );
+    } else if (input[0] == 'u') {
+        struct abstract_element *removed_items, *next_removed;
+        removed_items = schedule_cleanup ( timestep_window, *is_defunct_element );
+        next_removed = removed_items;
+        while (next_removed != NULL) {
+          printf ( "   Removed item at: %g\n", next_removed->t );
+          next_removed = next_removed->next;
+        }
+    } else if (input[0] == '-') {
+        put_neg_in_current = !put_neg_in_current;
+        printf ( "put_neg_in_current = %d\n", put_neg_in_current );
+    } else if (input[0] == 'q') {
+      printf ( "Exiting..." );
+    } else {
+      printf ( "Unknown command: %s", input );
     }
-    timestep_window->current = saved_current;
-    */
-    schedule_next ( timestep_window );
-    dump ( timestep_window, 0 );
-  }
+  } while ( strcmp(input,"q") != 0 );
+
 
   return ( 0 );
 }

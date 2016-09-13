@@ -1,3 +1,7 @@
+// This is intended to be the MCell scheduler with the following changes:
+//   Additional comments have been added using "//" prefix
+//   Additional debugging / user interface code has been added at the end
+
 
 // #include "config.h?"
 
@@ -234,10 +238,10 @@ struct schedule_helper *create_scheduler(double dt_min, double dt_max,
     goto failure;
 
   sh->circ_buf_head = (struct abstract_element **)calloc(
-      len * 2, sizeof(struct abstract_element*));
+      len * 2, sizeof(struct abstract_element*));           // Why 2 times len? Is this to allow the "tail" to be past the actual data?
   if (sh->circ_buf_head == NULL)
     goto failure;
-  sh->circ_buf_tail = sh->circ_buf_head + len;
+  sh->circ_buf_tail = sh->circ_buf_head + len;              // This puts the tail beyond the normal buffer data but in the additional (2xlen) elements.
 
   if (sh->dt * sh->buf_len < dt_max) {
     sh->next_scale =
@@ -296,7 +300,7 @@ int schedule_insert(struct schedule_helper *sh, void *data, int put_neg_in_curre
     else
       i = (int)nsteps + sh->index;
     if (i >= sh->buf_len)
-      i -= sh->buf_len;
+      i -= sh->buf_len;    // This wraps the pointer as if by "mod"
 
     if (sh->circ_buf_tail[i] == NULL) {
       sh->circ_buf_count[i] = 1;
@@ -332,7 +336,7 @@ int schedule_insert(struct schedule_helper *sh, void *data, int put_neg_in_curre
 
     /* insert item at coarser scale and insist that item is not placed in
      * "current" list */
-    return schedule_insert(sh->next_scale, data, 0);
+    return schedule_insert(sh->next_scale, data, 0);        // Recursive call to schedule_insert
   }
 
   return 0;
@@ -420,7 +424,7 @@ int schedule_deschedule(struct schedule_helper *sh, void *data) {
     if (!sh->next_scale)
       return 1;
 
-    if (!schedule_deschedule(sh->next_scale, data)) {
+    if (!schedule_deschedule(sh->next_scale, data)) { /* <-- Recursive call to schedule_deschedule */
       --sh->count;
       return 0;
     } else
@@ -547,6 +551,9 @@ schedule_peak:
   This is very similar to schedule_next, but the idea here is that we don't
   want to change the state of anything (specifically current_count).
   XXX: The caller needs to reset sh->current when it's done "peaking"
+
+  // Note that this function is only used by "modify_rate_constant" in mcell_reactions.
+  // It appears that modify_rate_constant saves and resets its current after "peaking" as advised.
 *************************************************************************/
 void *schedule_peak(struct schedule_helper *sh) {
   void *data;
@@ -690,11 +697,28 @@ void delete_scheduler(struct schedule_helper *sh) {
   }
 }
 
-void insert_item_at_time ( struct schedule_helper *my_helper, double t, int put_neg_in_current ) {
+
+
+////////////////////////////////////
+////////////////////////////////////
+/// Testing functions start here ///
+////////////////////////////////////
+////////////////////////////////////
+
+
+struct abstract_element * new_element_at_time ( double t ) {
   struct abstract_element *ae = (struct abstract_element *) malloc ( sizeof(struct abstract_element) );
   ae->t = t;
-  schedule_insert(my_helper, (void *)ae, put_neg_in_current);
+  ae->next = NULL;
+  return ae;
 }
+
+struct abstract_element * insert_item_at_time ( struct schedule_helper *my_helper, double t, int put_neg_in_current ) {
+  struct abstract_element *ae = new_element_at_time ( t );
+  schedule_insert(my_helper, (void *)ae, put_neg_in_current);
+  return ae;
+}
+
 
 void indent ( int depth ) {
   int i;
@@ -703,17 +727,17 @@ void indent ( int depth ) {
   }
 }
 
-void dump ( struct schedule_helper *helper, int depth ) {
-  indent(depth); printf ( "ScheduleWindow at depth %d\n", depth );
+void full_dump ( struct schedule_helper *helper, int depth ) {
+  indent(depth); printf ( "ScheduleWindow at depth %d, current=%d\n", depth, helper->current != NULL );
   indent(depth); printf ( "  dt=%g\n", helper->dt );
   indent(depth); printf ( "  dt_1=%g\n", helper->dt_1 );
   indent(depth); printf ( "  now=%g\n", helper->now );
-  indent(depth); printf ( "  count=%d\n", helper->count );
-  indent(depth); printf ( "  buf_len=%d\n", helper->buf_len );
+  indent(depth); printf ( "  count=%d (total here and afterward\n", helper->count );
+  indent(depth); printf ( "  buf_len=%d (number of slots in this buffer)\n", helper->buf_len );
   indent(depth); printf ( "  index=%d\n", helper->index );
 
   int i;
-  indent(depth); printf ( "  count array: " );
+  indent(depth); printf ( "  count array (count in each bin): " );
   for (i=0; i<helper->buf_len; i++) {
     printf ( " %d", helper->circ_buf_count[i] );
   }
@@ -736,9 +760,36 @@ void dump ( struct schedule_helper *helper, int depth ) {
   printf ( "\n" );
 
   if (helper->next_scale != NULL) {
+    full_dump ( helper->next_scale, depth+1 );
+  }
+}
+
+void dump ( struct schedule_helper *helper, int depth ) {
+  indent(depth); printf ( "ScheduleWindow at depth %d, current=%d, dt=%g, now=%g\n", depth, helper->current != NULL, helper->dt, helper->now );
+  int i;
+  indent(depth); printf ( "  circ buffer: " );
+  for (i=0; i<2*(helper->buf_len); i++) {
+    struct abstract_element *item;
+    item = helper->circ_buf_head[i];
+    if (item == NULL) {
+      printf ( "[_]" );
+    } else {
+      printf ( "[ " );
+      do {
+        printf ( "%g ", item->t );
+        item = item->next;
+      } while (item != NULL);
+      printf ( "]" );
+    }
+  }
+  printf ( "\n" );
+
+  if (helper->next_scale != NULL) {
     dump ( helper->next_scale, depth+1 );
   }
 }
+
+
 
 int main ( int argc, char *argv[] ) {
 
@@ -748,13 +799,29 @@ int main ( int argc, char *argv[] ) {
   printf( "*****************************\n" );
   printf( "\n" );
 
+  /*
+  // Scheduler functions:
+
+  struct abstract_element *ae_list_sort(struct abstract_element *ae);
+  struct schedule_helper *create_scheduler(double dt_min, double dt_max, int maxlen, double start_iterations);
+  int schedule_insert(struct schedule_helper *sh, void *data, int put_neg_in_current);
+  int schedule_deschedule(struct schedule_helper *sh, void *data);
+  int schedule_reschedule(struct schedule_helper *sh, void *data, double new_t);
+  //void schedule_excert(struct schedule_helper *sh,void *data,void *blank,int * size);
+  int schedule_advance(struct schedule_helper *sh, struct abstract_element **head,struct abstract_element **tail);
+  void *schedule_next(struct schedule_helper *sh);
+  void *schedule_peak(struct schedule_helper *sh);
+  #define schedule_add(x, y) schedule_insert((x), (y), 1)
+  int schedule_anticipate(struct schedule_helper *sh, double *t);
+  struct abstract_element *schedule_cleanup(struct schedule_helper *sh, int (*is_defunct)(struct abstract_element *e));
+  void delete_scheduler(struct schedule_helper *sh);
+  */
+
   // struct abstract_element *ae;
-  struct schedule_helper *timestep_window;
+  struct schedule_helper *timestep_window = NULL;
 
   printf ( "Make a new timestep_window and insert items\n" );
 
-
-  // The following code is the same in C or C++
 
   double dt_min = 1.0;
   double dt_max = 100.0;
@@ -762,9 +829,61 @@ int main ( int argc, char *argv[] ) {
   double start_iterations = 0;
   int put_neg_in_current = 0;
 
+  struct abstract_element *item_00, *item_01, *item_02, *item_03;
+
+  char **scheduler_names;
+  struct schedule_helper **schedulers;
+
+  char input[1000];
+
+  do {
+  printf ( "\n-> " );
+    scanf ( "%s", input );
+    if (input[0] == '?') {
+      printf ( "  h[elp]\n" );
+      printf ( "  c[reate]\n" );
+      printf ( "  i[nsert]t\n" );
+      printf ( "  s[tep]\n" );
+      printf ( "  n[ext]\n" );
+      printf ( "  d[ump]\n" );
+      printf ( "  q[uit]\n" );
+    } else if (input[0] == 'c') {
+      if (timestep_window != NULL) {
+        printf ( "Deleting old scheduler\n" );
+        delete_scheduler ( timestep_window );
+        timestep_window = NULL;
+      }
+      timestep_window = create_scheduler(dt_min, dt_max, maxlen, start_iterations);
+      printf ( "Created a new scheduler" );
+    } else if (input[0] == 'i') {
+      double t;
+      sscanf ( &input[1], "%lg", &t );
+        insert_item_at_time ( timestep_window, t, put_neg_in_current );
+      printf ( "Inserted at time %lg", t );
+    } else if (input[0] == 's') {
+        schedule_next ( timestep_window );
+        dump ( timestep_window, 0 );
+    } else if (input[0] == 'n') {
+        schedule_next ( timestep_window );
+    } else if (input[0] == 'd') {
+        dump ( timestep_window, 0 );
+    } else if (input[0] == 'q') {
+      printf ( "Exiting..." );
+    } else {
+      printf ( "Unknown command: %s", input );
+    }
+  } while ( strcmp(input,"q") != 0 );
+
+
+
+
   timestep_window = create_scheduler(dt_min, dt_max, maxlen, start_iterations);
 
   insert_item_at_time ( timestep_window, 0.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 0.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 0.1, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 0.3, put_neg_in_current );
+
   insert_item_at_time ( timestep_window, 0.0, put_neg_in_current );
   insert_item_at_time ( timestep_window, 0.0, put_neg_in_current );
   insert_item_at_time ( timestep_window, 0.1, put_neg_in_current );
@@ -772,11 +891,32 @@ int main ( int argc, char *argv[] ) {
   insert_item_at_time ( timestep_window, 0.3, put_neg_in_current );
   insert_item_at_time ( timestep_window, 0.9, put_neg_in_current );
   insert_item_at_time ( timestep_window, 1.3, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 1.5, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 1.7, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 2.1, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 2.9, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 2.7, put_neg_in_current );
   insert_item_at_time ( timestep_window, 2.0, put_neg_in_current );
+
   insert_item_at_time ( timestep_window, 3.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 3.5, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 3.9, put_neg_in_current );
+
+  insert_item_at_time ( timestep_window, 4.9, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 4.99, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 4.999, put_neg_in_current );
   insert_item_at_time ( timestep_window, 5.0, put_neg_in_current );
-  insert_item_at_time ( timestep_window, 10.0, put_neg_in_current );
+  insert_item_at_time ( timestep_window, 5.1, put_neg_in_current );
+  item_00 = insert_item_at_time ( timestep_window, 10.0, put_neg_in_current );
   insert_item_at_time ( timestep_window, 20.0, put_neg_in_current );
+
+  schedule_reschedule(timestep_window, item_00, 30.0);
+
+  schedule_insert ( timestep_window, item_01=(void *)(new_element_at_time ( 29.0 )), put_neg_in_current );
+  schedule_insert ( timestep_window, item_02=(void *)(new_element_at_time ( 31.0 )), put_neg_in_current );
+  schedule_insert ( timestep_window, item_03=(void *)(new_element_at_time ( 40.0 )), put_neg_in_current );
+
+
   insert_item_at_time ( timestep_window, 21.0, put_neg_in_current );
   insert_item_at_time ( timestep_window, 22.0, put_neg_in_current );
   insert_item_at_time ( timestep_window, 23.0, put_neg_in_current );
@@ -805,6 +945,28 @@ int main ( int argc, char *argv[] ) {
 
 
   dump ( timestep_window, 0 );
+
+  schedule_deschedule(timestep_window, item_00);
+
+  dump ( timestep_window, 0 );
+
+  schedule_deschedule(timestep_window, item_02);
+
+  dump ( timestep_window, 0 );
+
+  int step_num = 0;
+  for (step_num=0; step_num<0; step_num++) {
+    /*
+    struct abstract_element *saved_current = timestep_window->current;
+    if ( schedule_peak ( timestep_window ) == NULL ) {
+      printf ( "Schedule is empty\n" );
+      break;
+    }
+    timestep_window->current = saved_current;
+    */
+    schedule_next ( timestep_window );
+    dump ( timestep_window, 0 );
+  }
 
   return ( 0 );
 }

@@ -2,13 +2,63 @@
 //   Additional comments have been added using "//" prefix
 //   Additional debugging / user interface code has been added at the end
 
+/******************************************************************************
+ *
+ * Copyright (C) 2006-2015 by
+ * The Salk Institute for Biological Studies and
+ * Pittsburgh Supercomputing Center, Carnegie Mellon University
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
+ * USA.
+ *
+******************************************************************************/
 
-// #include "config.h?"
+// #include "config.h"  /// Not used ... dynamically generated from config-nix.h?
 
 #include <float.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+
+// #include "sched_util.h"
+
+/****
+  Scheduler functions:
+
+  struct abstract_element*   ae_list_sort         (struct abstract_element *ae);
+  struct schedule_helper*    create_scheduler     (double dt_min, double dt_max, int maxlen, double start_iterations);
+  int                        schedule_insert      (struct schedule_helper *sh, void *data, int put_neg_in_current);
+  int                        schedule_deschedule  (struct schedule_helper *sh, void *data);
+  int                        schedule_reschedule  (struct schedule_helper *sh, void *data, double new_t);
+  //void                     schedule_excert      (struct schedule_helper *sh,void *data,void *blank,int * size);
+  int                        schedule_advance     (struct schedule_helper *sh, struct abstract_element **head,struct abstract_element **tail);
+  void *                     schedule_next        (struct schedule_helper *sh);
+  void *                     schedule_peak        (struct schedule_helper *sh);
+  #define                    schedule_add         (x, y) schedule_insert((x), (y), 1)
+  int                        schedule_anticipate  (struct schedule_helper *sh, double *t);
+  struct abstract_element *  schedule_cleanup     (struct schedule_helper *sh, int (*is_defunct)(struct abstract_element *e));
+  void                       delete_scheduler     (struct schedule_helper *sh);
+****/
+
+
+
+/*******************************************************************************/
+/*******************************************************************************/
+/***************         sched_util.h starts here             ******************/
+/*******************************************************************************/
+/*******************************************************************************/
 
 
 /* Everything managed by scheduler must begin as if it were derived from
@@ -72,6 +122,11 @@ void delete_scheduler(struct schedule_helper *sh);
 
 
 
+/*******************************************************************************/
+/*******************************************************************************/
+/***************         sched_util.c starts here             ******************/
+/*******************************************************************************/
+/*******************************************************************************/
 
 
 /*************************************************************************
@@ -699,11 +754,23 @@ void delete_scheduler(struct schedule_helper *sh) {
 
 
 
-////////////////////////////////////
-////////////////////////////////////
-/// Testing functions start here ///
-////////////////////////////////////
-////////////////////////////////////
+
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+/***********                                                         ***********/
+/***********            Testing functions start here                 ***********/
+/***********                                                         ***********/
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+
 
 /*
 int is_defunct_molecule(struct abstract_element *e) {
@@ -741,6 +808,18 @@ void full_dump ( struct schedule_helper *helper, int depth ) {
   indent(depth); printf ( "ScheduleWindow at depth %d, current=%d\n", depth, helper->current != NULL );
   indent(depth); printf ( "  dt=%g\n", helper->dt );
   indent(depth); printf ( "  dt_1=%g\n", helper->dt_1 );
+  if (helper->current == NULL) {
+     indent(depth); printf ( "  current is NULL\n" );
+  } else {
+     indent(depth); printf ( "  current = [ " );
+     struct abstract_element *c;
+     c = helper->current;
+     while (c != NULL) {
+       printf ( "%g ", c->t );
+       c = c->next;
+     }
+     printf ( "]\n" );
+  }
   indent(depth); printf ( "  now=%g\n", helper->now );
   indent(depth); printf ( "  count=%d (total here and afterward)\n", helper->count );
   indent(depth); printf ( "  buf_len=%d (number of slots in this buffer)\n", helper->buf_len );
@@ -778,6 +857,18 @@ void full_dump ( struct schedule_helper *helper, int depth ) {
 void dump ( struct schedule_helper *helper, int depth ) {
   indent(depth); printf ( "ScheduleWindow at depth %d, current=%d, dt=%g, now=%g: [%g %g)\n", depth, helper->current != NULL, helper->dt, helper->now, helper->now, helper->now+(helper->buf_len*helper->dt) );
   int i;
+  if (helper->current == NULL) {
+     indent(depth); printf ( "  current is NULL\n" );
+  } else {
+     indent(depth); printf ( "  current = [ " );
+     struct abstract_element *c;
+     c = helper->current;
+     while (c != NULL) {
+       printf ( "%g ", c->t );
+       c = c->next;
+     }
+     printf ( "]\n" );
+  }
   indent(depth); printf ( "  circ buffer: " );
   for (i=0; i<1*(helper->buf_len); i++) {   // Only dump the first half (second is duplicates)
     struct abstract_element *item;
@@ -908,24 +999,6 @@ int main ( int argc, char *argv[] ) {
   printf( "*****************************\n" );
   printf( "\n" );
 
-  /*
-  // Scheduler functions:
-
-  struct abstract_element *ae_list_sort(struct abstract_element *ae);
-  struct schedule_helper *create_scheduler(double dt_min, double dt_max, int maxlen, double start_iterations);
-  int schedule_insert(struct schedule_helper *sh, void *data, int put_neg_in_current);
-  int schedule_deschedule(struct schedule_helper *sh, void *data);
-  int schedule_reschedule(struct schedule_helper *sh, void *data, double new_t);
-  //void schedule_excert(struct schedule_helper *sh,void *data,void *blank,int * size);
-  int schedule_advance(struct schedule_helper *sh, struct abstract_element **head,struct abstract_element **tail);
-  void *schedule_next(struct schedule_helper *sh);
-  void *schedule_peak(struct schedule_helper *sh);
-  #define schedule_add(x, y) schedule_insert((x), (y), 1)
-  int schedule_anticipate(struct schedule_helper *sh, double *t);
-  struct abstract_element *schedule_cleanup(struct schedule_helper *sh, int (*is_defunct)(struct abstract_element *e));
-  void delete_scheduler(struct schedule_helper *sh);
-  */
-
   // struct abstract_element *ae;
   struct schedule_helper *timestep_window = NULL;
 
@@ -961,7 +1034,8 @@ int main ( int argc, char *argv[] ) {
       printf ( "  r# = Run n steps (no dump)\n" );
       printf ( "  -  = Toggle \"put negative in current\" flag\n" );
       printf ( "  w# = Window buffer width\n" );
-      printf ( "  t  = Test case creation\n" );
+      printf ( "  t  = Test case creation (fixed case)\n" );
+      printf ( "  t# = Test case creation (distribution)\n" );
       printf ( "  v  = Show all assigned values\n" );
       printf ( "  x# = Remove element #\n" );
       printf ( "  u  = Clean Up\n" );
@@ -1043,15 +1117,25 @@ int main ( int argc, char *argv[] ) {
         }
       }
     } else if (input[0] == 's') {
-        schedule_next ( timestep_window );
+        struct abstract_element *ae = (struct abstract_element *) schedule_next ( timestep_window );
+        if (ae == NULL) {
+          printf ( "No Event returned by schedule_next\n" );
+        } else {
+          printf ( "Handling event at t=%g\n", ae->t );
+        }
         dump ( timestep_window, 0 );
     } else if (input[0] == 'n') {
-        schedule_next ( timestep_window );
+        struct abstract_element *ae = (struct abstract_element *) schedule_next ( timestep_window );
     } else if (input[0] == 'r') {
       long n, i;
       sscanf ( &input[1], "%ld", &n );
       for (i=0; i<n; i++) {
-        schedule_next ( timestep_window );
+        struct abstract_element *ae = (struct abstract_element *) schedule_next ( timestep_window );
+        if (ae == NULL) {
+          printf ( "No Event returned by schedule_next\n" );
+        } else {
+          printf ( "Handling event at t=%g\n", ae->t );
+        }
       }
     } else if (input[0] == 'd') {
         dump ( timestep_window, 0 );
@@ -1060,7 +1144,26 @@ int main ( int argc, char *argv[] ) {
     } else if (input[0] == 'f') {
         full_dump ( timestep_window, 0 );
     } else if (input[0] == 't') {
-        create_test_case ( timestep_window, put_neg_in_current );
+        if (strlen(input) == 1) {
+          create_test_case ( timestep_window, put_neg_in_current );
+        } else {
+          // Generate test data
+          double norm;
+          int num;
+          sscanf ( &input[1], "%d", &num );
+          norm = num;
+          int n;
+          for (n=0; n<num; n++) {
+            int i;
+            norm = -6.0;
+            for (i=0; i<12; i++) {
+              norm += drand48();
+            }
+            // printf ( "gaussian = %lg\n", norm );
+            insert_item_at_time ( timestep_window, norm*norm*num*num, put_neg_in_current );
+          }
+        }
+        // list ( timestep_window );
     } else if (input[0] == 'w') {
       sscanf ( &input[1], "%d", &maxlen );
       printf ( "Window width will be %d for NEW schedulers", maxlen );

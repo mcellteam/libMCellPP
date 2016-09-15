@@ -68,6 +68,7 @@ struct abstract_element {
   double t; /* Time at which the element is scheduled */
 };
 
+
 /* Implements a multi-scale, discretized event scheduler */
 struct schedule_helper {
   struct schedule_helper *next_scale; /* Next coarser time scale */
@@ -752,6 +753,162 @@ void delete_scheduler(struct schedule_helper *sh) {
   }
 }
 
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+/***********                                                         ***********/
+/***********         Debug and Testing functions start here          ***********/
+/***********                                                         ***********/
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+
+
+
+
+/*
+int is_defunct_molecule(struct abstract_element *e) {
+  return ((struct abstract_molecule *)e)->properties == NULL;
+}
+*/
+
+int is_defunct_element (struct abstract_element *e) {
+  return 1;
+}
+
+
+struct abstract_element * new_element_at_time ( double t ) {
+  struct abstract_element *ae = (struct abstract_element *) malloc ( sizeof(struct abstract_element) );
+  ae->t = t;
+  ae->next = NULL;
+  return ae;
+}
+
+struct abstract_element * insert_item_at_time ( struct schedule_helper *my_helper, double t, int put_neg_in_current ) {
+  struct abstract_element *ae = new_element_at_time ( t );
+  schedule_insert(my_helper, (void *)ae, put_neg_in_current);
+  return ae;
+}
+
+
+void indent ( int depth ) {
+  int i;
+  for (i=0; i<depth; i++) {
+    printf ( "  " );
+  }
+}
+
+void full_dump ( struct schedule_helper *helper, int depth ) {
+  indent(depth); printf ( "ScheduleWindow at depth %d, current=%d\n", depth, helper->current != NULL );
+  indent(depth); printf ( "  dt=%g\n", helper->dt );
+  indent(depth); printf ( "  dt_1=%g\n", helper->dt_1 );
+  if (helper->current == NULL) {
+     indent(depth); printf ( "  current is NULL\n" );
+  } else {
+     indent(depth); printf ( "  current = [ " );
+     struct abstract_element *c;
+     c = helper->current;
+     while (c != NULL) {
+       printf ( "%g ", c->t );
+       c = c->next;
+     }
+     printf ( "]\n" );
+  }
+  indent(depth); printf ( "  now=%g\n", helper->now );
+  indent(depth); printf ( "  count=%d (total here and afterward)\n", helper->count );
+  indent(depth); printf ( "  buf_len=%d (number of slots in this buffer)\n", helper->buf_len );
+  indent(depth); printf ( "  index=%d\n", helper->index );
+
+  int i;
+  indent(depth); printf ( "  count array (count in each bin): " );
+  for (i=0; i<helper->buf_len; i++) {
+    printf ( " %d", helper->circ_buf_count[i] );
+  }
+  printf ( "\n" );
+  indent(depth); printf ( "  circ buffer: " );
+  for (i=0; i<2*(helper->buf_len); i++) {
+    if (i == helper->buf_len) printf ( " ### " );
+    struct abstract_element *item;
+    item = helper->circ_buf_head[i];
+    if (item == NULL) {
+      printf ( "[_]" );
+    } else {
+      printf ( "[ " );
+      do {
+        printf ( "%g ", item->t );
+        item = item->next;
+      } while (item != NULL);
+      printf ( "]" );
+    }
+  }
+  printf ( "\n" );
+
+  if (helper->next_scale != NULL) {
+    full_dump ( helper->next_scale, depth+1 );
+  }
+}
+
+void dump ( struct schedule_helper *helper, int depth ) {
+  indent(depth); printf ( "ScheduleWindow at depth %d, current=%d, dt=%g, now=%g: [%g %g)\n", depth, helper->current != NULL, helper->dt, helper->now, helper->now, helper->now+(helper->buf_len*helper->dt) );
+  int i;
+  if (helper->current == NULL) {
+     indent(depth); printf ( "  current is NULL\n" );
+  } else {
+     indent(depth); printf ( "  current = [ " );
+     struct abstract_element *c;
+     c = helper->current;
+     while (c != NULL) {
+       printf ( "%g ", c->t );
+       c = c->next;
+     }
+     printf ( "]\n" );
+  }
+  indent(depth); printf ( "  circ buffer: " );
+  for (i=0; i<1*(helper->buf_len); i++) {   // Only dump the first half (second is duplicates)
+    struct abstract_element *item;
+    item = helper->circ_buf_head[i];
+    if (item == NULL) {
+      printf ( "[_]" );
+    } else {
+      printf ( "[ " );
+      do {
+        printf ( "%g ", item->t );
+        item = item->next;
+      } while (item != NULL);
+      printf ( "]" );
+    }
+  }
+  printf ( "\n" );
+
+  if (helper->next_scale != NULL) {
+    dump ( helper->next_scale, depth+1 );
+  }
+}
+
+
+void list ( struct schedule_helper *helper ) {
+  int i;
+  for (i=0; i<1*(helper->buf_len); i++) {   // Only dump the first half (second is duplicates)
+    struct abstract_element *item;
+    item = helper->circ_buf_head[i];
+    if (item != NULL) {
+      do {
+        printf ( "  t = %g\n", item->t );
+        item = item->next;
+      } while (item != NULL);
+    }
+  }
+
+  if (helper->next_scale != NULL) {
+    list ( helper->next_scale );
+  }
+}
 
 
 
@@ -929,161 +1086,6 @@ int validate_main()
 }
 
 
-/*******************************************************************************/
-/*******************************************************************************/
-/*******************************************************************************/
-/*******************************************************************************/
-/*******************************************************************************/
-/*******************************************************************************/
-/***********                                                         ***********/
-/***********            Testing functions start here                 ***********/
-/***********                                                         ***********/
-/*******************************************************************************/
-/*******************************************************************************/
-/*******************************************************************************/
-/*******************************************************************************/
-/*******************************************************************************/
-/*******************************************************************************/
-
-
-/*
-int is_defunct_molecule(struct abstract_element *e) {
-  return ((struct abstract_molecule *)e)->properties == NULL;
-}
-*/
-
-int is_defunct_element (struct abstract_element *e) {
-  return 1;
-}
-
-
-struct abstract_element * new_element_at_time ( double t ) {
-  struct abstract_element *ae = (struct abstract_element *) malloc ( sizeof(struct abstract_element) );
-  ae->t = t;
-  ae->next = NULL;
-  return ae;
-}
-
-struct abstract_element * insert_item_at_time ( struct schedule_helper *my_helper, double t, int put_neg_in_current ) {
-  struct abstract_element *ae = new_element_at_time ( t );
-  schedule_insert(my_helper, (void *)ae, put_neg_in_current);
-  return ae;
-}
-
-
-void indent ( int depth ) {
-  int i;
-  for (i=0; i<depth; i++) {
-    printf ( "  " );
-  }
-}
-
-void full_dump ( struct schedule_helper *helper, int depth ) {
-  indent(depth); printf ( "ScheduleWindow at depth %d, current=%d\n", depth, helper->current != NULL );
-  indent(depth); printf ( "  dt=%g\n", helper->dt );
-  indent(depth); printf ( "  dt_1=%g\n", helper->dt_1 );
-  if (helper->current == NULL) {
-     indent(depth); printf ( "  current is NULL\n" );
-  } else {
-     indent(depth); printf ( "  current = [ " );
-     struct abstract_element *c;
-     c = helper->current;
-     while (c != NULL) {
-       printf ( "%g ", c->t );
-       c = c->next;
-     }
-     printf ( "]\n" );
-  }
-  indent(depth); printf ( "  now=%g\n", helper->now );
-  indent(depth); printf ( "  count=%d (total here and afterward)\n", helper->count );
-  indent(depth); printf ( "  buf_len=%d (number of slots in this buffer)\n", helper->buf_len );
-  indent(depth); printf ( "  index=%d\n", helper->index );
-
-  int i;
-  indent(depth); printf ( "  count array (count in each bin): " );
-  for (i=0; i<helper->buf_len; i++) {
-    printf ( " %d", helper->circ_buf_count[i] );
-  }
-  printf ( "\n" );
-  indent(depth); printf ( "  circ buffer: " );
-  for (i=0; i<2*(helper->buf_len); i++) {
-    if (i == helper->buf_len) printf ( " ### " );
-    struct abstract_element *item;
-    item = helper->circ_buf_head[i];
-    if (item == NULL) {
-      printf ( "[_]" );
-    } else {
-      printf ( "[ " );
-      do {
-        printf ( "%g ", item->t );
-        item = item->next;
-      } while (item != NULL);
-      printf ( "]" );
-    }
-  }
-  printf ( "\n" );
-
-  if (helper->next_scale != NULL) {
-    full_dump ( helper->next_scale, depth+1 );
-  }
-}
-
-void dump ( struct schedule_helper *helper, int depth ) {
-  indent(depth); printf ( "ScheduleWindow at depth %d, current=%d, dt=%g, now=%g: [%g %g)\n", depth, helper->current != NULL, helper->dt, helper->now, helper->now, helper->now+(helper->buf_len*helper->dt) );
-  int i;
-  if (helper->current == NULL) {
-     indent(depth); printf ( "  current is NULL\n" );
-  } else {
-     indent(depth); printf ( "  current = [ " );
-     struct abstract_element *c;
-     c = helper->current;
-     while (c != NULL) {
-       printf ( "%g ", c->t );
-       c = c->next;
-     }
-     printf ( "]\n" );
-  }
-  indent(depth); printf ( "  circ buffer: " );
-  for (i=0; i<1*(helper->buf_len); i++) {   // Only dump the first half (second is duplicates)
-    struct abstract_element *item;
-    item = helper->circ_buf_head[i];
-    if (item == NULL) {
-      printf ( "[_]" );
-    } else {
-      printf ( "[ " );
-      do {
-        printf ( "%g ", item->t );
-        item = item->next;
-      } while (item != NULL);
-      printf ( "]" );
-    }
-  }
-  printf ( "\n" );
-
-  if (helper->next_scale != NULL) {
-    dump ( helper->next_scale, depth+1 );
-  }
-}
-
-
-void list ( struct schedule_helper *helper ) {
-  int i;
-  for (i=0; i<1*(helper->buf_len); i++) {   // Only dump the first half (second is duplicates)
-    struct abstract_element *item;
-    item = helper->circ_buf_head[i];
-    if (item != NULL) {
-      do {
-        printf ( "  t = %g\n", item->t );
-        item = item->next;
-      } while (item != NULL);
-    }
-  }
-
-  if (helper->next_scale != NULL) {
-    list ( helper->next_scale );
-  }
-}
-
 void create_test_case (  struct schedule_helper *timestep_window, int put_neg_in_current ) {
 
   struct abstract_element *item_00, *item_01, *item_02, *item_03;
@@ -1164,6 +1166,62 @@ void create_test_case (  struct schedule_helper *timestep_window, int put_neg_in
 }
 
 
+struct block_of_mem {
+  struct block_of_mem *next;
+  void *mem;
+};
+
+unsigned long how_much_free() {
+  double amount_free = 0;
+  // try {
+    double block_size = 1024 * 1024;
+    int ok;
+    struct block_of_mem *block;
+    block = (struct block_of_mem *) malloc ( sizeof(struct block_of_mem) );
+    if (block == NULL) {
+      return ( 0L );
+    }
+    amount_free += sizeof(struct block_of_mem);
+    block->next = NULL;
+    block->mem = NULL;
+    ok = 1;
+    do {
+      // printf ( "Try to allocate %ld\n", block_size );
+      void *mem = (void *) malloc ( block_size );
+      if (mem == NULL) {
+        if (block_size >= 2) {
+          block_size = block_size / 2;
+        } else {
+          ok = 0;
+        }
+      } else {
+        amount_free += block_size;
+        struct block_of_mem *new_block = (struct block_of_mem *) malloc ( sizeof(struct block_of_mem) );
+        if (new_block == NULL) {
+          free ( mem );
+          ok = 0;
+        } else {
+          new_block->mem = mem;
+          new_block->next = block;
+          block = new_block;
+          if (block_size < 1000000000L) {
+            block_size = block_size * 2;
+          }
+        }
+      }
+    } while (ok);
+    while (block != NULL) {
+      // cout << "Free a block" << endl;
+      free (block->mem);
+      struct block_of_mem *next = block->next;
+      free ( block );
+      block = next;
+    }
+  // } catch (exception e) {
+  // }
+  return amount_free;
+}
+
 
 int main ( int argc, char *argv[] ) {
 
@@ -1213,6 +1271,7 @@ int main ( int argc, char *argv[] ) {
       printf ( "  v  = Show all assigned values\n" );
       printf ( "  V  = Validate using code from validate_sched_util.c\n" );
       printf ( "  x# = Remove element #\n" );
+      printf ( "  F  = Report amount of free memory\n" );
       printf ( "  u  = Clean Up\n" );
       printf ( "  q  = Quit\n" );
     } else if (input[0] == 'c') {
@@ -1307,9 +1366,10 @@ int main ( int argc, char *argv[] ) {
       for (i=0; i<n; i++) {
         struct abstract_element *ae = (struct abstract_element *) schedule_next ( timestep_window );
         if (ae == NULL) {
-          printf ( "No Event returned by schedule_next\n" );
+          // printf ( "No Event returned by schedule_next\n" );
         } else {
           printf ( "Handling event at t=%g\n", ae->t );
+          free ( ae );
         }
       }
     } else if (input[0] == 'd') {
@@ -1390,6 +1450,19 @@ int main ( int argc, char *argv[] ) {
     } else if (input[0] == '-') {
         put_neg_in_current = !put_neg_in_current;
         printf ( "put_neg_in_current = %d\n", put_neg_in_current );
+    } else if (input[0] == 'F') {
+      static double last_free = 0;
+      static double baseline = 0;
+      // try {
+        double free_now = how_much_free();
+        if ( (baseline == 0) && (free_now == last_free) ) {
+          baseline = free_now;
+        }
+        printf ( "Amount free = %.0f down %.0f\n", free_now, baseline-free_now );
+        last_free = free_now;
+      // } catch (exception e) {
+      //   cout << "Exception: " << endl;
+      // }
     } else if (input[0] == 'q') {
       printf ( "Exiting..." );
     } else {

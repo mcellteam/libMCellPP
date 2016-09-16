@@ -1300,6 +1300,7 @@ int main ( int argc, char *argv[] ) {
       printf ( "  t# = Test case creation (distribution)\n" );
       printf ( "  T# = Time offset for insertion of test case events (adds an offset)\n" );
       printf ( "  V  = Validate using code from validate_sched_util.c\n" );
+      printf ( "  m# = Move element # to a new time (prompted)\n" );
       printf ( "  x# = Remove element #\n" );
       printf ( "  F  = Report amount of free memory\n" );
       printf ( "  u  = Clean Up\n" );
@@ -1387,6 +1388,19 @@ int main ( int argc, char *argv[] ) {
       sscanf ( &input[1], "%d", &maxlen );
       printf ( "Window width will be %d for NEW schedulers", maxlen );
 
+    } else if (input[0] == 'm') {
+      int v_index;
+      sscanf ( &input[1], "%d", &v_index );
+      SchedulableItem *item = timestep_window->item_at(v_index,0);
+      if ( item == NULL ) {
+        cout << "Index " << v_index << " is invalid" << endl;
+      } else {
+        double new_time;
+        cout << "Enter the new time for the item at " << item->t << " > ";
+        cin >> new_time;
+        cout << "Moving to time " << new_time << endl;
+        timestep_window->schedule_reschedule(item, new_time);
+      }
     } else if (input[0] == 'x') {
       int v_index;
       sscanf ( &input[1], "%d", &v_index );

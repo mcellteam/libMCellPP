@@ -400,6 +400,8 @@ void create_test_case (  struct schedule_helper *timestep_window, int put_neg_in
   insert_item_at_time ( timestep_window, 4.999, put_neg_in_current );
   insert_item_at_time ( timestep_window, 5.0, put_neg_in_current );
   insert_item_at_time ( timestep_window, 5.1, put_neg_in_current );
+
+  /*
   item_00 = insert_item_at_time ( timestep_window, 10.0, put_neg_in_current );
   insert_item_at_time ( timestep_window, 20.0, put_neg_in_current );
 
@@ -408,7 +410,7 @@ void create_test_case (  struct schedule_helper *timestep_window, int put_neg_in
   schedule_insert ( timestep_window, item_01=(void *)(new_element_at_time ( 29.0 )), put_neg_in_current );
   schedule_insert ( timestep_window, item_02=(void *)(new_element_at_time ( 31.0 )), put_neg_in_current );
   schedule_insert ( timestep_window, item_03=(void *)(new_element_at_time ( 40.0 )), put_neg_in_current );
-
+  */
 
   insert_item_at_time ( timestep_window, 21.0, put_neg_in_current );
   insert_item_at_time ( timestep_window, 22.0, put_neg_in_current );
@@ -436,6 +438,8 @@ void create_test_case (  struct schedule_helper *timestep_window, int put_neg_in
   insert_item_at_time ( timestep_window, 2000000.0, put_neg_in_current );
   insert_item_at_time ( timestep_window, 5000000.0, put_neg_in_current );
 
+  /*
+
   // dump ( timestep_window, 0 );
 
   schedule_deschedule(timestep_window, item_00);
@@ -445,6 +449,9 @@ void create_test_case (  struct schedule_helper *timestep_window, int put_neg_in
   schedule_deschedule(timestep_window, item_02);
 
   // dump ( timestep_window, 0 );
+
+  */
+
 }
 
 
@@ -735,12 +742,13 @@ int main ( int argc, char *argv[] ) {
         }
       }
     } else if (input[0] == 'u') {
-        struct abstract_element *removed_items, *next_removed;
+        struct abstract_element *removed_items, *next_to_remove;
         removed_items = schedule_cleanup ( timestep_window, *is_defunct_element );
-        next_removed = removed_items;
-        while (next_removed != NULL) {
-          printf ( "   Removed item at: %g\n", next_removed->t );
-          next_removed = next_removed->next;
+        while (removed_items != NULL) {
+          next_to_remove = removed_items->next;
+          printf ( "   Removed item at: %g\n", removed_items->t );
+          free ( removed_items );
+          removed_items = next_to_remove;
         }
     } else if (input[0] == '-') {
         put_neg_in_current = !put_neg_in_current;

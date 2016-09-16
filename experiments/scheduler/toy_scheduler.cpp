@@ -1102,6 +1102,7 @@ void create_test_case ( ScheduleWindow *timestep_window, int put_neg_in_current 
   insert_item_at_time ( timestep_window, 5.0, put_neg_in_current );
   insert_item_at_time ( timestep_window, 5.1, put_neg_in_current );
 
+  /*
   item_00 = insert_item_at_time ( timestep_window, 10.0, put_neg_in_current );
   insert_item_at_time ( timestep_window, 20.0, put_neg_in_current );
 
@@ -1110,6 +1111,7 @@ void create_test_case ( ScheduleWindow *timestep_window, int put_neg_in_current 
   timestep_window->insert_item ( item_01=new_element_at_time ( 29.0 ), put_neg_in_current );
   timestep_window->insert_item ( item_02=new_element_at_time ( 31.0 ), put_neg_in_current );
   timestep_window->insert_item ( item_03=new_element_at_time ( 40.0 ), put_neg_in_current );
+  */
 
 
   insert_item_at_time ( timestep_window, 21.0, put_neg_in_current );
@@ -1138,6 +1140,7 @@ void create_test_case ( ScheduleWindow *timestep_window, int put_neg_in_current 
   insert_item_at_time ( timestep_window, 2000000.0, put_neg_in_current );
   insert_item_at_time ( timestep_window, 5000000.0, put_neg_in_current );
 
+  /*
   // dump ( timestep_window, 0 );
 
   timestep_window->schedule_deschedule(item_00);
@@ -1147,7 +1150,10 @@ void create_test_case ( ScheduleWindow *timestep_window, int put_neg_in_current 
   timestep_window->schedule_deschedule(item_02);
 
   // dump ( timestep_window, 0 );
+  */
+
 }
+
 
 struct block_of_mem {
   struct block_of_mem *next;
@@ -1440,13 +1446,13 @@ int main ( int argc, char *argv[] ) {
       }
 
     } else if (input[0] == 'u') {
-        SchedulableItem *removed_items, *next_removed;
+        SchedulableItem *removed_items, *next_to_remove;
         removed_items = timestep_window->schedule_cleanup ( *is_defunct_element );
         while (removed_items != NULL) {
+          next_to_remove = removed_items->next;
           printf ( "   Removed item at: %g\n", removed_items->t );
-          next_removed = removed_items->next;
           delete removed_items;
-          removed_items = next_removed;
+          removed_items = next_to_remove;
         }
 
     } else if (input[0] == '-') {

@@ -3,8 +3,8 @@ all: toy_scheduler_c toy_scheduler_cpp sorting_tests
 #OPTS = -Ofast -fmax-errors=2
 OPTS = -O0 -g
 
-toy_scheduler_c: toy_scheduler.c makefile
-	gcc $(OPTS) -o toy_scheduler_c toy_scheduler.c
+toy_scheduler_c: toy_scheduler.c sched_util.c sched_util.h config.h makefile
+	gcc $(OPTS) -o toy_scheduler_c toy_scheduler.c sched_util.c
 
 toy_scheduler_cpp: toy_scheduler.cpp makefile
 	g++ $(OPTS) -std=c++11 -o toy_scheduler_cpp toy_scheduler.cpp

@@ -1160,7 +1160,7 @@ long long how_much_free() {
     long block_size = 1024 * 1024;
     bool ok;
     block_of_mem *block;
-    block = (struct block_of_mem *) malloc ( sizeof(struct block_of_mem) );
+    block = (struct block_of_mem *) calloc ( sizeof(struct block_of_mem), 1 );
     if (block == NULL) {
       return ( 0L );
     }
@@ -1170,7 +1170,7 @@ long long how_much_free() {
     ok = true;
     do {
       // cout << "Try to allocate " << block_size << endl;
-      void *mem = (void *) malloc ( block_size );
+      void *mem = (void *) calloc ( block_size, 1 );
       if (mem == NULL) {
         if (block_size >= 2) {
           block_size = block_size / 2;
@@ -1179,7 +1179,7 @@ long long how_much_free() {
         }
       } else {
         amount_free += block_size;
-        block_of_mem *new_block = (struct block_of_mem *) malloc ( sizeof(struct block_of_mem) );
+        block_of_mem *new_block = (struct block_of_mem *) calloc ( sizeof(struct block_of_mem), 1 );
         if (new_block == NULL) {
           free ( mem );
           ok = false;
@@ -1222,6 +1222,7 @@ int main ( int argc, char *argv[] ) {
   double dt_max = 100.0;
   int maxlen = 5;
   double start_iterations = 0;
+  double test_time_offset = 0;
   int put_neg_in_current = 0;
 
   int next_element_index = 0;
@@ -1250,6 +1251,7 @@ int main ( int argc, char *argv[] ) {
       printf ( "  w# = Window buffer width\n" );
       printf ( "  t  = Test case creation (fixed case)\n" );
       printf ( "  t# = Test case creation (distribution)\n" );
+      printf ( "  T# = Time offset for insertion of test case events (adds an offset)\n" );
       printf ( "  v  = Show all assigned values\n" );
       printf ( "  V  = Validate using code from validate_sched_util.c\n" );
       printf ( "  x# = Remove element #\n" );
@@ -1274,7 +1276,7 @@ int main ( int argc, char *argv[] ) {
       next_element_index = 0;
       printf ( "Created a new scheduler" );
     } else if (input[0] == 'i') {
-      double t;
+      double t=0;
       sscanf ( &input[1], "%lg", &t );
 
       // Do the actual insertion
@@ -1382,12 +1384,21 @@ int main ( int argc, char *argv[] ) {
             for (i=0; i<12; i++) {
               norm += drand48();
             }
-            SchedulableItem *ae = new SchedulableItem(norm*norm*num*num);
+            SchedulableItem *ae = new SchedulableItem(test_time_offset+(norm*norm*num*num));
             timestep_window->insert_item ( ae, put_neg_in_current );
           }
         }
         // list ( timestep_window );
-
+    } else if (input[0] == 'T') {
+        if (strlen(input) == 0) {
+          cout << "T option requires a time offset such as T3.5" << endl;
+        } else {
+          // Set the new start time
+          double new_offset;
+          sscanf ( &input[1], "%lg", &new_offset );
+          cout << "Changing insertion start time from " << test_time_offset << " to " << new_offset << endl;
+          test_time_offset = new_offset;
+        }
     } else if (input[0] == 'w') {
       sscanf ( &input[1], "%d", &maxlen );
       printf ( "Window width will be %d for NEW schedulers", maxlen );
@@ -1455,6 +1466,13 @@ int main ( int argc, char *argv[] ) {
         cout << "Exception: " << endl;
       }
     } else if (input[0] == 'q') {
+      delete timestep_window;
+      if (element_list != NULL) {
+        free ( element_list );
+      }
+      if (element_time_list != NULL) {
+        free ( element_time_list );
+      }
       cout << "Exiting..." << endl;
     } else {
       printf ( "Unknown command: %s", input );

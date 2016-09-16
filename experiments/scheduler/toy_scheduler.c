@@ -743,13 +743,31 @@ delete_scheduler:
 
 void delete_scheduler(struct schedule_helper *sh) {
   if (sh) {
-    if (sh->next_scale != NULL)
+    if (sh->next_scale != NULL) {
       delete_scheduler(sh->next_scale);
-    if (sh->circ_buf_head)
+    }
+    if (sh->circ_buf_head) {
+      int cbitem;
+      for (cbitem=0; cbitem<sh->buf_len; cbitem++) {
+        free ( sh->circ_buf_head[cbitem] );
+      }
       free(sh->circ_buf_head);
-    if (sh->circ_buf_count)
+      sh->circ_buf_head = NULL;
+    }
+    if (sh->circ_buf_count) {
       free(sh->circ_buf_count);
+      sh->circ_buf_count = NULL;
+    }
+    if (sh->current != NULL) {
+      struct abstract_element *next_current;
+      while (sh->current != NULL) {
+        next_current = sh->current->next;
+        free ( sh->current );
+        sh->current = next_current;
+      }
+    }
     free(sh);
+    sh = NULL;
   }
 }
 
@@ -1241,6 +1259,7 @@ int main ( int argc, char *argv[] ) {
   double dt_max = 100.0;
   int maxlen = 5;
   double start_iterations = 0;
+  double test_time_offset = 0;
   int put_neg_in_current = 0;
 
   int next_element_index = 0;
@@ -1268,6 +1287,7 @@ int main ( int argc, char *argv[] ) {
       printf ( "  w# = Window buffer width\n" );
       printf ( "  t  = Test case creation (fixed case)\n" );
       printf ( "  t# = Test case creation (distribution)\n" );
+      printf ( "  T# = Time offset for insertion of test case events (adds an offset)\n" );
       printf ( "  v  = Show all assigned values\n" );
       printf ( "  V  = Validate using code from validate_sched_util.c\n" );
       printf ( "  x# = Remove element #\n" );
@@ -1370,6 +1390,7 @@ int main ( int argc, char *argv[] ) {
         } else {
           printf ( "Handling event at t=%g\n", ae->t );
           free ( ae );
+          ae = NULL;
         }
       }
     } else if (input[0] == 'd') {
@@ -1397,10 +1418,20 @@ int main ( int argc, char *argv[] ) {
               norm += drand48();
             }
             // printf ( "gaussian = %lg\n", norm );
-            insert_item_at_time ( timestep_window, norm*norm*num*num, put_neg_in_current );
+            insert_item_at_time ( timestep_window, test_time_offset+(norm*norm*num*num), put_neg_in_current );
           }
         }
         // list ( timestep_window );
+    } else if (input[0] == 'T') {
+        if (strlen(input) == 0) {
+          printf ( "T option requires a time offset such as T3.5\n" );
+        } else {
+          // Set the new start time
+          double new_offset;
+          sscanf ( &input[1], "%lg", &new_offset );
+          printf ( "Changing insertion start time from %g to %g\n", test_time_offset, new_offset );
+          test_time_offset = new_offset;
+        }
     } else if (input[0] == 'w') {
       sscanf ( &input[1], "%d", &maxlen );
       printf ( "Window width will be %d for NEW schedulers", maxlen );
@@ -1464,6 +1495,15 @@ int main ( int argc, char *argv[] ) {
       //   cout << "Exception: " << endl;
       // }
     } else if (input[0] == 'q') {
+      delete_scheduler ( timestep_window );
+      if (element_list != NULL) {
+        free ( element_list );
+        element_list = NULL;
+      }
+      if (element_time_list != NULL) {
+        free ( element_time_list );
+        element_time_list = NULL;
+      }
       printf ( "Exiting..." );
     } else {
       printf ( "Unknown command: %s", input );

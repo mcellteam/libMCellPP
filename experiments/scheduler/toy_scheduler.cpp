@@ -38,14 +38,25 @@ using namespace std;
 /* Everything managed by scheduler must be derived from SchedulableItem */
 class SchedulableItem {
  public:
+  SchedulableItem *next=NULL; // nullptr ?
+  double t;
   SchedulableItem () {
     this->t = 0;
   }
   SchedulableItem ( double t ) {
     this->t = t;
   }
-  SchedulableItem *next;
-  double t;
+  ~SchedulableItem() {
+    // Should the destructor delete the list?
+  }
+  void delete_next_list () {
+    SchedulableItem *one_after_next = NULL;
+    while (next != NULL) {
+      one_after_next = next->next;
+      delete next;
+      next = one_after_next;
+    }
+  }
 };
 
 class ReleaseEvent : SchedulableItem {
@@ -158,11 +169,20 @@ class ScheduleWindow {  // Previously called a "struct schedule_helper"
     init ( 1.0 * 5, 100.0, 5, 0.0 );
   }
 
+  static int always_defunct (SchedulableItem *e) {
+    return 1;
+  }
+
   /*************************************************************************
     ScheduleWindow destructor:
   *************************************************************************/
   ~ScheduleWindow() {
-   if (true) {
+    SchedulableItem *removed_items;
+    removed_items = schedule_cleanup ( always_defunct );
+    if (removed_items != NULL) {
+      removed_items->delete_next_list();
+      delete removed_items;
+    }
 
     if (next_scale != NULL) {
       delete ( next_scale );
@@ -184,16 +204,6 @@ class ScheduleWindow {  // Previously called a "struct schedule_helper"
         current = next_current;
       }
     }
-
-   } else {
-
-    cout << "!!!!!!!!!!!!!!!!!!!!!!!" << endl;
-    cout << "!! Destructor called !!" << endl;
-    cout << "!!!!!!!!!!!!!!!!!!!!!!!" << endl;
-    cout << "!!    Memory Leak    !!" << endl;
-    cout << "!!!!!!!!!!!!!!!!!!!!!!!" << endl;
-
-   }
   }
 
 
@@ -684,7 +694,7 @@ class ScheduleWindow {  // Previously called a "struct schedule_helper"
          deallocation)
   *************************************************************************/
 
-  SchedulableItem * schedule_cleanup( int (*is_defunct)(SchedulableItem*)) {
+  SchedulableItem * schedule_cleanup( int (*is_defunct)(SchedulableItem*), bool return_list=true) {
 
     ScheduleWindow *sh = this;
 
@@ -862,22 +872,51 @@ class ScheduleWindow {  // Previously called a "struct schedule_helper"
   /*************************************************************************
     Print a list of the items in this schedule window and all following scales
   *************************************************************************/
-  void list() {
-    int i;
+  int list( int next_item_num ) {
+    int i=0;
     for (i=0; i<1*(this->buf_len); i++) {   // Only dump the first half (second is duplicates)
       SchedulableItem *item;
       item = this->circ_buf_head[i];
       if (item != NULL) {
         do {
-          cout << "  t = " << item->t << endl;
+          cout << "  " << next_item_num << ": t = " << item->t << endl;
+          next_item_num++;
           item = item->next;
         } while (item != NULL);
       }
     }
 
     if (this->next_scale != NULL) {
-      this->next_scale->list();
+      i += this->next_scale->list(next_item_num);
     }
+    return i;
+  }
+
+
+  /*************************************************************************
+    Find the item at the requested position in the linked list of scales
+  *************************************************************************/
+  SchedulableItem * item_at ( int item_num, int start_num ) {
+    int i=0;
+    for (i=0; i<1*(this->buf_len); i++) {   // Only dump the first half (second is duplicates)
+      SchedulableItem *item;
+      item = this->circ_buf_head[i];
+      if (item != NULL) {
+        do {
+          if (start_num == item_num) {
+            cout << "    found " << start_num << ": t = " << item->t << endl;
+            return ( item );
+          }
+          start_num++;
+          item = item->next;
+        } while (item != NULL);
+      }
+    }
+
+    if (this->next_scale != NULL) {
+       return this->next_scale->item_at(item_num, start_num);
+    }
+    return NULL;
   }
 
 
@@ -1064,6 +1103,10 @@ int validate_main()
   }
   gettimeofday(&(tv[1]),NULL);
   printf("Took %.3f seconds.\n",elapsed(&(tv[0]),&(tv[1]))/1000.0);
+
+  delete sh;
+
+  cout << "\nWarning: Validate is known to cause memory leaks!!" << endl;
 }
 
 
@@ -1102,7 +1145,7 @@ void create_test_case ( ScheduleWindow *timestep_window, int put_neg_in_current 
   insert_item_at_time ( timestep_window, 5.0, put_neg_in_current );
   insert_item_at_time ( timestep_window, 5.1, put_neg_in_current );
 
-  /*
+
   item_00 = insert_item_at_time ( timestep_window, 10.0, put_neg_in_current );
   insert_item_at_time ( timestep_window, 20.0, put_neg_in_current );
 
@@ -1111,8 +1154,6 @@ void create_test_case ( ScheduleWindow *timestep_window, int put_neg_in_current 
   timestep_window->insert_item ( item_01=new_element_at_time ( 29.0 ), put_neg_in_current );
   timestep_window->insert_item ( item_02=new_element_at_time ( 31.0 ), put_neg_in_current );
   timestep_window->insert_item ( item_03=new_element_at_time ( 40.0 ), put_neg_in_current );
-  */
-
 
   insert_item_at_time ( timestep_window, 21.0, put_neg_in_current );
   insert_item_at_time ( timestep_window, 22.0, put_neg_in_current );
@@ -1140,17 +1181,19 @@ void create_test_case ( ScheduleWindow *timestep_window, int put_neg_in_current 
   insert_item_at_time ( timestep_window, 2000000.0, put_neg_in_current );
   insert_item_at_time ( timestep_window, 5000000.0, put_neg_in_current );
 
-  /*
   // dump ( timestep_window, 0 );
 
   timestep_window->schedule_deschedule(item_00);
+  // Need to delete it after descheduling it!!!
+  delete item_00;
 
   // dump ( timestep_window, 0 );
 
   timestep_window->schedule_deschedule(item_02);
+  // Need to delete it after descheduling it!!!
+  delete item_02;
 
   // dump ( timestep_window, 0 );
-  */
 
 }
 
@@ -1211,6 +1254,8 @@ long long how_much_free() {
   return amount_free;
 }
 
+
+
 int main ( int argc, char *argv[] ) {
 
   cout << "\n\n" << endl;
@@ -1231,10 +1276,6 @@ int main ( int argc, char *argv[] ) {
   double test_time_offset = 0;
   int put_neg_in_current = 0;
 
-  int next_element_index = 0;
-  int element_list_length = 0;
-  SchedulableItem **element_list = NULL;
-  double *element_time_list = NULL;
 
   timestep_window = new ScheduleWindow (dt_min, dt_max, maxlen, start_iterations);
 
@@ -1258,7 +1299,6 @@ int main ( int argc, char *argv[] ) {
       printf ( "  t  = Test case creation (fixed case)\n" );
       printf ( "  t# = Test case creation (distribution)\n" );
       printf ( "  T# = Time offset for insertion of test case events (adds an offset)\n" );
-      printf ( "  v  = Show all assigned values\n" );
       printf ( "  V  = Validate using code from validate_sched_util.c\n" );
       printf ( "  x# = Remove element #\n" );
       printf ( "  F  = Report amount of free memory\n" );
@@ -1270,76 +1310,14 @@ int main ( int argc, char *argv[] ) {
         delete timestep_window;
         timestep_window = NULL;
       }
-      if (element_list != NULL) {
-        free(element_list);
-        element_list = NULL;
-      }
-      if (element_time_list != NULL) {
-        free(element_time_list);
-        element_time_list = NULL;
-      }
       timestep_window = new ScheduleWindow (dt_min, dt_max, maxlen, start_iterations);
-      next_element_index = 0;
       printf ( "Created a new scheduler" );
     } else if (input[0] == 'i') {
       double t=0;
       sscanf ( &input[1], "%lg", &t );
-
-      // Do the actual insertion
       SchedulableItem *ae = new SchedulableItem(t);
       timestep_window->insert_item ( ae, put_neg_in_current );
-
-      // Keep track of items by ID for deletion
-      if (element_list == NULL) {
-        element_list_length = 1;
-        element_list = (SchedulableItem **) calloc ( element_list_length, sizeof(SchedulableItem *) );
-        element_time_list = (double *) calloc ( element_list_length, sizeof(double) );
-        int i;
-        for (i=0; i<element_list_length; i++) {
-          element_list[i] = NULL;
-          element_time_list[i] = -1;
-        }
-        next_element_index = 0;
-      }
-      if (next_element_index >= element_list_length) {
-        // printf ( "Expanding values list ...\n" );
-        // Allocate new arrays
-        int new_element_list_length = element_list_length*2;
-        SchedulableItem **new_element_list = (SchedulableItem **) calloc ( new_element_list_length, sizeof(SchedulableItem *) );
-        double *new_element_time_list = (double *) calloc ( new_element_list_length, sizeof(double) );
-        // Copy data into new arrays
-        int i;
-        for (i=0; i<element_list_length; i++) {
-          new_element_list[i] = element_list[i];
-          new_element_time_list[i] = element_time_list[i];
-        }
-        for (i=element_list_length; i<new_element_list_length; i++) {
-          new_element_list[i] = NULL;
-          new_element_time_list[i] = -1;
-        }
-        // Free old arrays and assign new arrays to pointers
-        free(element_list);
-        element_list = new_element_list;
-        free(element_time_list);
-        element_time_list = new_element_time_list;
-        element_list_length = new_element_list_length;
-      }
-      element_list[next_element_index] = ae;
-      element_time_list[next_element_index] = t;
-
-      printf ( "Inserted item #%d at time %lg", next_element_index, t );
-      next_element_index += 1;
-    } else if (input[0] == 'v') {
-      if (element_list == NULL) {
-        printf ( "No assigned value indexes" );
-      } else {
-        int i;
-        for (i=0; i<next_element_index; i++) {
-          //if (element_list[i]!=NULL) {
-            printf ( "  index %d stores t=%g at %p\n", i, element_time_list[i], element_list[i] );
-          //}
-        }
-      }
+      printf ( "Inserted item at time %lg", t );
     } else if (input[0] == 's') {
         SchedulableItem *ae = timestep_window->schedule_next();
         if (ae == NULL) {
@@ -1369,7 +1347,7 @@ int main ( int argc, char *argv[] ) {
     } else if (input[0] == 'd') {
         timestep_window->dump ( 0 );
     } else if (input[0] == 'l') {
-        timestep_window->list ();
+        timestep_window->list (0);
     } else if (input[0] == 'f') {
         timestep_window->full_dump ( 0 );
     } else if (input[0] == 'V') {
@@ -1412,49 +1390,22 @@ int main ( int argc, char *argv[] ) {
     } else if (input[0] == 'x') {
       int v_index;
       sscanf ( &input[1], "%d", &v_index );
-      if ( (v_index<0) || (v_index>=next_element_index) ) {
-        printf ( "Index %d is outside of range: 0 <= i <= %d\n", v_index, next_element_index-1 );
+      SchedulableItem *item = timestep_window->item_at(v_index,0);
+      if ( item == NULL ) {
+        cout << "Index " << v_index << " is invalid" << endl;
       } else {
-        if (element_list[v_index] == NULL) {
-          printf ( "Item %d is already deleted.", v_index );
-        } else {
-          timestep_window->schedule_deschedule ( element_list[v_index] );
-          element_list[v_index] = NULL;
-          printf ( "Removed item at time %g.\n", element_time_list[v_index] );
-          element_time_list[v_index] = -1.0;
-          int i;
-          int empty = 1;
-          for (i=0; i<next_element_index; i++) {
-            if (element_time_list[i] >= 0) {
-              empty = 0;
-              break;
-            }
-          }
-          if (empty==1) {
-            printf ( "All value indexes are empty, so remove the arrays.\n" );
-            if (element_list != NULL) {
-              free(element_list);
-              element_list = NULL;
-            }
-            if (element_time_list != NULL) {
-              free(element_time_list);
-              element_time_list = NULL;
-            }
-            next_element_index = 0;
-          }
-        }
+        timestep_window->schedule_deschedule ( item );
+        // Remember to delete it after descheduling it or it will cause a memory leak!!
+        printf ( "Removed item at time %g.\n", item->t );
+        delete item;
       }
-
     } else if (input[0] == 'u') {
-        SchedulableItem *removed_items, *next_to_remove;
-        removed_items = timestep_window->schedule_cleanup ( *is_defunct_element );
-        while (removed_items != NULL) {
-          next_to_remove = removed_items->next;
-          printf ( "   Removed item at: %g\n", removed_items->t );
-          delete removed_items;
-          removed_items = next_to_remove;
-        }
-
+      SchedulableItem *removed_items, *next_to_remove;
+      removed_items = timestep_window->schedule_cleanup ( *is_defunct_element );
+      if (removed_items != NULL) {
+        removed_items->delete_next_list();
+        delete removed_items;
+      }
     } else if (input[0] == '-') {
         put_neg_in_current = !put_neg_in_current;
         printf ( "put_neg_in_current = %d\n", put_neg_in_current );
@@ -1473,12 +1424,6 @@ int main ( int argc, char *argv[] ) {
       }
     } else if (input[0] == 'q') {
       delete timestep_window;
-      if (element_list != NULL) {
-        free ( element_list );
-      }
-      if (element_time_list != NULL) {
-        free ( element_time_list );
-      }
       cout << "Exiting..." << endl;
     } else {
       printf ( "Unknown command: %s", input );

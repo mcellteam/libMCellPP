@@ -512,6 +512,25 @@ unsigned long how_much_free() {
 }
 
 
+int next_element_index = 0;
+int element_list_length = 0;
+struct abstract_element **element_list = NULL;
+double *element_time_list = NULL;
+
+void free_element_lists () {
+  if (element_list != NULL) {
+    free(element_list);
+    element_list = NULL;
+  }
+  if (element_time_list != NULL) {
+    free(element_time_list);
+    element_time_list = NULL;
+  }
+  next_element_index = 0;
+  element_list_length = 0;
+}
+
+
 int main ( int argc, char *argv[] ) {
 
   printf( "\n\n" );
@@ -532,11 +551,6 @@ int main ( int argc, char *argv[] ) {
   double start_iterations = 0;
   double test_time_offset = 0;
   int put_neg_in_current = 0;
-
-  int next_element_index = 0;
-  int element_list_length = 0;
-  struct abstract_element **element_list = NULL;
-  double *element_time_list = NULL;
 
   timestep_window = create_scheduler(dt_min, dt_max, maxlen, start_iterations);
 
@@ -571,14 +585,7 @@ int main ( int argc, char *argv[] ) {
         delete_scheduler ( timestep_window );
         timestep_window = NULL;
       }
-      if (element_list != NULL) {
-        free(element_list);
-        element_list = NULL;
-      }
-      if (element_time_list != NULL) {
-        free(element_time_list);
-        element_time_list = NULL;
-      }
+      free_element_lists();
       timestep_window = create_scheduler(dt_min, dt_max, maxlen, start_iterations);
       next_element_index = 0;
       printf ( "Created a new scheduler" );
@@ -729,15 +736,7 @@ int main ( int argc, char *argv[] ) {
           }
           if (empty==1) {
             printf ( "All value indexes are empty, so remove the arrays.\n" );
-            if (element_list != NULL) {
-              free(element_list);
-              element_list = NULL;
-            }
-            if (element_time_list != NULL) {
-              free(element_time_list);
-              element_time_list = NULL;
-            }
-            next_element_index = 0;
+            free_element_lists();
           }
         }
       }
@@ -768,14 +767,7 @@ int main ( int argc, char *argv[] ) {
       // }
     } else if (input[0] == 'q') {
       delete_scheduler ( timestep_window );
-      if (element_list != NULL) {
-        free ( element_list );
-        element_list = NULL;
-      }
-      if (element_time_list != NULL) {
-        free ( element_time_list );
-        element_time_list = NULL;
-      }
+      free_element_lists();
       printf ( "Exiting..." );
     } else {
       printf ( "Unknown command: %s", input );

@@ -7,7 +7,10 @@ INSTALL_DIR = ~/.config/blender/2.77/scripts/addons/
 #INSTALL_DIR = ~/Library/Application\ Support/Blender/2.74/scripts/addons/
 
 
-all: mcell_main_c _libMCell.so mcell_main mcell_main_c mcell_simple mcell_simple_count
+all: mcell_main_c libMCell.a _libMCell.so mcell_main mcell_main_c mcell_simple mcell_simple_count
+
+libMCell.a: libMCell.o rng.o JSON.o makefile
+	ar rcs libMCell.a libMCell.o rng.o JSON.o
 
 
 mcell_main_c: mcell_main_c.o JSON.o makefile
@@ -28,30 +31,30 @@ rng.o: rng.cpp rng.h makefile
 _libMCell.so: libMCell.cpp rng.cpp libMCell.h rng.h libMCell.i makefile
 	swig -python -c++ -o libMCell_wrap.cpp libMCell.i
 	g++ -c -std=c++11 -Wno-write-strings -fpic -I. -I/usr/include libMCell_wrap.cpp rng.cpp libMCell.cpp -I/usr/include/python2.7 -I/usr/lib/python2.7/config
-	g++ -shared -I/usr/include rng.o libMCell.o libMCell_wrap.o -o _libMCell.so
+	g++ -o _libMCell.so -shared -I/usr/include rng.o libMCell.o libMCell_wrap.o
 
 libMCell.o: libMCell.cpp libMCell.h makefile
-	g++ -c -std=c++11 -Wno-write-strings libMCell.cpp -o libMCell.o
+	g++ -o libMCell.o -c -std=c++11 -Wno-write-strings libMCell.cpp
 
 mcell_main.o: mcell_main.cpp libMCell.h makefile
-	g++ -c -std=c++11 -Wno-write-strings mcell_main.cpp -o mcell_main.o
+	g++ -o mcell_main.o -c -std=c++11 -Wno-write-strings mcell_main.cpp
 
-mcell_main: mcell_main.o rng.o JSON.o libMCell.o makefile
-	g++ -lm -o mcell_main mcell_main.o rng.o JSON.o libMCell.o
+mcell_main: mcell_main.o libMCell.a makefile
+	g++ -o mcell_main -lm mcell_main.o libMCell.a
 
 
 mcell_simple.o: mcell_simple.cpp libMCell.h makefile
-	g++ -c -std=c++11 -Wno-write-strings mcell_simple.cpp -o mcell_simple.o
+	g++ -o mcell_simple.o -c -std=c++11 -Wno-write-strings mcell_simple.cpp
 
-mcell_simple: mcell_simple.o rng.o JSON.o libMCell.o makefile
-	g++ -lm -o mcell_simple mcell_simple.o JSON.o rng.o libMCell.o
+mcell_simple: mcell_simple.o libMCell.a makefile
+	g++ -o mcell_simple -lm mcell_simple.o libMCell.a
 
 
 mcell_simple_count.o: mcell_simple_count.cpp libMCell.h makefile
-	g++ -c -std=c++11 -Wno-write-strings mcell_simple_count.cpp -o mcell_simple_count.o
+	g++ -o mcell_simple_count.o -c -std=c++11 -Wno-write-strings mcell_simple_count.cpp
 
-mcell_simple_count: mcell_simple_count.o rng.o JSON.o libMCell.o makefile
-	g++ -lm -o mcell_simple_count mcell_simple_count.o JSON.o rng.o libMCell.o
+mcell_simple_count: mcell_simple_count.o libMCell.a makefile
+	g++ -o mcell_simple_count -lm mcell_simple_count.o libMCell.a
 
 
 clean:
@@ -61,7 +64,7 @@ clean:
 	rm -f mcell_simple_count
 	rm -f *_wrap* *.pyc
 	rm -f core
-	rm -f *.o *.so
+	rm -f *.o *.a *.so
 	rm -f libMCell.py
 	rm -f *.class *.jar
 	rm -f *~

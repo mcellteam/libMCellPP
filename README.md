@@ -30,7 +30,7 @@ The "Trigger" portion will consist of the following built-in event types:
 
 * Time-based events:
     * Iteration step
-    * User-requestedi break
+    * User-requested break
 
 * Reaction/Release/Placement events: (what where when how how_many)
     * mol a created
@@ -64,7 +64,7 @@ Counting has been a somewhat complicated process in MCell because the MDL langua
 
 # Superclass of all TCO events will contain the time of the event
 class TCO_event:
-     timewith pneumatic tires
+     time
 
 # Superclass of all TCO event listeners
 class TCO_listener:

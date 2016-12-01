@@ -164,3 +164,5 @@ Eventually, the traditional mcell program will become an MDL-parsing interface t
 This repository contains work on a C++ version of libMCell. Many of these files
 were orginally from the CellBlender project under the "libMCell" subdirectory.
 
+Project status is uncertain.
+

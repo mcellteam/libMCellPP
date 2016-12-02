@@ -1,15 +1,6 @@
 # libMCel  Python API
 
-## Blender add-on to create a Blender Object from an SWC formatted file
-
-This addon can read an SWC formatted file and generate either a line object or a mesh object.
-
-* **[Description/Tutorial](files/description)**
-* **[Tips and Usage Notes](files/notes)**
-* **[Examples](files/examples)**
-* **[Source Files](files/source)**
-
-![libMCell++](files/images/libMCellPP.png?raw=true "libMCell++")
+![libMCell](libMCellPP.png?raw=true "libMCell")
 
 # Assorted CellBlender Models
 ## Models that don't fit any other category
@@ -17,19 +8,6 @@ This addon can read an SWC formatted file and generate either a line object or a
 This directory contains models that haven't been put in any other grouping.
 
 Current Models:
-
-![Organelle Demo](Organelle_Demo.png?raw=true "Organelle Demo")
-
-
-* **[Timed_Releases.json](Timed_Releases.json)**  - Demonstration of Timed Releases with Scripting.
-
-![Timed Releases](Timed_Releases.gif?raw=true "Timed Releases")
-
-
-* **[Vertex_Release.json](Vertex_Release.json)**  - Demonstration of Object Vertex Release.
-
-![Vertex Release](Vertex_Release.gif?raw=true "Vertex Release")
-
 
 
 # libMCell C++

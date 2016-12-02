@@ -9,7 +9,7 @@ This addon can read an SWC formatted file and generate either a line object or a
 * **[Examples](files/examples)**
 * **[Source Files](files/source)**
 
-![libMCell++](libMCellPP.png?raw=true "libMCell++")
+![libMCell++](files/images/libMCellPP.png?raw=true "libMCell++")
 
 
 # libMCell C++

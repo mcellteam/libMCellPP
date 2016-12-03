@@ -4,7 +4,7 @@
 
 1. Unbounded diffusion
 
-1. (a) Unbounded diffusion (through self-discovery)
+a) Unbounded diffusion (through self-discovery)
 ```
 >>> import libMCell
 >>> dir(libMCell)

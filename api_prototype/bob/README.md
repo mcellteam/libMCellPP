@@ -36,6 +36,14 @@
 		* When: frequency of counting
 		* How: Front hits/back hits, e.g. on a plane that goes through the box
 
+# Reaction Idea from Meeting:
+
+```
+mol_a = create_molecule_species ( ... )
+mol_b = create_molecule_species ( ... )
+mol_c = create_molecule_species ( ... )
+my_reaction = create_reaction ( "%m + %m -> %m", mol_a, mol_b, mol_c );
+```
 
 # libMCell API (C++ version)
 

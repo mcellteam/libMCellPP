@@ -1,6 +1,6 @@
-# libMCel  Python API
+![libMCell](libMCellCPP.png?raw=true "libMCell")
 
-![libMCell](libMCellPP.png?raw=true "libMCell")
+# libMCel  Python API
 
 # Assorted CellBlender Models
 ## Models that don't fit any other category

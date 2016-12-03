@@ -3,6 +3,60 @@
 # List of Test Cases for the API
 
 1. Unbounded diffusion
+
+1. (a) Unbounded diffusion (through self-discovery)
+```
+>>> import libMCell
+>>> dir(libMCell)
+['__all__', '__name__', ... 'create_simulation']
+>>> my_sim = libMCell.create_simulation()
+>>> dir(my_sim)
+['create_molecule_species', 'create_release_site', 'create_reaction', 'run_simulation' ...]
+>>> type(my_sim)
+<class 'dict'>
+>>> my_sim.keys()
+['data_model']
+>>> my_sim['data_model'].keys()
+['api_version', 'define_molecules', 'define_reactions', 'release_sites', 'initialization']
+>>> my_sim['data_model']['define_molecules'].keys()
+['molecule_list']
+>>> len(my_sim['data_model']['define_molecules']['molecule_list']
+0
+>>> help(my_sim.create_molecule_species)
+Help on create_molecule_species in module libMCell:
+  create_molecule_species(name, dc=, type=, color=)
+     name: required name for the species
+     dc: diffusion constant (defaults to 0)
+     type: 2D or 3D (defaults to 3D)
+     color: list [r,g,b] (defaults to gray)
+>>> my_sim.create_molecule_species(name='red', dc='1e-5', color=[1,0,0])
+>>> len(my_sim['data_model']['define_molecules']['molecule_list']
+1
+>>> my_sim['data_model']['define_molecules']['molecule_list'][0]['color']
+[1.0, 0.0, 0.0]
+>>> help(my_sim.create_release_site)
+Help on create_release_site in module libMCell:
+  create_release_site(mol, num, location=, name= )
+     mol: molecule species to be released
+     num: number of individual molecules to release
+     location: coordinates [x,y,z] (defaults to [0,0,0])
+     name: optional name of the release site
+>>> my_sim.create_release_site(my_sim['data_model']['define_molecules']['molecule_list'][0], 100)
+>>> len(my_sim['data_model']['release_sites']['release_site_list'])
+1
+>>> my_sim['data_model']['release_sites']['release_site_list'][0].keys()
+['name', 'molecule', 'quantity', 'quantity_type', 'release_probability', 'shape',
+ 'object_expr', 'orient', 'pattern', 'location_x', 'location_y', 'location_z',
+ 'site_diameter', 'stddev']
+>>> my_sim['data_model']['release_sites']['release_site_list'][0]['quantity']
+100
+>>> help(my_sim.run_simulation)
+Help on run_simulation in module libMCell:
+  run_simulation(iterations=)
+     iterations: number of iterations to run (defaults to 1)
+my_sim.run_simulation(1000)
+```
+
 2. "1D diffusion" in a thin tube
 	* initial release in a plane in the middle
 3. "2D diffusion" between two sheets

@@ -57,7 +57,7 @@ Help on run_simulation in module libMCell:
 >>> my_sim.run_simulation(1000)
 ```
 
-b) Unbounded diffusion (same commands but no self-discovery)
+b) Unbounded diffusion short version (same commands but no self-discovery)
 ```
 >>> import libMCell
 >>> my_sim = libMCell.create_simulation()

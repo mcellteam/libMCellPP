@@ -5,18 +5,34 @@ import json
 class DataModelObject(dict):
 
     def __init__(self, dm):
-        print ( "init" )
-        for k in dm.keys():
-          v = dm[k]
-          if type(v) == type({}):
-            self[k] = DataModelObject(v)
-          elif type(v) == type([]):
-            l = []
-            for item in v:
+        if type(dm) == type({}):
+          for k in dm.keys():
+            v = dm[k]
+            if type(v) == type({}):
+              self[k] = DataModelObject(v)
+            elif type(v) == type([]):
+              sub_list = []
+              self.fill_list(sub_list,v)
+              self[k] = sub_list
+            else:
+              self[k] = dm[k]
+        else:
+          raise AttributeError("Dictionary required rather than " + str(type(dm)))
+
+    def fill_list(self, l, dm):
+        if type(dm) == type([]):
+          for item in dm:
+            if type(item) == type({}):
               l.append ( DataModelObject(item) )
-            self[k] = l
-          else:
-            self[k] = dm[k]
+            elif type(item) == type([]):
+              sub_list = []
+              self.fill_list(sub_list,item)
+              l.append ( sub_list )
+            else:
+              l.append ( item )
+        else:
+          raise AttributeError("List required rather than " + str(type(dm)))
+
 
     def __getattr__(self, name):
         if name in self:
@@ -34,21 +50,28 @@ class DataModelObject(dict):
             raise AttributeError("No such attribute: " + name)
 
 
-dm = json.loads ( '{"iters":100, "init": {"warn":"off", "errlim":5 }, "mols": [ {"name":"a", "dc":1e-6 }, {"name":"b", "dc":2e-6 } ] }' )
+dm_str = '{"iters":100, "init": {"warn":"off", "errlim":5 }, "mols": [ {"name":"a", "dc":1e-6 }, {"name":"b", "dc":2e-6 } ] }'
+
+with open ( "Test_Data_Model.json", "r" ) as f:
+  dm_str = f.read()
+
+dm = json.loads ( dm_str )
 
 print ( str(dm) )
 
 dm = DataModelObject(dm)
 
 print()
-
-print ( "Iterations  = " + str(dm.iters) )
-print ( "Warnings    = " + str(dm.init.warn) )
-print ( "Error Limit = " + str(dm.init.errlim) )
+print ( "Iterations  = " + str(dm.mcell.initialization.iterations) )
+print ( "Warnings    = " + str(dm.mcell.initialization.warnings) )
+print()
+print ( "Parameters:" )
+for p in dm.mcell.parameter_system.model_parameters:
+    print ( "  " + p.par_name + " = " + str(p.par_expression) )
+print()
 print ( "Molecules:" )
-for m in dm.mols:
-    print ( "  " + m.name + ".dc = " + str(m.dc) )
-
+for m in dm.mcell.define_molecules.molecule_list:
+    print ( "  " + m.mol_name + ": diffusion_constant = " + str(m.diffusion_constant) )
 print()
 
 __import__('code').interact(local={k: v for ns in (globals(), locals()) for k, v in ns.items()})

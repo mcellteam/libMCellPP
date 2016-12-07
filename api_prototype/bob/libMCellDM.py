@@ -52,7 +52,7 @@ class DataModelObject(dict):
 
 dm_str = '{"iters":100, "init": {"warn":"off", "errlim":5 }, "mols": [ {"name":"a", "dc":1e-6 }, {"name":"b", "dc":2e-6 } ] }'
 
-with open ( "Test_Data_Model.json", "r" ) as f:
+with open ( "moderate_model.json", "r" ) as f:
   dm_str = f.read()
 
 dm = json.loads ( dm_str )
@@ -73,6 +73,14 @@ print ( "Molecules:" )
 for m in dm.mcell.define_molecules.molecule_list:
     print ( "  " + m.mol_name + ": diffusion_constant = " + str(m.diffusion_constant) )
 print()
+print ( "Objects:" )
+for o in dm.mcell.geometrical_objects.object_list:
+    print ( "  " + o.name + " has " + str(len(o.vertex_list)) + " points and " + str(len(o.element_connections)) + " faces" )
+print()
+print ( "Surface Classes:" )
+for s in dm.mcell.define_surface_classes.surface_class_list:
+    print ( "  " + s.name + " has " + str(len(s.surface_class_prop_list)) + " property definitions" )
+print()
 
-__import__('code').interact(local={k: v for ns in (globals(), locals()) for k, v in ns.items()})
+# __import__('code').interact(local={k: v for ns in (globals(), locals()) for k, v in ns.items()})
 

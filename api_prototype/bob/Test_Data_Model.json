@@ -1,0 +1,111 @@
+{
+
+    "mcell": {
+        "define_reactions": {"data_model_version": "DM_2014_10_24_1638", "reaction_list": []}, 
+        "modify_surface_regions": {"modify_surface_regions_list": [{"region_selection": "SEL", "region_name": "spots", "name": "Surface Class: transp   Object: ico_1   Region: spots", "object_name": "ico_1", "surf_class_name": "transp", "data_model_version": "DM_2015_11_06_1732"}], "data_model_version": "DM_2014_10_24_1638"}, 
+        "simulation_control": {
+            "run_limit": "-1", 
+            "processes_list": [
+                {"name": "PID: 23572, MDL: Scene.main.mdl, Seed: 1", "data_model_version": "DM_2015_04_23_1753"}, 
+                {"name": "PID: 24119, MDL: Scene.main.mdl, Seed: 1", "data_model_version": "DM_2015_04_23_1753"}, 
+                {"name": "PID: 25105, MDL: Scene.main.mdl, Seed: 1", "data_model_version": "DM_2015_04_23_1753"}, 
+                {"name": "PID: 14599, MDL: Scene.main.mdl, Seed: 1", "data_model_version": "DM_2015_04_23_1753"}, 
+                {"name": "PID: 14878, MDL: Scene.main.mdl, Seed: 1", "data_model_version": "DM_2015_04_23_1753"}, 
+                {"name": "PID: 15836, MDL: Scene.main.mdl, Seed: 1", "data_model_version": "DM_2015_04_23_1753"}, 
+                {"name": "PID: 16252, MDL: Scene.main.mdl, Seed: 1", "data_model_version": "DM_2015_04_23_1753"}, 
+                {"name": "PID: 16580, MDL: Scene.main.mdl, Seed: 1", "data_model_version": "DM_2015_04_23_1753"}, 
+                {"name": "PID: 16758, MDL: Scene.main.mdl, Seed: 1", "data_model_version": "DM_2015_04_23_1753"}, 
+                {"name": "PID: 16892, MDL: Scene.main.mdl, Seed: 1", "data_model_version": "DM_2015_04_23_1753"}, 
+                {"name": "PID: 17194, MDL: Scene.main.mdl, Seed: 1", "data_model_version": "DM_2015_04_23_1753"}, 
+                {"name": "PID: 18385, MDL: Scene.main.mdl, Seed: 1", "data_model_version": "DM_2015_04_23_1753"}, 
+                {"name": "PID: 18794, MDL: Scene.main.mdl, Seed: 1", "data_model_version": "DM_2015_04_23_1753"}
+            ], 
+            "start_seed": "1", 
+            "name": "", 
+            "end_seed": "seeds", 
+            "data_model_version": "DM_2016_10_27_1642"
+        }, 
+        "reaction_data_output": {"plot_legend": "0", "mol_colors": false, "reaction_output_list": [], "rxn_step": "", "always_generate": true, "output_buf_size": "", "combine_seeds": true, "plot_layout": " ", "data_model_version": "DM_2016_03_15_1800"}, 
+        "api_version": 0, 
+        "viz_output": {"end": "1", "export_all": true, "step": "1", "start": "0", "all_iterations": true, "data_model_version": "DM_2014_10_24_1638"}, 
+        "initialization": {
+            "notifications": {"diffusion_constant_report": "BRIEF", "molecule_collision_report": false, "probability_report_threshold": "0", "varying_probability_report": true, "release_event_report": true, "final_summary": true, "iteration_report": true, "box_triangulation_report": false, "partition_location_report": false, "probability_report": "ON", "file_output_report": false, "progress_report": true, "all_notifications": "INDIVIDUAL"}, 
+            "microscopic_reversibility": "OFF", 
+            "time_step_max": "", 
+            "partitions": {"y_start": "-1", "z_start": "-1", "recursion_flag": false, "y_step": "0.02", "x_step": "0.02", "z_end": "1", "x_end": "1", "include": false, "z_step": "0.02", "y_end": "1", "data_model_version": "DM_2016_04_15_1600", "x_start": "-1"}, 
+            "center_molecules_on_grid": false, "interaction_radius": "", "iterations": "iters", "radial_directions": "", "accurate_3d_reactions": true, "radial_subdivisions": "", "space_step": "", 
+            "warnings": {"degenerate_polygons": "WARNING", "high_reaction_probability": "IGNORED", "lifetime_threshold": "50", "missed_reactions": "WARNING", "missed_reaction_threshold": "0.001", "all_warnings": "INDIVIDUAL", "negative_reaction_rate": "WARNING", "lifetime_too_short": "WARNING", "high_probability_threshold": "1", "useless_volume_orientation": "WARNING", "negative_diffusion_constant": "WARNING", "missing_surface_orientation": "ERROR"}, 
+            "surface_grid_density": "10000", "time_step": "dt", "data_model_version": "DM_2014_10_24_1638", "vacancy_search_distance": ""}, 
+        "define_molecules": {"molecule_list": [{"diffusion_constant": "dc", "custom_space_step": "", "mol_type": "2D", "display": {"color": [0.0012195426970720291, 1.0, 0.0], "glyph": "Cone", "emit": 0.0, "scale": 10.0}, "export_viz": false, "custom_time_step": "", "maximum_step_length": "", "mol_name": "sm", "mol_bngl_label": "", "target_only": false, "data_model_version": "DM_2016_01_13_1930"}], "data_model_version": "DM_2014_10_24_1638"}, 
+        "mol_viz": {
+            "viz_enable": true, "manual_select_viz_dir": false, "file_step_index": 1, "render_and_save": false, "file_start_index": 0, "file_stop_index": 100, "file_num": 101, 
+            "file_dir": "../../../../../../../home/bobkuczewski/proj/MCell/tutorials/intro/2016_12_05/IcoModel_by_hand_files/mcell/output_data/viz_data/seed_00001", 
+            "viz_list": ["mol_sm"], 
+            "active_seed_index": 0, 
+            "color_list": [[0.8, 0.0, 0.0], [0.0, 0.8, 0.0], [0.0, 0.0, 0.8], [0.0, 0.8, 0.8], [0.8, 0.0, 0.8], [0.8, 0.8, 0.0], [1.0, 1.0, 1.0], [0.0, 0.0, 0.0]], 
+            "file_index": 93, 
+            "file_name": "Scene.cellbin.093.dat", 
+            "color_index": 0, 
+            "seed_list": ["seed_00001"], 
+            "data_model_version": "DM_2015_04_13_1700"
+        }, 
+        "cellblender_source_sha1": "76b769b495a563a6ebaaba5da7bf273151cb463a", 
+        "parameter_system": {
+            "model_parameters": [
+                {"par_description": "Number of shells to sample", "_extras": {"par_id_name": "g1", "par_value": 1.0, "par_valid": true}, "par_name": "n", "par_units": "#", "par_expression": "1"}, 
+                {"par_description": "Delta Radius of each successive shell", "par_expression": "1.0", "_extras": {"par_id_name": "g2", "par_value": 1.0, "par_valid": true}, "par_name": "dr", "par_units": "um", "sweep_enabled": false}, 
+                {"par_description": "Surface Smoothness of each shell", "_extras": {"par_id_name": "g3", "par_value": 2.0, "par_valid": true}, "par_name": "ss", "par_units": "#", "par_expression": "2"}, 
+                {"par_description": "Diffusion Constant of Molecules", "par_expression": "1e-6", "_extras": {"par_id_name": "g4", "par_value": 1e-06, "par_valid": true}, "par_name": "dc", "par_units": "cm^2/sec", "sweep_enabled": false}, 
+                {"par_description": "Number of molecules to release", "par_expression": "10", "_extras": {"par_id_name": "g5", "par_value": 10.0, "par_valid": true}, "par_name": "nrel", "par_units": "Count", "sweep_enabled": false}, 
+                {"par_description": "Number of iterations to run", "par_expression": "100", "_extras": {"par_id_name": "g6", "par_value": 100.0, "par_valid": true}, "par_name": "iters", "par_units": "", "sweep_enabled": false}, 
+                {"par_description": "Number of seeds to run", "_extras": {"par_id_name": "g7", "par_value": 1.0, "par_valid": true}, "par_name": "seeds", "par_units": "", "par_expression": "1"},
+                {"par_description": "Time step for each iteration of the simulation", "par_expression": "1e-6", "_extras": {"par_id_name": "g8", "par_value": 1e-06, "par_valid": true}, "par_name": "dt", "par_units": "sec", "sweep_enabled": false}
+            ], 
+            "_extras": {"ordered_id_names": ["g8", "g3", "g4", "g5", "g1", "g2", "g6", "g7"]}
+        }, 
+        "define_surface_classes": {"surface_class_list": [{"name": "transp", "data_model_version": "DM_2014_10_24_1638", "surface_class_prop_list": [{"clamp_value": "0", "affected_mols": "ALL_SURFACE_MOLECULES", "surf_class_orient": ";", "surf_class_type": "REFLECTIVE", "molecule": "", "name": "Molec.: ALL_SURFACE_MOLECULES   Orient.: Ignore   Type: Reflective", "data_model_version": "DM_2015_11_08_1756"}]}], "data_model_version": "DM_2014_10_24_1638"}, 
+        "model_objects": {"model_object_list": [{"name": "ico_1"}], "data_model_version": "DM_2014_10_24_1638"}, 
+        "materials": {"material_dict": {}}, 
+        "data_model_version": "DM_2014_10_24_1638", 
+        "scripting": {"show_simulation_scripting": false, "dm_internal_file_name": "IcoModel.py", "dm_external_file_name": "", "force_property_update": true, "script_texts": {}, "show_data_model_scripting": true, "scripting_list": [], "data_model_version": "DM_2016_03_15_1900"}, 
+        "geometrical_objects": {
+            "object_list": [
+                {
+                    "element_connections": [[0, 1, 2],[2,1,0]], 
+                    "vertex_list": [[-0.2763932, 0.85065078, -0.44721359], [-0.5013752, 0.7020464, -0.505720], [-0.688190, 0.5, -0.525731]], 
+                    "name": "ico_1", 
+                    "location": [0.0, 0.0, 0.0], 
+                    "define_surface_regions": [{"name": "spots", "include_elements": [2, 14, 52, 60, 101, 103, 117, 119, 134, 186, 187, 213, 215, 236, 239, 241, 252, 296, 313, 315]}]
+                }
+            ]
+        }, 
+        "release_sites": {
+            "release_site_list": [
+                {
+                    "object_expr": "ico_1[spots]", 
+                    "location_y": "0", 
+                    "shape": "OBJECT", 
+                    "pattern": "", 
+                    "name": "res_surf", 
+                    "stddev": "0", 
+                    "quantity": "nrel", 
+                    "location_z": "0", 
+                    "orient": "'", 
+                    "quantity_type": 
+                    "NUMBER_TO_RELEASE", 
+                    "release_probability": "1", 
+                    "points_list": [], 
+                    "location_x": "0", 
+                    "site_diameter": "0", 
+                    "molecule": "sm", 
+                    "data_model_version": "DM_2015_11_11_1717"
+                }
+            ],
+            "data_model_version": "DM_2014_10_24_1638"
+        }, 
+        "cellblender_version": "0.1.54", 
+        "blender_version": [2, 78, 0], 
+        "define_release_patterns": {"release_pattern_list": [], "data_model_version": "DM_2014_10_24_1638"}
+    }
+
+}

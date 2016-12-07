@@ -4,34 +4,55 @@ import json
 
 class DataModelObject(dict):
 
-    def __init__(self, dm):
-        if type(dm) == type({}):
-          for k in dm.keys():
-            v = dm[k]
-            if type(v) == type({}):
-              self[k] = DataModelObject(v)
-            elif type(v) == type([]):
-              sub_list = []
-              self.fill_list(sub_list,v)
-              self[k] = sub_list
-            else:
-              self[k] = dm[k]
-        else:
-          raise AttributeError("Dictionary required rather than " + str(type(dm)))
+    def __init__(self, dm, path):
+        # print ( "Path = " + str(path) )
+        known_paths = ['mcell.viz_output',
+                       'mcell.initialization',
+                       'mcell.simulation_control',
+                       'mcell.geometrical_objects',
+                       'mcell.modify_surface_regions',
+                       'mcell.define_molecules',
+                       'mcell.materials',
+                       'mcell.define_reactions',
+                       'mcell.release_sites',
+                       'mcell.define_surface_classes',
+                       'mcell.reaction_data_output',
+                       'mcell.parameter_system',
+                       'mcell.define_release_sites',
+                       'mcell.scripting',
+                       'mcell.model_objects']
+        if (len(path) > 0) and (path[1:] in known_paths):
+            print ( "Data Model Category = " + path[1:] )
 
-    def fill_list(self, l, dm):
-        if type(dm) == type([]):
-          for item in dm:
-            if type(item) == type({}):
-              l.append ( DataModelObject(item) )
-            elif type(item) == type([]):
-              sub_list = []
-              self.fill_list(sub_list,item)
-              l.append ( sub_list )
-            else:
-              l.append ( item )
+        if type(dm) == type({}):
+            for k in dm.keys():
+                v = dm[k]
+                if type(v) == type({}):
+                    self[k] = DataModelObject(v, path+"."+k)
+                elif type(v) == type([]):
+                    sub_list = []
+                    self.fill_list(sub_list,v, path+"."+k)
+                    self[k] = sub_list
+                else:
+                    self[k] = dm[k]
         else:
-          raise AttributeError("List required rather than " + str(type(dm)))
+            raise AttributeError("Dictionary required rather than " + str(type(dm)))
+
+    def fill_list(self, l, dm, path):
+        # print ( "Path = " + str(path) )
+        if type(dm) == type([]):
+            index = 0
+            for item in dm:
+                if type(item) == type({}):
+                    l.append ( DataModelObject(item, path+'['+str(index)+']') )
+                elif type(item) == type([]):
+                    sub_list = []
+                    self.fill_list(sub_list,item, path+'['+str(index)+']')
+                    l.append ( sub_list )
+                else:
+                    l.append ( item )
+        else:
+            raise AttributeError("List required rather than " + str(type(dm)))
 
 
     def __getattr__(self, name):
@@ -53,13 +74,13 @@ class DataModelObject(dict):
 dm_str = '{"iters":100, "init": {"warn":"off", "errlim":5 }, "mols": [ {"name":"a", "dc":1e-6 }, {"name":"b", "dc":2e-6 } ] }'
 
 with open ( "moderate_model.json", "r" ) as f:
-  dm_str = f.read()
+    dm_str = f.read()
 
 dm = json.loads ( dm_str )
 
 # print ( str(dm) )
 
-dm = DataModelObject(dm)
+dm = DataModelObject(dm,"")
 
 print()
 print ( "Source ID   = " + dm.mcell.cellblender_source_sha1 )
@@ -72,12 +93,12 @@ print()
 ns = dm.mcell.initialization.notifications
 print ( "Notifications:" )
 for n in ns.keys():
-  print ( "  " + n + ": " + str(ns[n]) )
+    print ( "  " + n + ": " + str(ns[n]) )
 print()
 ws = dm.mcell.initialization.warnings
 print ( "Warnings:" )
 for w in ws.keys():
-  print ( "  " + w + ": " + str(ws[w]) )
+    print ( "  " + w + ": " + str(ws[w]) )
 print()
 print ( "Parameters:" )
 for p in dm.mcell.parameter_system.model_parameters:
@@ -91,7 +112,7 @@ print ( "Objects:" )
 for o in dm.mcell.geometrical_objects.object_list:
     print ( "  " + o.name + " has " + str(len(o.vertex_list)) + " points and " + str(len(o.element_connections)) + " faces" )
     if "define_surface_regions" in o.keys():
-      print ( "    " + o.name + " contains " + str(len(o.define_surface_regions)) + " regions" )
+        print ( "    " + o.name + " contains " + str(len(o.define_surface_regions)) + " regions" )
 print()
 print ( "Surface Classes:" )
 for s in dm.mcell.define_surface_classes.surface_class_list:

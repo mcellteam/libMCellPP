@@ -57,13 +57,27 @@ with open ( "moderate_model.json", "r" ) as f:
 
 dm = json.loads ( dm_str )
 
-print ( str(dm) )
+# print ( str(dm) )
 
 dm = DataModelObject(dm)
 
 print()
+print ( "Source ID   = " + dm.mcell.cellblender_source_sha1 )
+print ( "DM Version  = " + dm.mcell.data_model_version )
 print ( "Iterations  = " + str(dm.mcell.initialization.iterations) )
-print ( "Warnings    = " + str(dm.mcell.initialization.warnings) )
+print()
+p = dm.mcell.initialization.partitions
+print ( "Partitions:   x: %s to %s by %s,   y: %s to %s by %s,   z: %s to %s by %s" % (p.x_start, p.x_end, p.x_step, p.y_start, p.y_end, p.y_step, p.z_start, p.z_end, p.z_step, ) )
+print()
+ns = dm.mcell.initialization.notifications
+print ( "Notifications:" )
+for n in ns.keys():
+  print ( "  " + n + ": " + str(ns[n]) )
+print()
+ws = dm.mcell.initialization.warnings
+print ( "Warnings:" )
+for w in ws.keys():
+  print ( "  " + w + ": " + str(ws[w]) )
 print()
 print ( "Parameters:" )
 for p in dm.mcell.parameter_system.model_parameters:
@@ -71,15 +85,21 @@ for p in dm.mcell.parameter_system.model_parameters:
 print()
 print ( "Molecules:" )
 for m in dm.mcell.define_molecules.molecule_list:
-    print ( "  " + m.mol_name + ": diffusion_constant = " + str(m.diffusion_constant) )
+    print ( "  " + m.mol_name + " is " + m.mol_type + " with diffusion_constant = " + str(m.diffusion_constant) )
 print()
 print ( "Objects:" )
 for o in dm.mcell.geometrical_objects.object_list:
     print ( "  " + o.name + " has " + str(len(o.vertex_list)) + " points and " + str(len(o.element_connections)) + " faces" )
+    if "define_surface_regions" in o.keys():
+      print ( "    " + o.name + " contains " + str(len(o.define_surface_regions)) + " regions" )
 print()
 print ( "Surface Classes:" )
 for s in dm.mcell.define_surface_classes.surface_class_list:
     print ( "  " + s.name + " has " + str(len(s.surface_class_prop_list)) + " property definitions" )
+print()
+print ( "Modify Surface Regions:" )
+for s in dm.mcell.modify_surface_regions.modify_surface_regions_list:
+    print ( "  " + s.name )
 print()
 
 # __import__('code').interact(local={k: v for ns in (globals(), locals()) for k, v in ns.items()})

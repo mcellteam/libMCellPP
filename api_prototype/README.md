@@ -1,4 +1,4 @@
-# List of Test Cases for the API
+# List of Example Usage Cases for the API
 
 1. Unbounded diffusion
 2. "1D diffusion" in a thin tube
@@ -33,3 +33,14 @@
 		* Where: World, object, region
 		* When: frequency of counting
 		* How: Front hits/back hits, e.g. on a plane that goes through the box
+12. SubClassing Molecule Species
+	* Implement a subclass of molecule that occupies space
+13. SubClassing Molecules and Reactions
+	* Implement subclasses that use BioNetGen-like molecules and reactions
+14. SubClassing Diffusion
+	* Implement a subclass that uses a different kind of diffusion
+15. SubClassing the Scheduler
+	* Implement a subclass that uses a variable time-step scheduler
+
+
+

@@ -50,7 +50,7 @@ while num < num_mols:
 
 
 # Add molecules to the simulation at the current time (t=0)
-m.add_molecules_at_points ( mol=mol_A, points=release_points )  # Add by reference, could also use name='A'
+sim.add_molecules_at_points ( mol=mol_A, points=release_points )  # Add by reference, could also use name='A'
 
 
 # Create a cylinder from a rotated path

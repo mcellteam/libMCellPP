@@ -10,7 +10,7 @@ iterations = 1000
 num_A = 200
 num_B = 100
 decay_rate_A = 1e3
-decay_rate_B = 1e3
+ab_decay = 1e3
 ab_to_c_rate = 1e6
 ab_c_rate = 1e8
 box_len = 0.5
@@ -50,13 +50,13 @@ sim.species_list.append(mol_C)
 
 # Define the reactions and add to simulation
 decay_A_rxn = m.create_reaction("%m -> 0" % (mol_A), name="decay_A", fwd_rate=decay_rate_A)
-decay_B_rxn = m.create_reaction("%m -> 0" % (mol_B), name="decay_B", fwd_rate=decay_rate_B)
+ab_decay_rxn = m.create_reaction("%m -> %m" % (mol_A, mol_B), name="A_to_B_decay", fwd_rate=ab_decay)
 ab_to_c_rxn = m.create_reaction("%m + %m -> %m" % (mol_A, mol_B, mol_C), name="ab_to_c", fwd_rate=ab_to_c_rate)
 ab_c_rxn = m.create_reaction("A + B <-> C", name="ab_c", fwd_rate=ab_c_rate, bkwd_rate=ab_c_rate)
 
 # Add to the simulation
 sim.rxn_list.append(decay_A_rxn)
-sim.rxn_list.append(decay_B_rxn)
+sim.rxn_list.append(ab_decay_rxn)
 sim.rxn_list.append(ab_to_c_rxn)
 sim.rxn_list.append(ab_c_rxn)
 

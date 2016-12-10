@@ -37,7 +37,24 @@
     },
 
     "materials": {
-      "material_dict": {}
+      "material_dict": {
+        "right_cube_mat": {
+          "diffuse_color": {
+            "b": 0.663,
+            "r": 0.800,
+            "a": 0.200,
+            "g": 0.0
+          }
+        },
+        "left_cube_mat": {
+          "diffuse_color": {
+            "b": 0.239,
+            "r": 0.0,
+            "a": 0.200,
+            "g": 0.800
+          }
+        }
+      }
     },
 
     "viz_output": {"start": "0", "export_all": true, "end": "1", "step": "1", "data_model_version": "DM_2014_10_24_1638", "all_iterations": true},

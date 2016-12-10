@@ -7,35 +7,50 @@ class DataModelItem(dict):
 
     def __init__(self, dm, path):
         # print ( "Path = " + str(path) )
-        known_paths = {  'mcell.parameter_system' : Parameters,
-                         'mcell.initialization' : Initialization,
-                         'mcell.geometrical_objects' : GeometryObjects,
-                         'mcell.model_objects' : ModelObjects,
-                         'mcell.define_surface_classes' : DataModelStub,
-                         'mcell.modify_surface_regions' : DataModelStub,
-                         'mcell.define_molecules' : Species,
-                         'mcell.define_reactions' : DataModelStub,
-                         'mcell.release_sites' : DataModelStub,
-                         'mcell.define_release_patterns' : DataModelStub,
-                         'mcell.materials' : DataModelStub,
-                         'mcell.mol_viz' : DataModelStub,
-                         'mcell.viz_output' : DataModelStub,
-                         'mcell.reaction_data_output' : DataModelStub,
-                         'mcell.scripting' : DataModelStub,
-                         'mcell.simulation_control' : DataModelStub  }
+        path_obj_map = ( ('mcell.parameter_system', Parameters),
+                         ('mcell.initialization', Initialization),
+                         ('mcell.geometrical_objects', GeometryObjects),
+                         ('mcell.model_objects', ModelObjects),
+                         ('mcell.define_surface_classes', DataModelStub),
+                         ('mcell.modify_surface_regions', DataModelStub),
+                         ('mcell.define_molecules', Species),
+                         ('mcell.define_reactions', DataModelStub),
+                         ('mcell.release_sites', DataModelStub),
+                         ('mcell.define_release_patterns', DataModelStub),
+                         ('mcell.materials', DataModelStub),
+                         ('mcell.mol_viz', DataModelStub),
+                         ('mcell.viz_output', DataModelStub),
+                         ('mcell.reaction_data_output', DataModelStub),
+                         ('mcell.scripting', DataModelStub),
+                         ('mcell.simulation_control', DataModelStub) )
 
-        #if (len(path) > 0) and (path in known_paths.keys()):
-        #    print ( "Data Model Category = " + path )
+        known_paths = []
+        for p in path_obj_map:
+            known_paths.append(p[0])
 
         if type(dm) == type({}):
-            for k in dm.keys():
+            path_prefix = ""
+            if len(path) > 0:
+                path_prefix = path + "."
+            # Sort the keys to match the order in path_obj_map
+            dm_keys = [ k for k in dm.keys() ]  # This is a copy of the original keys. Some (or all) of these may be moved into sorted_dm_keys.
+            sorted_dm_keys = []   # This list of keys will be sorted to reflect the preferred order in the path_obj_map.
+            for p in path_obj_map:
+                for k in dm.keys():
+                    if p[0] == path_prefix + k:
+                        sorted_dm_keys.append ( k )
+                        dm_keys.pop(dm_keys.index(k))
+            # Add the remaining keys that didn't match
+            for k in dm_keys:
+                sorted_dm_keys.append ( k )
+
+            for k in sorted_dm_keys:
                 v = dm[k]
-                subpath = k
-                if len(path) > 0:
-                    subpath = path + "." + k
+                subpath = path_prefix + k
                 if type(v) == type({}):
-                    if (len(subpath) > 0) and (subpath in known_paths.keys()):
-                        self[k] = known_paths[subpath](v, subpath)
+                    if (len(subpath) > 0) and (subpath in known_paths):
+                        i = known_paths.index(subpath)
+                        self[k] = path_obj_map[i][1](v, subpath)
                     else:
                         self[k] = DataModelItem(v, subpath)
                 elif type(v) == type([]):

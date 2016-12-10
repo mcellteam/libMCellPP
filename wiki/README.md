@@ -59,6 +59,7 @@ Models share nothing with eachother. Each model has its own:
 	i. Keyed by species name.
 
 	ii. There is only one way to add species:
+	
 		b. Direct way:
 		```
 		my_species = my_model.create_species(...)

@@ -11,18 +11,19 @@ class DataModelItem(dict):
                          ('mcell.initialization', Initialization),
                          ('mcell.geometrical_objects', GeometryObjects),
                          ('mcell.model_objects', ModelObjects),
-                         ('mcell.define_surface_classes', DataModelStub),
-                         ('mcell.modify_surface_regions', DataModelStub),
+                         ('mcell.define_surface_classes', SurfaceClasses),
+                         ('mcell.modify_surface_regions', SurfaceRegionMods),
                          ('mcell.define_molecules', Species),
-                         ('mcell.define_reactions', DataModelStub),
-                         ('mcell.release_sites', DataModelStub),
-                         ('mcell.define_release_patterns', DataModelStub),
-                         ('mcell.materials', DataModelStub),
-                         ('mcell.mol_viz', DataModelStub),
-                         ('mcell.viz_output', DataModelStub),
-                         ('mcell.reaction_data_output', DataModelStub),
-                         ('mcell.scripting', DataModelStub),
-                         ('mcell.simulation_control', DataModelStub) )
+                         ('mcell.define_reactions', Reactions),
+                         ('mcell.release_sites', ReleaseSites),
+                         ('mcell.define_release_patterns', ReleasePatterns),
+                         ('mcell.materials', Materials),
+                         ('mcell.mol_viz', MoleculeVisualization),
+                         ('mcell.viz_output', VisualizationOutput),
+                         ('mcell.reaction_data_output', ReactionOutput),
+                         ('mcell.scripting', Scripting),
+                         ('mcell.simulation_control', SimulationControl) )
+
 
         known_paths = []
         for p in path_obj_map:
@@ -104,6 +105,9 @@ class Parameters(DataModelItem):
         # Start by reading all of the data model items generically
         super().__init__(dm,path)
         # Next perform any class-specific initialization
+        self.print()
+
+    def print(self):
         print ( "\nInitializing Parameters from Data Model" )
         for p in self.model_parameters:
             print ( "  " + p.par_name + " = " + str(p.par_expression) )
@@ -114,6 +118,9 @@ class Initialization(DataModelItem):
         # Start by reading all of the data model items generically
         super().__init__(dm,path)
         # Next perform any class-specific initialization
+        self.print()
+
+    def print(self):
         p = self.partitions
         print ( "\nInitializing Partitions from Data Model:" )
         print ( "  x: [%s to %s by %s]\n  y: [%s to %s by %s]\n  z: [%s to %s by %s]" % (p.x_start, p.x_end, p.x_step, p.y_start, p.y_end, p.y_step, p.z_start, p.z_end, p.z_step) )
@@ -132,6 +139,9 @@ class GeometryObjects(DataModelItem):
         # Start by reading all of the data model items generically
         super().__init__(dm,path)
         # Next perform any class-specific initialization
+        self.print()
+
+    def print(self):
         print ( "\nInitializing GeometryObjects from Data Model" )
         for o in self.object_list:
             print ( "  " + o.name + " is at " + str(o.location) + " with " + str(len(o.vertex_list)) + " points and " + str(len(o.element_connections)) + " faces" )
@@ -142,6 +152,9 @@ class ModelObjects(DataModelItem):
         # Start by reading all of the data model items generically
         super().__init__(dm,path)
         # Next perform any class-specific initialization
+        self.print()
+
+    def print(self):
         print ( "\nInitializing ModelObjects from Data Model" )
         for m in self.model_object_list:
             print ( "  Model Object " + m.name )
@@ -152,11 +165,142 @@ class Species(DataModelItem):
         # Start by reading all of the data model items generically
         super().__init__(dm,path)
         # Next perform any class-specific initialization
+        self.print()
+
+    def print(self):
         print ( "\nInitializing Species from Data Model" )
         for m in self.molecule_list:
             print ( "  " + m.mol_name + " is " + m.mol_type + " with diffusion_constant = " + str(m.diffusion_constant) )
 
+class  SurfaceClasses (DataModelItem):
+    def __init__ ( self, dm, path ):
+        # Start by reading all of the data model items generically
+        super().__init__(dm,path)
+        # Next perform any class-specific initialization
+        self.print()
 
+    def print(self):
+        print ( "\nInitializing SurfaceClasses from Data Model" )
+        for sc in self.surface_class_list:
+            print ( "  " + sc.name + " has " + str(len(sc.surface_class_prop_list)) + " surface properties" )
+
+class  SurfaceRegionMods (DataModelItem):
+    def __init__ ( self, dm, path ):
+        # Start by reading all of the data model items generically
+        super().__init__(dm,path)
+        # Next perform any class-specific initialization
+        self.print()
+
+    def print(self):
+        print ( "\nInitializing SurfaceRegionMods from Data Model" )
+        for sr in self.modify_surface_regions_list:
+            print ( "  " + sr.region_name + " is " + sr.name )
+
+class  Reactions (DataModelItem):
+    def __init__ ( self, dm, path ):
+        # Start by reading all of the data model items generically
+        super().__init__(dm,path)
+        # Next perform any class-specific initialization
+        self.print()
+
+    def print(self):
+        print ( "\nInitializing Reactions from Data Model" )
+        for r in self.reaction_list:
+            print ( "  Reaction Definition:  " + r.name + " [" + str(r.fwd_rate) + "," + str(r.bkwd_rate) + "]" )
+
+class  ReleaseSites (DataModelItem):
+    def __init__ ( self, dm, path ):
+        # Start by reading all of the data model items generically
+        super().__init__(dm,path)
+        # Next perform any class-specific initialization
+        self.print()
+
+    def print(self):
+        print ( "\nInitializing ReleaseSites from Data Model" )
+        for rs in self.release_site_list:
+            print ( "  " + rs.name + " releases " + rs.molecule + " with shape " + rs.shape )
+
+class  ReleasePatterns (DataModelItem):
+    def __init__ ( self, dm, path ):
+        # Start by reading all of the data model items generically
+        super().__init__(dm,path)
+        # Next perform any class-specific initialization
+        self.print()
+
+    def print(self):
+        print ( "\nInitializing ReleasePatterns from Data Model" )
+        for rp in self.release_pattern_list:
+            print ( "  Pattern " + str(rp.name) + " releases " + str(rp.number_of_trains) + " train(s)" )
+
+class  Materials (DataModelItem):
+    def __init__ ( self, dm, path ):
+        # Start by reading all of the data model items generically
+        super().__init__(dm,path)
+        # Next perform any class-specific initialization
+        self.print()
+
+    def print(self):
+        print ( "\nInitializing Materials from Data Model" )
+        for k in self.material_dict.keys():
+            c = self.material_dict[k].diffuse_color
+            print ( "  Material " + str(k) + " color is: [ R=%g  G=%g  B=%g   a=%g ]" % ( c.r, c.g, c.b, c.a) )
+
+class  MoleculeVisualization (DataModelItem):
+    def __init__ ( self, dm, path ):
+        # Start by reading all of the data model items generically
+        super().__init__(dm,path)
+        # Next perform any class-specific initialization
+        self.print()
+
+    def print(self):
+        print ( "\nInitializing MoleculeVisualization from Data Model" )
+        for m in self.viz_list:
+            print ( "  Molecule " + m )
+
+class  VisualizationOutput (DataModelItem):
+    def __init__ ( self, dm, path ):
+        # Start by reading all of the data model items generically
+        super().__init__(dm,path)
+        # Next perform any class-specific initialization
+        self.print()
+
+    def print(self):
+        print ( "\nInitializing VisualizationOutput from Data Model" )
+        print ( "  Visualization: from " + str(self.start) + " to " + str(self.end) + " by " + str(self.step) + " with all_iterations = " + str(self.all_iterations) )
+
+class  ReactionOutput (DataModelItem):
+    def __init__ ( self, dm, path ):
+        # Start by reading all of the data model items generically
+        super().__init__(dm,path)
+        # Next perform any class-specific initialization
+        self.print()
+
+    def print(self):
+        print ( "\nInitializing ReactionOutput from Data Model" )
+        for ro in self.reaction_output_list:
+            print ( "  " + ro.name )
+
+class  Scripting (DataModelItem):
+    def __init__ ( self, dm, path ):
+        # Start by reading all of the data model items generically
+        super().__init__(dm,path)
+        # Next perform any class-specific initialization
+        self.print()
+
+    def print(self):
+        print ( "\nInitializing Scripting from Data Model" )
+        print ( "  Scripting has " + str(len(self.script_texts)) + " texts, and " + str(len(self.scripting_list)) + " items in the list" )
+
+class  SimulationControl (DataModelItem):
+    def __init__ ( self, dm, path ):
+        # Start by reading all of the data model items generically
+        super().__init__(dm,path)
+        # Next perform any class-specific initialization
+        self.print()
+
+    def print(self):
+        print ( "\nInitializing SimulationControl from Data Model" )
+        print ( "  Simulation Control uses seeds from " + str(self.start_seed) + " to " + str(self.end_seed) )
 
 
 
@@ -174,9 +318,12 @@ dm = DataModelItem(dm,"")
 mcell = dm.mcell
 
 print()
+print ( "=============================================================================" )
 for k in mcell.keys():
   print ( "mcell." + k + " is of type " + str(type(mcell[k])) )
+print ( "=============================================================================" )
 
+"""
 print()
 print ( "Source ID   = " + mcell.cellblender_source_sha1 )
 print ( "DM Version  = " + mcell.data_model_version )
@@ -217,6 +364,7 @@ print ( "Modify Surface Regions:" )
 for s in mcell.modify_surface_regions.modify_surface_regions_list:
     print ( "  " + s.name )
 print()
+"""
 
-__import__('code').interact(local={k: v for ns in (globals(), locals()) for k, v in ns.items()})
+# __import__('code').interact(local={k: v for ns in (globals(), locals()) for k, v in ns.items()})
 

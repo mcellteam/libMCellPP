@@ -1,4 +1,4 @@
-# import libMCell as m
+# import pyMCell as m
 
 import json
 
@@ -21,17 +21,20 @@ class DataModelObject(dict):
                        'mcell.define_release_sites',
                        'mcell.scripting',
                        'mcell.model_objects']
-        if (len(path) > 0) and (path[1:] in known_paths):
-            print ( "Data Model Category = " + path[1:] )
+        if (len(path) > 0) and (path in known_paths):
+            print ( "Data Model Category = " + path )
 
         if type(dm) == type({}):
             for k in dm.keys():
                 v = dm[k]
+                subpath = k
+                if len(path) > 0:
+                  sub_path = path + "." + k
                 if type(v) == type({}):
-                    self[k] = DataModelObject(v, path+"."+k)
+                    self[k] = DataModelObject(v, subpath)
                 elif type(v) == type([]):
                     sub_list = []
-                    self.fill_list(sub_list,v, path+"."+k)
+                    self.fill_list(sub_list,v, subpath)
                     self[k] = sub_list
                 else:
                     self[k] = dm[k]
@@ -69,6 +72,10 @@ class DataModelObject(dict):
             del self[name]
         else:
             raise AttributeError("No such attribute: " + name)
+
+class Species(DataModelObject):
+    def __init__ ( self, name, dc ):
+        self.dc = dc
 
 
 dm_str = '{"iters":100, "init": {"warn":"off", "errlim":5 }, "mols": [ {"name":"a", "dc":1e-6 }, {"name":"b", "dc":2e-6 } ] }'
@@ -123,5 +130,5 @@ for s in dm.mcell.modify_surface_regions.modify_surface_regions_list:
     print ( "  " + s.name )
 print()
 
-# __import__('code').interact(local={k: v for ns in (globals(), locals()) for k, v in ns.items()})
+__import__('code').interact(local={k: v for ns in (globals(), locals()) for k, v in ns.items()})
 

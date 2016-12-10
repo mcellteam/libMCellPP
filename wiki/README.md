@@ -56,20 +56,20 @@ Models share nothing with eachother. Each model has its own:
 
 1. Dictionary of species:
 
-	i. Keyed by species name.
+ i. Keyed by species name.
 
-	ii. There is only one way to add species:
+ ii. There is only one way to add species:
 	
-		b. Direct way:
-		```
-		my_species = my_model.create_species(...)
-		```
-		We considered previously being able to create a template species, separate from any model. However, this caused: 1) extra code, 2) confusion about the different ways to add species (clearer to just have one) and 3) no obvious benefit. If the user wants to create a template for a species, they can write their own in Python. In other words, why would you ever create a species that's not part of a simulation?
+  a. Direct way:	
+  ```
+  my_species = my_model.create_species(...)
+  ```
+  We considered previously being able to create a template species, separate from any model. However, this caused: 1) extra code, 2) confusion about the different ways to add species (clearer to just have one) and 3) no obvious benefit. If the user wants to create a template for a species, they can write their own in Python. In other words, why would you ever create a species that's not part of a simulation?
 		
-	iii. To access objects, the user may either use the handle that was given during assignment. Alternatively, by name:
-	```
-	my_species = my_model.species_dict["species_name"]
-	```
+ iii. To access objects, the user may either use the handle that was given during assignment. Alternatively, by name:
+ ```
+ my_species = my_model.species_dict["species_name"]
+ ```
 
 
 

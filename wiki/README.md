@@ -40,13 +40,15 @@ This raises the following questions:
 	        del self._name
 
 
-	class Species(MObject):
+	class Species(Base):
 	    def __init__(self):
 	        super().__init__()
 	```
 	Note that `name` is now actually a function disguised as a property, while the actual name is stored as `_name`. Potentially the user could directly edit `_name` and break the desired dictionary-key-update functionality - however, since this name is protected, the user will know they are doing some illegal.
 
 A further functionality that the setter function of the name property should have is a check against possible duplicate names in the dictionary - this is not allowed.
+
+Here is a nice working example of a species dict: [EXAMPLE](https://github.com/mcellteam/libMCellPP/blob/master/api_prototype/oliver/test_1_unbounded_diffusion.py).
 
 ## Basics
 
@@ -56,18 +58,12 @@ Models share nothing with eachother. Each model has its own:
 
 	i. Keyed by species name.
 
-	ii. There are two ways to add species:
-		a. Template way:
-		```
-		my_species_template = m.create_species(...)
-		my_species = my_model.species_dict.add(my_species_template)
-		```
-		The species are stored in a dict because the order doesn't matter, and accessing by names is useful.
-		When you add the species to the `species_dict`, a deep-copy operations occurs which copies the species properties from `my_species_template` into a unique memory location.
+	ii. There is only one way to add species:
 		b. Direct way:
 		```
 		my_species = my_model.create_species(...)
 		```
+		We considered previously being able to create a template species, separate from any model. However, this caused: 1) extra code, 2) confusion about the different ways to add species (clearer to just have one) and 3) no obvious benefit. If the user wants to create a template for a species, they can write their own in Python. In other words, why would you ever create a species that's not part of a simulation?
 		
 	iii. To access objects, the user may either use the handle that was given during assignment. Alternatively, by name:
 	```

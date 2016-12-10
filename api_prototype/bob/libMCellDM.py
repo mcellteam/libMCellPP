@@ -7,8 +7,8 @@ class DataModelItem(dict):
 
     def __init__(self, dm, path):
         # print ( "Path = " + str(path) )
-        known_paths = {  'mcell.parameter_system' : DataModelStub,
-                         'mcell.initialization' : DataModelStub,
+        known_paths = {  'mcell.parameter_system' : Parameters,
+                         'mcell.initialization' : Initialization,
                          'mcell.geometrical_objects' : GeometryObjects,
                          'mcell.model_objects' : ModelObjects,
                          'mcell.define_surface_classes' : DataModelStub,
@@ -24,8 +24,8 @@ class DataModelItem(dict):
                          'mcell.scripting' : DataModelStub,
                          'mcell.simulation_control' : DataModelStub  }
 
-        if (len(path) > 0) and (path in known_paths.keys()):
-            print ( "Data Model Category = " + path )
+        #if (len(path) > 0) and (path in known_paths.keys()):
+        #    print ( "Data Model Category = " + path )
 
         if type(dm) == type({}):
             for k in dm.keys():
@@ -84,19 +84,63 @@ class DataModelStub(DataModelItem):
     pass
 
 
-class Species(DataModelItem):
+class Parameters(DataModelItem):
     def __init__ ( self, dm, path ):
+        # Start by reading all of the data model items generically
         super().__init__(dm,path)
+        # Next perform any class-specific initialization
+        print ( "\nInitializing Parameters from Data Model" )
+        for p in self.model_parameters:
+            print ( "  " + p.par_name + " = " + str(p.par_expression) )
 
 
-class ModelObjects(DataModelItem):
+class Initialization(DataModelItem):
     def __init__ ( self, dm, path ):
+        # Start by reading all of the data model items generically
         super().__init__(dm,path)
+        # Next perform any class-specific initialization
+        p = self.partitions
+        print ( "\nInitializing Partitions from Data Model:" )
+        print ( "  x: [%s to %s by %s]\n  y: [%s to %s by %s]\n  z: [%s to %s by %s]" % (p.x_start, p.x_end, p.x_step, p.y_start, p.y_end, p.y_step, p.z_start, p.z_end, p.z_step) )
+        ns = self.notifications
+        print ( "\nInitializing Notifications:" )
+        for n in ns.keys():
+            print ( "  " + n + ": " + str(ns[n]) )
+        ws = self.warnings
+        print ( "\nInitializing Warnings:" )
+        for w in ws.keys():
+            print ( "  " + w + ": " + str(ws[w]) )
 
 
 class GeometryObjects(DataModelItem):
     def __init__ ( self, dm, path ):
+        # Start by reading all of the data model items generically
         super().__init__(dm,path)
+        # Next perform any class-specific initialization
+        print ( "\nInitializing GeometryObjects from Data Model" )
+        for o in self.object_list:
+            print ( "  " + o.name + " is at " + str(o.location) + " with " + str(len(o.vertex_list)) + " points and " + str(len(o.element_connections)) + " faces" )
+
+
+class ModelObjects(DataModelItem):
+    def __init__ ( self, dm, path ):
+        # Start by reading all of the data model items generically
+        super().__init__(dm,path)
+        # Next perform any class-specific initialization
+        print ( "\nInitializing ModelObjects from Data Model" )
+        for m in self.model_object_list:
+            print ( "  Model Object " + m.name )
+
+
+class Species(DataModelItem):
+    def __init__ ( self, dm, path ):
+        # Start by reading all of the data model items generically
+        super().__init__(dm,path)
+        # Next perform any class-specific initialization
+        print ( "\nInitializing Species from Data Model" )
+        for m in self.molecule_list:
+            print ( "  " + m.mol_name + " is " + m.mol_type + " with diffusion_constant = " + str(m.diffusion_constant) )
+
 
 
 

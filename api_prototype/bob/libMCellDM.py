@@ -3,7 +3,7 @@
 import json
 
 
-class DataModelItem(dict):
+class DataModelDict(dict):
 
     def __init__(self, dm, path):
         # print ( "Path = " + str(path) )
@@ -53,7 +53,7 @@ class DataModelItem(dict):
                         i = known_paths.index(subpath)
                         self[k] = path_obj_map[i][1](v, subpath)
                     else:
-                        self[k] = DataModelItem(v, subpath)
+                        self[k] = DataModelDict(v, subpath)
                 elif type(v) == type([]):
                     sub_list = []
                     self.fill_list(sub_list,v, subpath)
@@ -69,7 +69,7 @@ class DataModelItem(dict):
             index = 0
             for item in dm:
                 if type(item) == type({}):
-                    l.append ( DataModelItem(item, path+'['+str(index)+']') )
+                    l.append ( DataModelDict(item, path+'['+str(index)+']') )
                 elif type(item) == type([]):
                     sub_list = []
                     self.fill_list(sub_list,item, path+'['+str(index)+']')
@@ -84,7 +84,7 @@ class DataModelItem(dict):
         if name in self:
             return self[name]
         else:
-            raise AttributeError("No such attribute: " + name)
+            raise AttributeError("No such attribute: " + str(name))
 
     def __setattr__(self, name, value):
         self[name] = value
@@ -93,19 +93,19 @@ class DataModelItem(dict):
         if name in self:
             del self[name]
         else:
-            raise AttributeError("No such attribute: " + name)
+            raise AttributeError("No such attribute: " + str(name))
 
 
-class DataModelStub(DataModelItem):
+class DataModelStub(DataModelDict):
     pass
 
 
-class Parameters(DataModelItem):
+class Parameters(DataModelDict):
     def __init__ ( self, dm, path ):
         # Start by reading all of the data model items generically
         super().__init__(dm,path)
         # Next perform any class-specific initialization
-        self.print()
+        print()
 
     def print(self):
         print ( "\nInitializing Parameters from Data Model" )
@@ -113,7 +113,7 @@ class Parameters(DataModelItem):
             print ( "  " + p.par_name + " = " + str(p.par_expression) )
 
 
-class Initialization(DataModelItem):
+class Initialization(DataModelDict):
     def __init__ ( self, dm, path ):
         # Start by reading all of the data model items generically
         super().__init__(dm,path)
@@ -134,7 +134,7 @@ class Initialization(DataModelItem):
             print ( "  " + w + ": " + str(ws[w]) )
 
 
-class GeometryObjects(DataModelItem):
+class GeometryObjects(DataModelDict):
     def __init__ ( self, dm, path ):
         # Start by reading all of the data model items generically
         super().__init__(dm,path)
@@ -147,7 +147,7 @@ class GeometryObjects(DataModelItem):
             print ( "  " + o.name + " is at " + str(o.location) + " with " + str(len(o.vertex_list)) + " points and " + str(len(o.element_connections)) + " faces" )
 
 
-class ModelObjects(DataModelItem):
+class ModelObjects(DataModelDict):
     def __init__ ( self, dm, path ):
         # Start by reading all of the data model items generically
         super().__init__(dm,path)
@@ -160,7 +160,7 @@ class ModelObjects(DataModelItem):
             print ( "  Model Object " + m.name )
 
 
-class Species(DataModelItem):
+class Species(DataModelDict):
     def __init__ ( self, dm, path ):
         # Start by reading all of the data model items generically
         super().__init__(dm,path)
@@ -172,7 +172,7 @@ class Species(DataModelItem):
         for m in self.molecule_list:
             print ( "  " + m.mol_name + " is " + m.mol_type + " with diffusion_constant = " + str(m.diffusion_constant) )
 
-class  SurfaceClasses (DataModelItem):
+class  SurfaceClasses (DataModelDict):
     def __init__ ( self, dm, path ):
         # Start by reading all of the data model items generically
         super().__init__(dm,path)
@@ -184,7 +184,7 @@ class  SurfaceClasses (DataModelItem):
         for sc in self.surface_class_list:
             print ( "  " + sc.name + " has " + str(len(sc.surface_class_prop_list)) + " surface properties" )
 
-class  SurfaceRegionMods (DataModelItem):
+class  SurfaceRegionMods (DataModelDict):
     def __init__ ( self, dm, path ):
         # Start by reading all of the data model items generically
         super().__init__(dm,path)
@@ -196,7 +196,7 @@ class  SurfaceRegionMods (DataModelItem):
         for sr in self.modify_surface_regions_list:
             print ( "  " + sr.region_name + " is " + sr.name )
 
-class  Reactions (DataModelItem):
+class  Reactions (DataModelDict):
     def __init__ ( self, dm, path ):
         # Start by reading all of the data model items generically
         super().__init__(dm,path)
@@ -208,7 +208,7 @@ class  Reactions (DataModelItem):
         for r in self.reaction_list:
             print ( "  Reaction Definition:  " + r.name + " [" + str(r.fwd_rate) + "," + str(r.bkwd_rate) + "]" )
 
-class  ReleaseSites (DataModelItem):
+class  ReleaseSites (DataModelDict):
     def __init__ ( self, dm, path ):
         # Start by reading all of the data model items generically
         super().__init__(dm,path)
@@ -220,7 +220,7 @@ class  ReleaseSites (DataModelItem):
         for rs in self.release_site_list:
             print ( "  " + rs.name + " releases " + rs.molecule + " with shape " + rs.shape )
 
-class  ReleasePatterns (DataModelItem):
+class  ReleasePatterns (DataModelDict):
     def __init__ ( self, dm, path ):
         # Start by reading all of the data model items generically
         super().__init__(dm,path)
@@ -232,7 +232,7 @@ class  ReleasePatterns (DataModelItem):
         for rp in self.release_pattern_list:
             print ( "  Pattern " + str(rp.name) + " releases " + str(rp.number_of_trains) + " train(s)" )
 
-class  Materials (DataModelItem):
+class  Materials (DataModelDict):
     def __init__ ( self, dm, path ):
         # Start by reading all of the data model items generically
         super().__init__(dm,path)
@@ -245,7 +245,7 @@ class  Materials (DataModelItem):
             c = self.material_dict[k].diffuse_color
             print ( "  Material " + str(k) + " color is: [ R=%g  G=%g  B=%g   a=%g ]" % ( c.r, c.g, c.b, c.a) )
 
-class  MoleculeVisualization (DataModelItem):
+class  MoleculeVisualization (DataModelDict):
     def __init__ ( self, dm, path ):
         # Start by reading all of the data model items generically
         super().__init__(dm,path)
@@ -257,7 +257,7 @@ class  MoleculeVisualization (DataModelItem):
         for m in self.viz_list:
             print ( "  Molecule " + m )
 
-class  VisualizationOutput (DataModelItem):
+class  VisualizationOutput (DataModelDict):
     def __init__ ( self, dm, path ):
         # Start by reading all of the data model items generically
         super().__init__(dm,path)
@@ -268,7 +268,7 @@ class  VisualizationOutput (DataModelItem):
         print ( "\nInitializing VisualizationOutput from Data Model" )
         print ( "  Visualization: from " + str(self.start) + " to " + str(self.end) + " by " + str(self.step) + " with all_iterations = " + str(self.all_iterations) )
 
-class  ReactionOutput (DataModelItem):
+class  ReactionOutput (DataModelDict):
     def __init__ ( self, dm, path ):
         # Start by reading all of the data model items generically
         super().__init__(dm,path)
@@ -280,7 +280,7 @@ class  ReactionOutput (DataModelItem):
         for ro in self.reaction_output_list:
             print ( "  " + ro.name )
 
-class  Scripting (DataModelItem):
+class  Scripting (DataModelDict):
     def __init__ ( self, dm, path ):
         # Start by reading all of the data model items generically
         super().__init__(dm,path)
@@ -291,7 +291,7 @@ class  Scripting (DataModelItem):
         print ( "\nInitializing Scripting from Data Model" )
         print ( "  Scripting has " + str(len(self.script_texts)) + " texts, and " + str(len(self.scripting_list)) + " items in the list" )
 
-class  SimulationControl (DataModelItem):
+class  SimulationControl (DataModelDict):
     def __init__ ( self, dm, path ):
         # Start by reading all of the data model items generically
         super().__init__(dm,path)
@@ -302,69 +302,94 @@ class  SimulationControl (DataModelItem):
         print ( "\nInitializing SimulationControl from Data Model" )
         print ( "  Simulation Control uses seeds from " + str(self.start_seed) + " to " + str(self.end_seed) )
 
+import sys
+import argparse
 
+def main(argv=None):
+    arg_parser = argparse.ArgumentParser()
+    group = arg_parser.add_mutually_exclusive_group()
+    group.add_argument ( "-f", "--data_model_name", type=str, help="name of the data model to use" )
+    group.add_argument ( "-t", "--test_only", action='store_true', help="use the default self-contained data model" )
+    arg_parser.add_argument ( "-v", "--verbose", action='store_true', help="print additional details" )
+    arg_parser.add_argument ( "-i", "--interactive", action='store_true', help="drop into an interactive shell after loading" )
+    args = arg_parser.parse_args()
 
-dm_str = '{"iters":100, "init": {"warn":"off", "errlim":5 }, "mols": [ {"name":"a", "dc":1e-6 }, {"name":"b", "dc":2e-6 } ] }'
+    dm_str = ''
+    if args.test_only:
+        dm_str = """{ "mcell":
+                      {
+                        "initialization": {
+                          "time_step": "1e-6",
+                          "iterations": "123",
+                          "partitions": {
+                            "data_model_version": "DM_2016_04_15_1600",
+                            "include": true,
+                            "x_start": "-2.1",
+                            "x_end": "2.1",
+                            "x_step": "0.1",
+                            "y_start": "-1",
+                            "y_end": "1",
+                            "y_step": "0.1",
+                            "z_start": "-1",
+                            "z_end": "1",
+                            "z_step": "0.1"
+                          },
+                          "notifications": {
+                            "all_notifications": "INDIVIDUAL"
+                          },
+                          "warnings": {
+                            "all_warnings": "INDIVIDUAL"
+                          }
+                        },
+                        "define_molecules": {
+                          "data_model_version": "DM_2014_10_24_1638",
+                          "molecule_list": [
+                            {"mol_name":"a", "mol_type":"3D", "diffusion_constant":"1e-6", "data_model_version": "DM_2016_01_13_1930" },
+                            {"mol_name":"b", "mol_type":"3D", "diffusion_constant":"2e-6", "data_model_version": "DM_2016_01_13_1930" }
+                          ]
+                        },
+                        "define_reactions": {
+                          "data_model_version": "DM_2014_10_24_1638",
+                          "reaction_list": [
+                            {
+                              "name": "left_vol + right_vol -> left_right_vol",
+                              "data_model_version": "DM_2014_10_24_1638",
+                              "reactants": "left_vol + right_vol",
+                              "bkwd_rate": "",
+                              "variable_rate_text": "",
+                              "rxn_name": "",
+                              "rxn_type": "irreversible",
+                              "fwd_rate": "1e10",
+                              "products": "left_right_vol",
+                              "variable_rate_valid": false,
+                              "variable_rate": "",
+                              "variable_rate_switch": false
+                            }
+                          ]
+                        }
+                      }
+                    }"""
+    else:
+        with open ( args.data_model_name, "r" ) as f:
+            dm_str = f.read()
 
-with open ( "moderate_model.json", "r" ) as f:
-    dm_str = f.read()
+    dm = json.loads ( dm_str )
 
-dm = json.loads ( dm_str )
+    if args.verbose:
+        print ( str(dm) )
 
-# print ( str(dm) )
+    dm = DataModelDict(dm,"")
 
-dm = DataModelItem(dm,"")
+    mcell = dm.mcell
 
-mcell = dm.mcell
+    print()
+    print ( "=============================================================================" )
+    for k in mcell.keys():
+      print ( "mcell." + k + " is of type " + str(type(mcell[k])) )
+    print ( "=============================================================================" )
 
-print()
-print ( "=============================================================================" )
-for k in mcell.keys():
-  print ( "mcell." + k + " is of type " + str(type(mcell[k])) )
-print ( "=============================================================================" )
+    if args.interactive:
+        __import__('code').interact(local={k: v for ns in (globals(), locals()) for k, v in ns.items()})
 
-"""
-print()
-print ( "Source ID   = " + mcell.cellblender_source_sha1 )
-print ( "DM Version  = " + mcell.data_model_version )
-print ( "Iterations  = " + str(mcell.initialization.iterations) )
-print()
-p = mcell.initialization.partitions
-print ( "Partitions:   x: %s to %s by %s,   y: %s to %s by %s,   z: %s to %s by %s" % (p.x_start, p.x_end, p.x_step, p.y_start, p.y_end, p.y_step, p.z_start, p.z_end, p.z_step, ) )
-print()
-ns = mcell.initialization.notifications
-print ( "Notifications:" )
-for n in ns.keys():
-    print ( "  " + n + ": " + str(ns[n]) )
-print()
-ws = mcell.initialization.warnings
-print ( "Warnings:" )
-for w in ws.keys():
-    print ( "  " + w + ": " + str(ws[w]) )
-print()
-print ( "Parameters:" )
-for p in mcell.parameter_system.model_parameters:
-    print ( "  " + p.par_name + " = " + str(p.par_expression) )
-print()
-print ( "Molecules:" )
-for m in mcell.define_molecules.molecule_list:
-    print ( "  " + m.mol_name + " is " + m.mol_type + " with diffusion_constant = " + str(m.diffusion_constant) )
-print()
-print ( "Objects:" )
-for o in mcell.geometrical_objects.object_list:
-    print ( "  " + o.name + " has " + str(len(o.vertex_list)) + " points and " + str(len(o.element_connections)) + " faces" )
-    if "define_surface_regions" in o.keys():
-        print ( "    " + o.name + " contains " + str(len(o.define_surface_regions)) + " regions" )
-print()
-print ( "Surface Classes:" )
-for s in mcell.define_surface_classes.surface_class_list:
-    print ( "  " + s.name + " has " + str(len(s.surface_class_prop_list)) + " property definitions" )
-print()
-print ( "Modify Surface Regions:" )
-for s in mcell.modify_surface_regions.modify_surface_regions_list:
-    print ( "  " + s.name )
-print()
-"""
-
-# __import__('code').interact(local={k: v for ns in (globals(), locals()) for k, v in ns.items()})
-
+if __name__ == '__main__':
+    sys.exit(main())

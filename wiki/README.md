@@ -27,7 +27,8 @@ The base class must contain a list of the parent object dictionaries that refere
 
 Each model has its own:
 
-1. List of species
+1. List of species which inherit from `MCellBase`
+
  i. How do you make a species? There are two ways:
  ```
  my_species = m.create_species(...)
@@ -41,16 +42,21 @@ Each model has its own:
  The `my_species` object in either case may be appended to multiple models. In this case, the memory is shared.
 
  ii. How do you access a species? There are 3 ways:
+ 
   a. You have the handle when you made it
+  
   b. `my_model.species_list[0]`
+  
   c. Access by name via a special function: `my_model.species_list.get("name")`. This means that in addition to a `species_list` there needs to be an internal dictionary from the species name to the species object.
 
   Why is there an internal dictionary?
-  a. Searching the list could be slow
-  b. It should be private because when the name of a species is changed using it's handle:
-  ```
-  my_species.name = "new name"
-  ```
-  the dictionary will need to update the key associated with this species object. This can possibly fail if the key is a duplicate.
+  
+   a. Searching the list could be slow
+  
+   b. It should be private because when the name of a species is changed using it's handle:
+   ```
+   my_species.name = "new name"
+   ```
+   the dictionary will need to update the key associated with this species object. This can possibly fail if the key is a duplicate.
 
 

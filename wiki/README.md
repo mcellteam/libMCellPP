@@ -2,77 +2,55 @@
 
 ## Name of module: "pyMCell"
 
-## Fundamental command to create an MCell World
+## Fundamental command to create an MCell Model
 
 ```
 my_model = m.create_model()
 ```
 
+Models created in the same process can share with each other, since they are in the same memory space.
+
 ## MCell Base Class
 
 The MCell base class will store properties and functions that are useful to all different types of objects. For example, the species class, the reaction class, etc. will all be subclasses of the MCell base class.
 
-One of the things the base class will contain is the name of the instance. This is necessary for the following reason:
-Objects will be stored in a dictionary form, with the keys being the names of the instances. For example, species will be stored in a species_dict, with keys being the names of the species. Unfortunately, this means that the `name` property will be stored twice: once as a key in a dictionary, and once as a property of the base class.
+The name of the base class is:
+```
+MCellBase
+```
 
-This raises the following questions:
+One of the things the base class will contain is the name of the instance. Changing the name of objects is **forbidden**. Alternatively you may delete and re-add the object.
 
-1. How do we access the objects name? It will inherit the name property from the base class. Therefore it will be possible to simply write `my_species.name` to get the name.
-
-2. How do we change the name of the object? We want to be able to change it in the same form as we access it: `my_species.name = "new name"`. However, the dictionary must now also be updated, such that the old key (the old name) is deleted, and the new key (the new name) is inserted. There are two ways to do this:
-
- i. (Worse) the name property is read-only. That is, `my_species.name = "new name"` is forbidden. Instead, a different function is provided `my_species.change_name("new name")` that 1) changes the name property, but also 2) makes the change in the dictionary `my_model.species_dict`.
-
- ii. (Better) the base class overloads the setter and getter functions of `name`, such that we can write `my_species.name = "new name"` which also runs extra commands to change the dictionary keys in `my_model.species_dict`. This is possible e.g. by the following code
- ```
- class Base(object):
-     def __init__(self):
-         self._name = None
-     @property
-     def name(self):
-         return self._name
-     @name.setter
-     def name(self, value):
-         print("Here I can do other things like update the species_dict.")
-         self._name = value
-     @name.deleter
-     def name(self):
-         del self._name
-
-
- class Species(Base):
-     def __init__(self):
-         super().__init__()
- ```
- Note that `name` is now actually a function disguised as a property, while the actual name is stored as `_name`. Potentially the user could directly edit `_name` and break the desired dictionary-key-update functionality - however, since this name is protected, the user will know they are doing some illegal.
-
- A further functionality that the setter function of the name property should have is a check against possible duplicate names in the dictionary - this is not allowed.
-
- Here is a nice working example of a species dict: [EXAMPLE](https://github.com/mcellteam/libMCellPP/blob/master/api_prototype/oliver/pymcell_base_class.py).
+The base class must contain a list of the parent object dictionaries that reference it. This is because when the name of the object is changed, the dictionaries that reference it must also change their keys to match.
 
 ## Basics
 
-Models share nothing with eachother. Each model has its own:
+Each model has its own:
 
-1. Dictionary of species:
-
- i. Keyed by species name.
-
- ii. There is only one way to add species:
-	
-  a. Direct way:	
-  ```
-  my_species = my_model.create_species(...)
-  ```
-  We considered previously being able to create a template species, separate from any model. However, this caused: 1) extra code, 2) confusion about the different ways to add species (clearer to just have one) and 3) no obvious benefit. If the user wants to create a template for a species, they can write their own in Python. In other words, why would you ever create a species that's not part of a simulation?
-		
- iii. To access objects, the user may either use the handle that was given during assignment. Alternatively, by name:
+1. List of species
+ i. How do you make a species? There are two ways:
  ```
- my_species = my_model.species_dict["species_name"]
+ my_species = m.create_species(...)
+ my_model.species_list.append(my_species)
+ ```
+ or:
+ ```
+ my_species = my_model.create_species(...)
  ```
 
-2. Dictionary of objects (geometries)
+ The `my_species` object in either case may be appended to multiple models. In this case, the memory is shared.
 
-3. Dictionary of reactions
+ ii. How do you access a species? There are 3 ways:
+  a. You have the handle when you made it
+  b. `my_model.species_list[0]`
+  c. Access by name via a special function: `my_model.species_list.get("name")`. This means that in addition to a `species_list` there needs to be an internal dictionary from the species name to the species object.
+
+  Why is there an internal dictionary?
+  a. Searching the list could be slow
+  b. It should be private because when the name of a species is changed using it's handle:
+  ```
+  my_species.name = "new name"
+  ```
+  the dictionary will need to update the key associated with this species object. This can possibly fail if the key is a duplicate.
 
 

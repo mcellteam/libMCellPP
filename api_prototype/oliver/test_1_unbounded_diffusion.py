@@ -1,62 +1,58 @@
-######
-# This file shows how to implement a species dict where the species 
-# inherit the name from the base class and check for illegal assignments
-# as well as update the key in the species_dict when the name is changed
-######
-
-# import pymcell as m
-
-# Make a fake pymcell
-
-def create_model():
-	return Model()
-
-class Model():
-	def __init__(self):
-		self.species_dict = {}
-
-	def create_species(self,name,dc):
-		if name in self.species_dict:
-			raise NameError("Species name: " + str(name) + " exists.")
-
-		self.species_dict[name] = Species(name, dc)
-		self.species_dict[name]._parent_dict = self.species_dict
-		return self.species_dict[name]
-
-class Base(object):
-	def __init__(self, name):
-		self._name = name
-		self._parent_dict = None
-	@property
-	def name(self):
-		return self._name
-	@name.setter
-	def name(self, new_name):
-		# Check that new name
-		if new_name in self._parent_dict:
-			raise NameError("Species name: " + str(new_name) + " exists.")
-
-		# Pop the old key and insert the new one
-		if self._parent_dict != None:
-			self._parent_dict[new_name] = self._parent_dict.pop(self._name)
-		self._name = new_name
-	@name.deleter
-	def name(self):
-		del self._name
-
-class Species(Base):
-	def __init__(self, name, dc):
-		super().__init__(name)
-		self.dc = dc
+import pymcell as m
 
 # Make a world
-model = create_model()
+world = m.make_mcell_world()
+
+# Set timestep
+# NOTE: maybe there should be no number of iterations
+world.dt = 0.1
+
+# All statements proceed in two parts:
+# 1) Create a thing
+# 2) Add it to the MCell world
+
+###
+# Species
+###
 
 # Create a species
-mol_A = model.create_species(name="A",dc=1)
+mol_A = m.create_species(name="A",dc=1) # Volume mol by default
 
-# __import__('code').interact(local={k: v for ns in (globals(), locals()) for k, v in ns.items()})
+# Add to the mcell world
+world.species_list.append(mol_A)
 
-#####
-# DO THE RELEASE....
-#####
+###
+# Release molecules
+###
+
+# SEE README FOR TWO ALTERNATE WAYS TO RELEASE MOLECULES
+
+# Way # 1 (passive/scheduled):
+list_of_mols_to_release = [mol_A]
+number_of_each_to_release = [100]
+releaser = m.create_release_obj(list_of_mols_to_release,
+    nrel = number_of_each_to_release,
+    loc = [0,0,0],
+    time = 0)
+world.releaser_list.append(releaser)
+
+# Way # 2 (active):
+list_of_mols_to_release = [mol_A]
+number_of_each_to_release = [100]
+world.release_mols(list_of_mols_to_release, 
+	nrel = number_of_each_to_release, 
+	loc = [0,0,0])
+
+# ALSO SEE README:
+# Should we write 'mol_A' or 'world.species_list[0]'?
+# 'mol_A' is a template, and 'world.species_list[0]' is the actual instantiation of the obj in the world
+# In the first case, only 'mol_A' should be allowed - we are creating a template
+# In the second case, either should be allowed. 'world.species_list[0]' should know via a pointer
+# that it belongs to the template type 'mol_A'
+
+###
+# Run the simulation
+###
+
+n_iter = 100
+world.run(n_iter)

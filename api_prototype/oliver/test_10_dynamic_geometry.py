@@ -1,17 +1,20 @@
 import pymcell as m
 
-# Make a model
-model = m.create_model()
+# Make a world
+world = m.make_mcell_world()
 
 # Set timestep
-model.dt = 0.1
+world.dt = 0.1
 
 ###
 # Box
 ###
 
 # Create a box
-box = model.create_simple_object(name="My box", type="CUBE", center=[0,0,0], radius=[1,1,1])
+box = m.create_simple_object(name="My box", type="CUBE", center=[0,0,0], radius=[1,1,1])
+
+# Add it to the mcell world
+world.obj_list.append(box)
 
 ###
 # Run the simulation
@@ -19,15 +22,15 @@ box = model.create_simple_object(name="My box", type="CUBE", center=[0,0,0], rad
 
 n_iter = 100
 for i_iter in range(0,n_iter):
-	model.run_timestep() # runs by one timestep by default
+	world.run_timestep() # runs by one timestep by default
 
 	# Import some new vertex/face list
 	v_list_new, f_list_new = import_geometry("my_file_" + str(i_iter) + ".mdl")
 
 	# Try to update the geometry
 	try:
-		model.update_geometry_from_points(
-			obj = box,
+		world.update_geometry_from_points(
+			obj = world.obj_list[0],
 			vert_list = v_list_new,
 			face_list = f_list_new)
 	except:

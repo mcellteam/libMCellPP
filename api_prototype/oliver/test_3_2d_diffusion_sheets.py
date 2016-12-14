@@ -1,24 +1,30 @@
 import pymcell as m
 
 # Make a world
-model = m.create_model()
+world = m.make_mcell_world()
 
 # Set timestep
-model.dt = 0.1
+world.dt = 0.1
 
 ###
 # Thin sheet/box
 ###
 
 # Create a sheet_box
-sheet_box = model.create_simple_object(name="My box", type="CUBE", center=[0,0,0], radius=[1,1,0.01])
+sheet_box = m.create_simple_object(name="My box", type="CUBE", center=[0,0,0], radius=[1,1,0.01])
+
+# Add it to the mcell world
+world.obj_list.append(sheet_box)
 
 ###
 # Species
 ###
 
 # Create a species
-mol_A = model.create_species(name="A",dc=1) # Volume mol by default
+mol_A = m.create_species(name="A",dc=1) # Volume mol by default
+
+# Add to the mcell world
+world.species_list.append(mol_A)
 
 ###
 # Release molecules into the sheet_box
@@ -26,7 +32,7 @@ mol_A = model.create_species(name="A",dc=1) # Volume mol by default
 
 list_of_mols_to_release = [mol_A]
 number_of_each_to_release = [100]
-model.release_mols(list_of_mols_to_release, 
+world.release_mols(list_of_mols_to_release, 
 	nrel = number_of_each_to_release, 
 	loc = "%o" % (sheet_box))
 
@@ -35,4 +41,4 @@ model.release_mols(list_of_mols_to_release,
 ###
 
 n_iter = 100
-model.run(n_iter)
+world.run(n_iter)

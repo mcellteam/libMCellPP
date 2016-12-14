@@ -14,6 +14,10 @@ box_len = 0.5
 import math
 
 class my_sphere ( MCellGeometry ):
+  # This is an attempt to create geometry from an analytic description
+  # This type of geometry would not have points and faces, but would satisfy this interface:
+  #  is_inside (x,y,z)
+  #  normal_of_first_crossing ( start_point, end_point )
 
   def __init__(self, x, y, z, r):
     self.x = x

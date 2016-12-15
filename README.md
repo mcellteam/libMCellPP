@@ -166,7 +166,7 @@ were orginally from the CellBlender project under the "libMCell" subdirectory.
 
 ## Data Model / API correspondence
 
-The following data model naming reflects changes from the December 14th, 2016 meeting:
+The following data model naming reflects changes resulting from the December 14th, 2016 meeting:
 
 ```
 ['mcell_model']['api_version']   (long)

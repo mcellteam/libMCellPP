@@ -19,7 +19,7 @@ The name of the base class is:
 MCellBase
 ```
 
-One of the things the base class will contain is the name of the instance. Changing the name of objects is **forbidden**. Alternatively you may delete and re-add the object.
+One of the things the base class will contain is the name of the instance. Changing the name of objects is allowed. Doing so will trigger the execution of appropriate update functions.
 
 The base class must contain a list of the parent object dictionaries that reference it. This is because when the name of the object is changed, the dictionaries that reference it must also change their keys to match.
 

@@ -2,6 +2,10 @@
 
 ## Name of module: "pyMCell"
 
+## What is an MCell data model?
+
+[What is an MCell data model?](./model.md)
+
 ## Fundamental command to create an MCell Model
 
 ```

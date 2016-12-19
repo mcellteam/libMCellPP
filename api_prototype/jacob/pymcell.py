@@ -11,7 +11,8 @@ class Species():
         self.name = name
         self.volume = volume
         self.dc = dc
-        logging.info("Creating species '%s'" % name)
+        vol_surf = "volume" if volume else "surface"
+        logging.info("Creating %s species '%s'" % (vol_surf, name))
 
 
 class Molecule():
@@ -124,32 +125,44 @@ class CountReaction(Count):
 
 
 class Simulation():
-    def __init__(self, dt: float, molecules: List[Molecule]=None,
-                 reactions: List[Reaction]=None, counts: List[Count]=None,
-                 meshes: List[MeshObject]=None) -> None:
+    def __init__(
+            self,
+            dt: float,
+            molecules: List[Molecule]=None,
+            reactions: List[Reaction]=None,
+            counts: List[Count]=None,
+            meshes: List[MeshObject]=None) -> None:
         self.dt = dt
         self.molecules = molecules
         self.reactions = reactions
         self.counts = counts
         self.meshes = meshes
-        self.molecules = molecules
 
 
     def create_molecules_shape(
             self, spec: Species, amount: float,
             location: (float, float, float), width: float=0.0, 
             shape: Shape=Shape.cube, conc=False) -> None:
-        pass
+        logging.info("Creating %g '%s' molecules at %s" % (
+            amount,
+            spec.name,
+            location))
 
 
     def create_molecules_obj(self, spec: Species, obj: MeshObject,
                              amount: float, conc=False) -> None:
-        pass
+        logging.info("Creating %g '%s' molecules on/in '%s'" % (
+            amount,
+            spec.name,
+            obj.name))
 
 
     def create_molecules_reg(self, spec: Species, reg: Region, amount: float,
                              conc=False) -> None:
-        pass
+        logging.info("Creating %g '%s' molecules on/in '%s'" % (
+            amount,
+            spec.name,
+            reg.name))
 
 
     def run_iteration(self) -> None:
@@ -157,5 +170,6 @@ class Simulation():
 
 
     def run_iterations(self, iterations) -> None:
+        logging.info("Running %d iterations" % iterations)
         for i in range(iterations):
             self.run_iteration()

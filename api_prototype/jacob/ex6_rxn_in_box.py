@@ -18,7 +18,8 @@ def main():
     bimol_rev = pymcell.Reaction([a, b], [c], reversible=True, rate=1e4)
     box = pymcell.import_obj(Path("./box.obj"))
     sim = pymcell.Simulation(dt=1e-6, meshes=[box])
-    sim.create_molecules_obj(a, 100, (0, 0, 0))
+    sim.create_molecules_obj(a, box, 100)
+    sim.create_molecules_obj(b, box, 100)
     sim.run_iterations(100)
 
 if __name__ == "__main__":

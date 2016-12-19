@@ -1,7 +1,9 @@
 from typing import List
 from enum import Enum
 from pathlib import Path
+import logging
 
+logging.basicConfig(format='%(message)s', level=logging.DEBUG)
 
 class Species():
     """ A type of molecule """
@@ -9,6 +11,7 @@ class Species():
         self.name = name
         self.volume = volume
         self.dc = dc
+        logging.info("Creating species '%s'" % name)
 
 
 class Molecule():
@@ -33,6 +36,16 @@ class Reaction():
         self._products = products
         self._reversible = reversible
         self.rate = rate
+        reactant_names = [r.name for r in reactants]
+        reactants_str = " + ".join(reactant_names)
+        if products:
+            product_names = [r.name for r in products]
+            products_str = " + ".join(product_names)
+        else:
+            products_str = "NULL"
+        arrow = "<->" if reversible else "->"
+        logging.info("Creating reaction '%s %s %s [%.2E]'" % (
+            reactants_str, arrow, products_str, rate))
 
 
 class Rule():
@@ -50,6 +63,7 @@ class Region():
     def __init__(self, name: str, face_indices: List[int]):
         self.name = name
         self.face_indices = face_indices
+        logging.info("Creating region '%s'" % name)
 
 
 class SurfaceProperty():
@@ -59,6 +73,7 @@ class SurfaceProperty():
         self.name = name
         self.surf_type = surf_type
         self.regions = regions
+        logging.info("Creating surface property '%s'" % name)
 
 
 class Shape(Enum):
@@ -79,6 +94,7 @@ class MeshObject():
         self.verts = verts
         self.faces = faces
         self.regions = regions
+        logging.info("Creating mesh object '%s'" % name)
 
     def add_surface_property(
             self, surf_prop: SurfaceProperty, indices: List[int]):
@@ -86,7 +102,8 @@ class MeshObject():
 
 
 def import_obj(obj_path: Path) -> MeshObject:
-    pass
+    logging.info("Importing mesh object from '%s'" % obj_path)
+    return MeshObject("box", [1], [1])
 
 
 class Count():

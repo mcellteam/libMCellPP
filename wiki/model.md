@@ -47,7 +47,7 @@ To join the two models, the user could type a command similar to something like:
 my_model.add_submodel(other_file.my_other_model)
 ```
 
-This should create the following structure. Note that the submodel might not be a direct key in the parent's model (as shown in the drawing) due to potential name conflicts. By adding a special "submodels" key, the submodel names would not have potential conflicts with other predefined data model names (like "molecules", "reactions", "geometry", etc). Of course they would still have to be unique in the "submodels" name space).
+This should create the following structure. Note that the submodel ("my_other_model") might not be a direct key in the parent's model (as shown in the drawing) due to potential name conflicts. By adding a special "submodels" key to the parent model, the submodel names would avoid potential conflicts with other predefined (or subsequently defined) data model names (like "molecules", "reactions", "geometry", etc). Of course they would still have to be unique in the "submodels" name space).
 
 ![model_joined](./figures/model_joined.jpg?raw=true "Submodels")
 

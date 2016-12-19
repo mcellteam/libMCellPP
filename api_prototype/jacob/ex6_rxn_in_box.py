@@ -5,12 +5,10 @@
 #####################
 
 import pymcell
-import logging
 from pathlib import Path
 
 
 def main():
-    logging.basicConfig(level=logging.INFO)
     a = pymcell.Species("a", dc=1e-6)
     b = pymcell.Species("b", dc=1e-6)
     c = pymcell.Species("c", dc=1e-6)

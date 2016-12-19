@@ -60,9 +60,11 @@ class SurfaceProperty():
         self.surf_type = surf_type
         self.regions = regions
 
+
 class Shape(Enum):
     cube = 1
     sphere = 2
+
 
 class ShapeKey():
     def __init__(self):
@@ -107,7 +109,7 @@ class CountReaction(Count):
 class Simulation():
     def __init__(self, dt: float, molecules: List[Molecule]=None,
                  reactions: List[Reaction]=None, counts: List[Count]=None,
-                 meshes=List[MeshObject]) -> None:
+                 meshes: List[MeshObject]=None) -> None:
         self.dt = dt
         self.molecules = molecules
         self.reactions = reactions
@@ -128,8 +130,8 @@ class Simulation():
         pass
 
 
-    def create_molecules_obj(self, spec: Species, location, shape,
-                             amount: float, conc=False) -> None:
+    def create_molecules_reg(self, spec: Species, reg: Region, amount: float,
+                             conc=False) -> None:
         pass
 
 

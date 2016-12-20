@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 from enum import Enum
 from pathlib import Path
 import logging
@@ -34,7 +34,9 @@ class SpeciesComplex():
     def __init__(self, spec: Species) -> None:
         self.spec = spec
 
+
 odict = {Orient.up:"'", Orient.down:",", Orient.mix:";"}
+
 
 class Reaction():
     """ A reaction involving molecules """
@@ -61,10 +63,11 @@ class Rule():
         pass
 
 
-class SurfacePropertyType(Enum):
-    reflective = 1
-    transparent = 2
-    absorptive = 3
+class SP(Enum):
+    reflect = 1
+    transp = 2
+    absorb = 3
+    clamp = 4
 
 
 class Region():
@@ -76,11 +79,9 @@ class Region():
 
 class SurfaceProperty():
     """ How a species interacts with a surface (boundary) """
-    def __init__(self, name: str, surf_type: SurfacePropertyType,
-                 spec: Species, regions: List[Region]) -> None:
+    def __init__(self, name: str, surf_type: SP, spec, clamp_val: int=None) -> None:
         self.name = name
         self.surf_type = surf_type
-        self.regions = regions
         logging.info("Creating surface property '%s'" % name)
 
 
@@ -96,7 +97,7 @@ class ShapeKey():
 
 class MeshObject():
     def __init__(self, name: str, verts: List[int],
-                 faces: List[int], regions: List[Region] = None,
+                 faces: List[int], regions: Dict[str, Region] = None,
                  shape_keys: ShapeKey=None) -> None:
         self.name = name
         self.verts = verts
@@ -105,19 +106,20 @@ class MeshObject():
         logging.info("Creating mesh object '%s'" % name)
 
     def add_surface_property(
-            self, surf_prop: SurfaceProperty, indices: List[int]):
+            self, surf_prop: SurfaceProperty, reg: Region):
         pass
 
 
 def create_box(name: str) -> MeshObject:
         logging.info("Creating box object '%s'" % name)
-        regs = []
-        regs.append(Region("top", [0, 1]))
-        regs.append(Region("bottom", [2, 3]))
-        regs.append(Region("left", [4, 5]))
-        regs.append(Region("right", [6, 7]))
-        regs.append(Region("front", [8, 9]))
-        regs.append(Region("back", [10, 11]))
+        regs = {
+            "top": Region("top", [0, 1]),
+            "bottom": Region("bottom", [2, 3]),
+            "left": Region("left", [4, 5]),
+            "right": Region("right", [6, 7]),
+            "front": Region("front", [8, 9]),
+            "back": Region("back", [10, 11]),
+        }
         return MeshObject(name, [1], [1], regs)
 
 
@@ -157,16 +159,14 @@ class Simulation():
         self.counts = counts
         self.meshes = meshes
 
-
     def create_molecules_shape(
             self, spec: Species, amount: float,
-            location: (float, float, float), width: float=0.0, 
+            location: (float, float, float), width: float=0.0,
             shape: Shape=Shape.cube, conc=False) -> None:
         logging.info("Creating %g '%s' molecules at %s" % (
             amount,
             spec.name,
             location))
-
 
     def create_molecules_obj(self, spec: Species, obj: MeshObject,
                              amount: float, conc=False) -> None:
@@ -175,7 +175,6 @@ class Simulation():
             spec.name,
             obj.name))
 
-
     def create_molecules_reg(self, spec: Species, reg: Region, amount: float,
                              conc=False) -> None:
         logging.info("Creating %g '%s' molecules on/in '%s'" % (
@@ -183,10 +182,8 @@ class Simulation():
             spec.name,
             reg.name))
 
-
     def run_iteration(self) -> None:
         pass
-
 
     def run_iterations(self, iterations) -> None:
         logging.info("Running %d iterations" % iterations)

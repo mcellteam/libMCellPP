@@ -109,6 +109,18 @@ class MeshObject():
         pass
 
 
+def create_box(name: str) -> MeshObject:
+        logging.info("Creating box object '%s'" % name)
+        regs = []
+        regs.append(Region("top", [0, 1]))
+        regs.append(Region("bottom", [2, 3]))
+        regs.append(Region("left", [4, 5]))
+        regs.append(Region("right", [6, 7]))
+        regs.append(Region("front", [8, 9]))
+        regs.append(Region("back", [10, 11]))
+        return MeshObject(name, [1], [1], regs)
+
+
 def import_obj(obj_path: Path) -> MeshObject:
     logging.info("Importing mesh object from '%s'" % obj_path)
     return MeshObject("box", [1], [1])

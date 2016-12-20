@@ -5,7 +5,6 @@
 #####################
 
 import pymcell as m
-from pathlib import Path
 
 
 def main():

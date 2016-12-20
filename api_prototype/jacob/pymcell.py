@@ -79,7 +79,8 @@ class Region():
 
 class SurfaceProperty():
     """ How a species interacts with a surface (boundary) """
-    def __init__(self, name: str, surf_type: SP, spec, clamp_val: int=None) -> None:
+    def __init__(
+            self, name: str, surf_type: SP, spec, clamp_val: int=None) -> None:
         self.name = name
         self.surf_type = surf_type
         logging.info("Creating surface property '%s'" % name)
@@ -110,7 +111,7 @@ class MeshObject():
         pass
 
 
-def create_box(name: str) -> MeshObject:
+def create_box(name: str, width: float) -> MeshObject:
         logging.info("Creating box object '%s'" % name)
         regs = {
             "top": Region("top", [0, 1]),
@@ -169,14 +170,14 @@ class Simulation():
             location))
 
     def create_molecules_obj(self, spec: Species, obj: MeshObject,
-                             amount: float, conc=False) -> None:
+            amount: float, conc=False, orient: Orient=None) -> None:
         logging.info("Creating %g '%s' molecules on/in '%s'" % (
             amount,
             spec.name,
             obj.name))
 
     def create_molecules_reg(self, spec: Species, reg: Region, amount: float,
-                             conc=False) -> None:
+                             conc_dens=False, orient: Orient=None) -> None:
         logging.info("Creating %g '%s' molecules on/in '%s'" % (
             amount,
             spec.name,

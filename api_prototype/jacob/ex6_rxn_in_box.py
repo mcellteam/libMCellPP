@@ -14,7 +14,7 @@ def main():
     c = m.Species("c", dc=1e-6)
     a_mix = (a, m.Orient.mix)
     b_mix = (b, m.Orient.mix)
-    c_mix = (b, m.Orient.mix)
+    c_mix = (c, m.Orient.mix)
     unimol1 = m.Reaction([a_mix], [b_mix], rate=1e4)
     unimol2 = m.Reaction([a_mix], rate=1e4)
     bimol_irrev = m.Reaction([a_mix, b_mix], [c_mix], rate=1e4)

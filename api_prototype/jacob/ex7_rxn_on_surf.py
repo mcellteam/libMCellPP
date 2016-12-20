@@ -17,7 +17,7 @@ def main():
     c_up = (c, m.Orient.up)
     bimol_irrev = m.Reaction([a_mix, b_up], [c_up], rate=1e4)
     box = m.import_obj(Path("./box.obj"))
-    sim = m.Simulation(dt=1e-6, meshes=[box])
+    sim = m.Simulation(dt=1e-6, meshes=[box], reactions=[bimol_irrev])
     sim.create_molecules_obj(a, box, 100)
     sim.create_molecules_obj(b, box, 100)
     sim.run_iterations(100)

@@ -19,8 +19,9 @@ def main():
     unimol2 = m.Reaction([a_mix], rate=1e4)
     bimol_irrev = m.Reaction([a_mix, b_mix], [c_mix], rate=1e4)
     bimol_rev = m.Reaction([a_mix, b_mix], [c_mix], reversible=True, rate=1e4)
+    rxns = [unimol1, unimol2, bimol_irrev, bimol_rev]
     box = m.import_obj(Path("./box.obj"))
-    sim = m.Simulation(dt=1e-6, meshes=[box])
+    sim = m.Simulation(dt=1e-6, meshes=[box], reactions=rxns)
     sim.create_molecules_obj(a, box, 100)
     sim.create_molecules_obj(b, box, 100)
     sim.run_iterations(100)

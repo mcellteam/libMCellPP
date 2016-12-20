@@ -7,4 +7,5 @@ py_files.sort()
 for pf in py_files:
     print("-"*40)
     print("%s\n" % pf)
-    subprocess.call(["python3",  "./%s" % pf])
+    if (subprocess.call(["python3",  "./%s" % pf])):
+        break

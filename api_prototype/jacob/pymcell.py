@@ -5,6 +5,13 @@ import logging
 
 logging.basicConfig(format='%(message)s', level=logging.DEBUG)
 
+
+class Orient(Enum):
+    up = 1
+    down = 2
+    mix = 3
+
+
 class Species():
     """ A type of molecule """
     def __init__(self, name: str, volume=True, dc=0.0) -> None:
@@ -27,25 +34,25 @@ class SpeciesComplex():
     def __init__(self, spec: Species) -> None:
         self.spec = spec
 
+odict = {Orient.up:"'", Orient.down:",", Orient.mix:";"}
 
 class Reaction():
     """ A reaction involving molecules """
-    def __init__(self, reactants: List[Species],
-                 products: List[Species]=None, reversible=False,
+    def __init__(self, reactants, products=None, reversible=False,
                  rate=0.0, name="") -> None:
         self._reactants = reactants
         self._products = products
         self._reversible = reversible
         self.rate = rate
-        reactant_names = [r.name for r in reactants]
+        reactant_names = [r[0].name+odict[r[1]] for r in reactants]
         reactants_str = " + ".join(reactant_names)
         if products:
-            product_names = [r.name for r in products]
+            product_names = [r[0].name+odict[r[1]] for r in products]
             products_str = " + ".join(product_names)
         else:
             products_str = "NULL"
         arrow = "<->" if reversible else "->"
-        logging.info("Creating reaction '%s %s %s [%.2E]'" % (
+        logging.info("Creating reaction %s %s %s [%.2E]" % (
             reactants_str, arrow, products_str, rate))
 
 

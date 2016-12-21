@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 ###############################
-# "1D" diffusion in a thin tube
+# "2D" diffusion between sheets
 ###############################
 
 import pymcell as m

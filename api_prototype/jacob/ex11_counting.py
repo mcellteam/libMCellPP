@@ -15,7 +15,7 @@ def main():
     b_mix = (b, m.Orient.mix)
     c_mix = (c, m.Orient.mix)
     bimol_irrev = m.Reaction([a_mix, b_mix], [c_mix], rate=1e4, name="rxn")
-    box = m.create_box("box", 1.0)
+    box = m.create_box("box", 1.0, (0, 0, 0))
     count_a_box = m.CountMolecules(a, box)
     count_a_rxn = m.CountReaction(bimol_irrev, box)
     sim_counts = [count_a_box, count_a_rxn]

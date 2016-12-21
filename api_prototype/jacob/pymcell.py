@@ -35,7 +35,7 @@ class SpeciesComplex():
         self.spec = spec
 
 
-odict = {Orient.up:"'", Orient.down:",", Orient.mix:";"}
+odict = {Orient.up: "'", Orient.down: ",", Orient.mix: ";"}
 
 
 class Reaction():
@@ -174,8 +174,9 @@ class Simulation():
             spec.name,
             location))
 
-    def create_molecules_obj(self, spec: Species, obj: MeshObject,
-            amount: float, conc=False, orient: Orient=None) -> None:
+    def create_molecules_obj(
+            self, spec: Species, obj: MeshObject, amount: float, conc=False,
+            orient: Orient=None) -> None:
         logging.info("Creating %g '%s' molecules on/in '%s'" % (
             amount,
             spec.name,

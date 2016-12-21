@@ -15,5 +15,6 @@ def main():
         a, box.regions["top"], 100, conc_dens=True, orient=m.Orient.up)
     sim.run_iterations(100)
 
+
 if __name__ == "__main__":
     main()

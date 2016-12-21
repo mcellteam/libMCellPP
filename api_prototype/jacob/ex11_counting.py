@@ -5,7 +5,6 @@
 #####################
 
 import pymcell as m
-from pathlib import Path
 
 
 def main():
@@ -25,6 +24,7 @@ def main():
     sim.create_molecules_obj(a, box, 100)
     sim.create_molecules_obj(b, box, 100)
     sim.run_iterations(100)
+
 
 if __name__ == "__main__":
     main()

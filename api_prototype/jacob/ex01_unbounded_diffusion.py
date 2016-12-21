@@ -13,5 +13,6 @@ def main():
     sim.create_molecules_shape(a, 100, (0, 0, 0))
     sim.run_iterations(100)
 
+
 if __name__ == "__main__":
     main()

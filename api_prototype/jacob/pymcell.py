@@ -137,6 +137,14 @@ def import_obj(obj_path: Path) -> MeshObject:
     return MeshObject("box", [1], [1])
 
 
+def import_blender_mesh(obj) -> MeshObject:
+    logging.info("Importing mesh object %s" % obj.name)
+    verts = [(v.co[0], v.co[1], v.co[2]) for v in obj.data.vertices]
+    bl_faces = obj.data.polygons
+    faces = [(f.vertices[0], f.vertices[1], f.vertices[2]) for f in bl_faces]
+    return MeshObject(obj.name, verts, faces)
+
+
 class Count():
     def __init__(self):
         pass

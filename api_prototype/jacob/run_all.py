@@ -7,5 +7,9 @@ py_files.sort()
 for pf in py_files:
     print("-"*40)
     print("%s\n" % pf)
-    if (subprocess.call(["python3",  "./%s" % pf])):
-        break
+    if pf.startswith("ex09"):
+        if (subprocess.call(["blender", "-b", "-P",  "./%s" % pf])):
+            break
+    else:
+        if (subprocess.call(["python3",  "./%s" % pf])):
+            break

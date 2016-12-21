@@ -112,17 +112,24 @@ class MeshObject():
         pass
 
 
-def create_box(name: str, width: float) -> MeshObject:
-        logging.info("Creating box object '%s'" % name)
-        regs = {
-            "top": Region("top", [0, 1]),
-            "bottom": Region("bottom", [2, 3]),
-            "left": Region("left", [4, 5]),
-            "right": Region("right", [6, 7]),
-            "front": Region("front", [8, 9]),
-            "back": Region("back", [10, 11]),
-        }
-        return MeshObject(name, [1], [1], regs)
+def create_plane(
+        name: str, width: float, center: (float, float, float)) -> MeshObject:
+    logging.info("Creating plane object '%s'" % name)
+    return MeshObject(name, [1], [1])
+
+
+def create_box(
+        name: str, width: float, center: (float, float, float)) -> MeshObject:
+    logging.info("Creating box object '%s'" % name)
+    regs = {
+        "top": Region("top", [0, 1]),
+        "bottom": Region("bottom", [2, 3]),
+        "left": Region("left", [4, 5]),
+        "right": Region("right", [6, 7]),
+        "front": Region("front", [8, 9]),
+        "back": Region("back", [10, 11]),
+    }
+    return MeshObject(name, [1], [1], regs)
 
 
 def import_obj(obj_path: Path) -> MeshObject:
@@ -164,6 +171,10 @@ class Simulation():
         self.reactions = reactions
         self.counts = counts
         self.meshes = meshes
+
+    def create_molecule(
+            self, spec: Species, location: (float, float, float)) -> None:
+        logging.info("Creating '%s' molecule at %s" % (spec.name, location))
 
     def create_molecules_shape(
             self, spec: Species, amount: float,

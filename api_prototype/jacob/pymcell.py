@@ -46,6 +46,7 @@ class Reaction():
         self._products = products
         self._reversible = reversible
         self.rate = rate
+        self.name = name
         reactant_names = [r[0].name+odict[r[1]] for r in reactants]
         reactants_str = " + ".join(reactant_names)
         if products:
@@ -138,12 +139,16 @@ class CountMolecules(Count):
     def __init__(self, spec: Species, location: MeshObject=None) -> None:
         self.spec = spec
         self.location = location
+        logging.info("Creating count of '%s' in/on '%s'" % (
+            spec.name, location.name))
 
 
 class CountReaction(Count):
     def __init__(self, rxn: Reaction, location: MeshObject=None) -> None:
         self.rxn = rxn
         self.location = location
+        logging.info("Creating count of '%s' in/on '%s'" % (
+            rxn.name, location.name))
 
 
 class Simulation():

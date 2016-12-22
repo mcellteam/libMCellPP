@@ -41,6 +41,8 @@
 	* Implement a subclass that uses a different kind of diffusion
 15. SubClassing the Scheduler
 	* Implement a subclass that uses a variable time-step scheduler
-
+16. Complex Molecules (BNGL syntax)
+	* Demonstrate an example using BNGL molecule/reactions with components
+ 
 
 

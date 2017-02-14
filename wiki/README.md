@@ -1,4 +1,63 @@
-# libMCell C++ Wiki
+# Overview
+
+This document aims to provide a spec. for a future pyMCell/libMCell package.
+
+* [The Event Scheduler](#The Event Scheduler)
+* [pyMCell API](#pyMCell API)
+
+# The Event Scheduler
+
+(copied from earlier discussions of the scheduler)
+
+## Event Model
+
+The libMCell event model will implement an event-generator/event-listener interface. It will follow the "Trigger, Condition, Outcome" model described in earlier MCell documentation. These are implemented as specific instances of the generic TCO class:
+
+* Trigger == an event
+* Condition == context of event
+* Outcome == what happens if conditions are met
+
+The "Trigger" portion will consist of the following built-in event types:
+
+* Begin Simulation event
+
+* End Simulation event
+
+* Time-based events:
+    * Iteration step
+    * User-requested break
+
+* Reaction/Release/Placement events: (what where when how how_many)
+    * mol a created
+    * mol a destroyed
+    * reaction named "my_rxn" checked
+    * reaction named "my_rxn" happens 
+
+* Diffusion events: (p0, p1, t, collision list)
+    * mol a moved
+    * molecule a collides with molecule b
+    * mol a hits front or back of obj "sphere" or sphere[triangle i]
+    * mol a crosses from front or crosses from back of obj "sphere" or sphere[triangle i]
+    * mol a absorbed on front or back of obj "sphere" or sphere[triangle i]
+
+* Dynamic geometry events:
+    * obj "sphere" added
+    * obj "sphere" removed
+    * obj "sphere" changed
+
+* User-defined event types:
+    * impiilemented as user-specified subclasses of the generic TCO class
+
+Each of these events can be enabled and handled by user code in the form of "callbacks". If written in C++, these callbacks should be as fast as the current MCell internal code, but much more flexible. Callbacks of this type can handle all of an application's custom counting and visualization needs without the need for an extensive API.
+
+
+
+
+
+
+
+
+# pyMCell API
 
 ## Name of module: "pyMCell"
 

@@ -2,8 +2,9 @@
 
 This document aims to provide a spec. for a future pyMCell/libMCell package.
 
-* [The Event Scheduler](#The Event Scheduler)
-* [pyMCell API](#pyMCell API)
+* [The Event Scheduler](# The Event Scheduler)
+* [pyMCell API](# pyMCell API)
+* [Lessons from the neuropil model](# Lessons from the neuropil model)
 
 # The Event Scheduler
 
@@ -121,5 +122,115 @@ Each model has its own:
    my_species.name = "new name"
    ```
    the dictionary will need to update the key associated with this species object. This can possibly fail if the key is a duplicate.
+
+
+
+
+# Lessons from the neuropil model
+
+(in no particular order)
+
+## Object returns
+
+Function returns are sometimes confusing because: (1) they return unusable objects (objects that have not been exposed via. SWIG to Python), and (2) deleting the returned objects affects the simulation.
+
+For example, when setting up a `count` statement for a species, we are given back a whole list of return objects. Deleting these objects causes the molecule not to be counted (from a quick but possibly wrong analysis, the symbol in the hashtable disappears). This may actually be a desired effect, but it should be clearly documented what the returned objects are, and when it is ok to delete them. Ideally, there will be some consistency in the behavior here across functions (if deleting the count returned object causes the count to disappear, then deleting a release object should cause the release to disappear).
+
+Unusable objects should either (1) be exposed and made usable, or (2) not be returned.
+
+## Passing objects vs. names
+
+Some functions currently take names of objects as input (e.g. to change a reaction rate, pass the name of a reaction), while others take objects (e.g. to release some molecule in a volume, pass the species object). This should be unified - in particular, passing the objects directly is the more Python-ic way.
+
+## Typemaps
+
+The interface for passing objects from Python to MCell is currently clunky. In particular, only some lists of objects (e.g. `[strings]`) have a typemap that converts it into the appropriate C objects (`char**`). For example, lists of molecule objects are currently not passed this way, and are added to special list objects using a helper function `mcell_add_to_species_list`. A quick list of things that need typemaps:
+* Lists of strings (exists), doubles (exists), ints
+* Lists of molecules
+* Lists of reactions
+* Lists of geometry/mesh objects
+
+## Molecule position inquiries
+
+A very useful and necessary feature will be to be able to inquire about the positions of molecules. This includes the ability to access position information, as well as to test whether a molecule is inside a volume or not. This function already partially exists in MCell, with two problems:
+
+1. It is not easy to expose to libMCell/pyMCell, because it is intimately tied to waypoints and partitions. The upside of this is that the function evaluation is very fast.
+2. It does not support tests for subvolumes which may violate the "outward facing normals" criteria. Consider the case of two compartments joined by a single plane:
+
+```
+---------------
+|      |      |
+|   1  |  2   |
+|      |      |
+---------------
+```
+
+It should be possible to test whether or not a molecule is inside volume 1 or volume 2. There are two general approaches to answer this question:
+
+* An initial determination at simulation time determines: (1) what subvolume the molecule is in, and (2) for every surface element at a given normal orientation, which compartment are we leaving and entering. The simulation then keeps track of which subvolume a given molecule is in at all times. This corresponds to more metadata stored on molecules and walls, but few subsequent computations.
+
+  However, it also has to address the problem of composability of volumes. For example:
+
+```
+-------------------
+|      |     2    |
+|      |          |
+|      |   -----  |
+|   1  |   | 3 |  |
+|      |   -----  |
+|      |          |
+-------------------
+```
+
+Now, a given molecule keeps track of: "Am I in subvolume 1/2/3?" However, if the molecule is inside subvolume 3, what should it answer to the question of "Are you in subvolume 2?" Technically, we have here a subsubvolume 3 which is a subvolume of volume 2. This kind of a composition hierarchy will also need to be determined / stored somewhere.
+
+Adding to this, what do we do in the following situation
+
+```
+-------------------
+|   1  |     2    |
+|      |          |
+|   ------------  |
+|   |  |   3   |  |
+|   ------------  |
+|      |          |
+-------------------
+```
+
+A part of subsubvolume 3 is a subvolume of 2, and a different part is a subvolume of 1. How do we define the composition hierarchy now? The simulation would have to work out something along the lines of reassigning names, e.g.
+
+```
+-------------------
+|   1  |     2    |
+|      |          |
+|   ------------  |
+|   |3a|   3b  |  |
+|   ------------  |
+|      |          |
+-------------------
+```
+
+* The second general approach is the one taken by MCell now - to have a general function that can test on the fly whether or not a molecule is inside a given volume. However, it requires the normals to be outward facing in order for its waypoint method to function correctly. Returning to the original example
+
+```
+---------------
+|      |      |
+|   1  |  2   |
+|      |      |
+---------------
+```
+
+It is impossibly to assign the normals such that **both** subvolumes have outward facing normals. Tom here suggested that this can be solved by the introduction of **submanifolds**. (Note: this is transcribed from memory, and may differ from Tom's suggestion).
+
+A submanifold will be defined for each subvolume 1 and 2. For each, every face belonging to the submanifold will be assigned a flag: 1 or -1. The flags are assigned such that the submanifold has outward facing normals, with the normal direction of a face being defined as:
+
+```
+(flag) * (regular normal direction in MCell)
+```
+
+With this information, it should be possible to answer whether or not a given particle is inside any given closed volume using the waypoint method.
+
+This seems like the better choice of the two!
+
 
 

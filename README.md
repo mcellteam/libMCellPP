@@ -64,7 +64,8 @@ Counting has been a somewhat complicated process in MCell because the MDL langua
 
 # Superclass of all TCO events will contain the time of the event
 class TCO_event:
-     time
+    def __init__(self):
+      self.time = 0
 
 # Superclass of all TCO event listeners
 class TCO_listener:
@@ -74,13 +75,12 @@ class TCO_listener:
 # The molecule creation event subclass contains the molecule (or molecules?)
 #   that have been created
 class TCO_mol_creation_event(TCO_event):
-     the_molecule  # the instance of the molecule (not species) that was created
+    def __init__(self):
+       self.the_molecule = None  # the instance of the molecule (not species) that was created
 
 
 # Here's our event handler to count mol a in the world:
 class mol_a_listener(TCO_listener):
-
-    count=0
 
     def __init__(self):
       self.count = 0
@@ -102,9 +102,6 @@ class mol_a_listener(TCO_listener):
 # Here's our event handler to count any mol in the world:
 class mol_listener(TCO_listener):
  
-    count = None
-    mol_name = None
-
     def __init__(self, mol_name):
       self.count = 0
       self.mol_name = mol_name
@@ -126,9 +123,6 @@ class mol_listener(TCO_listener):
 #   and registers itself in the model:
 class mol_counter(TCO_listener):
  
-    count = None
-    mol_name = None
-
     def __init__(self, the_model, mol_name):
       self.count = 0
       self.mol_name = mol_name

@@ -4,6 +4,8 @@ C++ Version of MCell
 
 The C++ version of libMCell is intended to provide a convenient and high performance interface to the capabilities of the MCell code base. This Wiki page describes some of the features of libMCell as it is being designed. It is a work in progress.
 
+See also: http://mcellteam.github.io/libMCellPP/
+
 ## Purpose and Goal
 
 **libMCell C++** should do the following:

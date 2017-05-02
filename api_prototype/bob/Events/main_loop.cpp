@@ -1,4 +1,5 @@
 #include <iostream>
+#include <typeinfo>
 #include <vector>
 #include <forward_list>
 #include <list>  // stl_list.h?
@@ -133,6 +134,7 @@ int main() {
   events->dump();
   // Process events
   while (events != NULL) {
+    // Can't do this:  cout << "TypeID = " << typeid(events) << endl;
     events->callback();
     Event *temp;
     temp = events;

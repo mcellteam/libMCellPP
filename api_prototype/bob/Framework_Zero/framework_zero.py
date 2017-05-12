@@ -9,7 +9,7 @@ class schedulable_object:
     pass
 
   def execute ( self, scheduler, t, data=None ):
-    pass
+    print ( "Executing at time = " + str(t) )
 
 
 class scheduled_time_slot:
@@ -51,4 +51,16 @@ class scheduler:
 
   def run_through ( self, t ):
     pass
+
+
+if __name__ == "__main__":
+
+    s = scheduler()
+    o = schedulable_object()
+
+    s.schedule_item ( o, 0 )
+    s.schedule_item ( o, 1 )
+    s.schedule_item ( o, 2 )
+    s.schedule_item ( o, 10 )
+    s.run()
 

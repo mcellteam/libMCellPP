@@ -13,11 +13,13 @@ class schedulable_object:
 
 
 class scheduled_time_slot:
-  def __init__ ( self, sable_object, t ):
+  def __init__ ( self, t ):
     self.t = t
     self.absolute_first = None
     self.absolute_last = None
-    self.obj = sable_object
+    self.obj_list = []
+  def append ( self, sable_object ):
+    self.obj_list.append ( sable_object )
     
 
 class scheduler:
@@ -34,7 +36,7 @@ class scheduler:
     pass
 
   def schedule_item ( self, sable_object, t ):
-    slot = scheduled_time_slot( sable_object, t )
+    slot = scheduled_time_slot( t ).append ( sable_object )
     self.slots[t] = slot
     pass
 
@@ -46,9 +48,11 @@ class scheduler:
 
   def run ( self ):
     while len(self.slots) > 0:
-      slot = self.slots.pop( sorted(self.slots.keys())[0] )
-      slot.obj.execute ( self, slot.t )
-    pass
+      # Get the first slot (earliest time)
+      earliest_key = sorted(self.slots.keys())[0]
+      slot = self.slots[earliest_key]
+      for o in slot.obj_list:
+        o.execute ( self, slot.t )
 
   def run_through ( self, t ):
     pass

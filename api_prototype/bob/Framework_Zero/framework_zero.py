@@ -88,6 +88,23 @@ class named_schedulable_object(schedulable_object):
     print ( "Executing " + self.name + " at t=" + str(t) )
 
 
+class schedulable_object_with_callback_list(schedulable_object):
+
+  def __init__(self):
+    self.callback_list = []
+
+  def add_callback(self, cb):
+    self.callback_list.append ( cb )
+
+  def execute ( self, scheduler, t, data=None):
+    print ( "Executing callbacks in list at t=" + str(t) )
+    for cb in self.callback_list:
+      cb(self)
+
+
+def print_callback ( x ):
+  print ( "Executing with parameter " + str(x) )
+
 if __name__ == "__main__":
 
     s = scheduler()
@@ -111,6 +128,14 @@ if __name__ == "__main__":
     s.schedule_item ( named_schedulable_object('A20c'), 20 )
 
     s.schedule_item ( o, 2 )
+
+    o = schedulable_object_with_callback_list()
+    o.callback_list.append ( print_callback )   ## This used the syntax from today's discussion
+    ## o.add_callback(print_callback)           ## This is the better way (hides implementation)
+
+    s.schedule_item ( o, 30 )
+    s.schedule_item ( o, 31 )
+    s.schedule_item ( o, 32 )
 
     s.run()
 

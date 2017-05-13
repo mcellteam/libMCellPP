@@ -12,6 +12,28 @@ class schedulable_object:
     print ( "Executing at time = " + str(t) )
 
 
+class named_schedulable_object(schedulable_object):
+  def __init__(self, name):
+    self.name = name
+  def execute ( self, scheduler, t, data=None):
+    print ( "Executing " + self.name + " at t=" + str(t) )
+
+
+class schedulable_object_with_callback_list(schedulable_object):
+
+  def __init__(self):
+    self.callback_list = []
+
+  def add_callback(self, cb):
+    self.callback_list.append ( cb )
+
+  def execute ( self, scheduler, t, data=None):
+    print ( "Executing callbacks in list at t=" + str(t) )
+    for cb in self.callback_list:
+      cb(self)
+
+
+
 class scheduled_time_slot:
   def __init__ ( self, t ):
     self.t = t
@@ -79,27 +101,6 @@ class scheduler:
 
   def run_through ( self, t ):
     pass
-
-
-class named_schedulable_object(schedulable_object):
-  def __init__(self, name):
-    self.name = name
-  def execute ( self, scheduler, t, data=None):
-    print ( "Executing " + self.name + " at t=" + str(t) )
-
-
-class schedulable_object_with_callback_list(schedulable_object):
-
-  def __init__(self):
-    self.callback_list = []
-
-  def add_callback(self, cb):
-    self.callback_list.append ( cb )
-
-  def execute ( self, scheduler, t, data=None):
-    print ( "Executing callbacks in list at t=" + str(t) )
-    for cb in self.callback_list:
-      cb(self)
 
 
 def print_callback ( x ):

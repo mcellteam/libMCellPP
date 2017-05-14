@@ -4,7 +4,7 @@ from math import sin
 from math import cos
 
 from scheduler import *
-from points import *
+from location import *
 from molecules import *
 
 # __import__('code').interact(local={k: v for ns in (globals(), locals()) for k, v in ns.items()})
@@ -41,9 +41,9 @@ class time_step_action(priority_scheduled_item):
       #self.sim.scheduler.schedule_item ( diffuse_action(self.sim), [self.sim.t] )
 
 
-class spiral_point ( point ):
+class spiral_point ( point_location ):
   def __init__( self, x=0, y=0 ):
-    point.__init__(self, x, y)  ### Initialize the Base Class first
+    point_location.__init__(self, x, y)  ### Initialize the Base Class first
     self.cx = x
     self.cy = y
     self.angle = 0
@@ -72,8 +72,8 @@ class diff_2d_sim:
         molecule(mol_a,brownian_point(1,0)),
         molecule(mol_a,brownian_point(0,1)),
         molecule(mol_a,brownian_point(1,2)),
-        molecule(mol_b,point(2,0)),
-        molecule(mol_b,point(1,1)),
+        molecule(mol_b,point_location(2,0)),
+        molecule(mol_b,point_location(1,1)),
         molecule(mol_c,newtonian_point(-1,2,-1,0)),
         molecule(mol_c,newtonian_point(-1,2,0,-1)),
         molecule(mol_c,newtonian_point(-1,2,1,1)),

@@ -95,11 +95,13 @@ class diff_2d_sim:
   def diffuse ( self ):
     print ( "Start diffuse" )
     # Simple Collision Detection using the "Manhattan Distance" (taxi cab) metric
-    for mi in range(len(self.mols)):
-      m = self.mols[mi]
+    for mol_index in range(len(self.mols)):
+      m = self.mols[mol_index]
+      # Get the start and end points for this molecule's motion for this time step.
       pt_start, pt_end = m.pt.get_motion(0.01)
-      for ti in range (mi+1,len(self.mols)):
-        target_mol = self.mols[ti]
+      # Check for a collision between this molecule and others along that line
+      for target_index in range (mol_index+1,len(self.mols)):
+        target_mol = self.mols[target_index]
         if ( abs(target_mol.pt.x - pt_end[0]) < 2 ) and ( abs(target_mol.pt.y - pt_end[1]) < 2 ):
           print ( "  Collision Detected between " + m.species.name + "(" + str(m.pt.x) + "," + str(m.pt.y) + ") and " + target_mol.species.name + "(" + str(target_mol.pt.x) + "," + str(target_mol.pt.y) + ")" )
           self.collisions.append ( ( (target_mol.pt.x+pt_end[0])/2.0, (target_mol.pt.y+pt_end[1])/2.0 ) )

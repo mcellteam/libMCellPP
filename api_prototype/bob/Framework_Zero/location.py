@@ -1,4 +1,4 @@
-from random import randint
+import random
 
 # __import__('code').interact(local={k: v for ns in (globals(), locals()) for k, v in ns.items()})
 # Alternative:
@@ -27,8 +27,9 @@ class point_location (location):
 class brownian_point ( point_location ):
   def __init__( self, x=0, y=0 ):
     point_location.__init__(self, x, y)  ### Initialize the Base Class first
+    random.seed(123)
   def get_motion ( self, dt ):
-    return ( (self.x, self.y), (self.x+randint(-2,2), self.y+randint(-2,2)) )
+    return ( (self.x, self.y), (self.x+random.randint(-2,2), self.y+random.randint(-2,2)) )
 
 class newtonian_point ( point_location ):
   def __init__( self, x=0, y=0, vx=0, vy=0 ):

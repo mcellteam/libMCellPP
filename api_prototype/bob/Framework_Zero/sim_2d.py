@@ -1,4 +1,3 @@
-from random import randint
 import sys
 from math import sin
 from math import cos

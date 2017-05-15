@@ -1,4 +1,3 @@
-from random import randint
 import sys
 
 # __import__('code').interact(local={k: v for ns in (globals(), locals()) for k, v in ns.items()})
@@ -67,7 +66,6 @@ class scheduler(priority_scheduled_item):
       remaining_list = priority_list[1:]
       print ( "Using specified priority of " + str(priority) )
     else:
-      # priority = randint(0,10000)
       priority = self.next_unspecified_priority
       print ( "Using unspecified priority of " + str(priority) )
       self.next_unspecified_priority += 1

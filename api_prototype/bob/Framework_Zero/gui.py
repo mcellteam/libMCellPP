@@ -74,6 +74,7 @@ def reset_callback(drawing_area):
 
 # Create the window and connect the events
 def main():
+
   window = gtk.Window ( gtk.WINDOW_TOPLEVEL )
   window.set_name ( "Conways Life" )
   

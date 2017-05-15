@@ -1,5 +1,3 @@
-from random import randint
-
 import scheduler as d
 s = d.scheduler()
 
@@ -26,7 +24,7 @@ if False:
   # Schedule an item in the future
   self.scheduler.schedule_item ( scheduled_item(), [1] )
 
-  # Schedule 2 items at the same time. These will create a new scheduler and give them random times.
+  # Schedule 2 items at the same time.
   self.scheduler.schedule_item ( scheduled_item(), [2] )
   self.scheduler.schedule_item ( scheduled_item(), [2] )
 

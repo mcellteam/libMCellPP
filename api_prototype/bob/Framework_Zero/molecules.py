@@ -1,4 +1,3 @@
-from random import randint
 from location import *
 
 # __import__('code').interact(local={k: v for ns in (globals(), locals()) for k, v in ns.items()})

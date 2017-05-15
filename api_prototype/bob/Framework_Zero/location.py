@@ -18,8 +18,9 @@ class point_location (location):
     self.y = y
   def get_motion ( self, dt ):
     return ( (self.x, self.y), (self.x, self.y) )
-  def move ( self, dt ):
-    pass
+  def move ( self, x, y ):
+    self.x = x
+    self.y = y
   def print_self ( self ):
     print ( "x,y = (" + str(self.x) + "," + str(self.y) )
 
@@ -28,9 +29,6 @@ class brownian_point ( point_location ):
     point_location.__init__(self, x, y)  ### Initialize the Base Class first
   def get_motion ( self, dt ):
     return ( (self.x, self.y), (self.x+randint(-2,2), self.y+randint(-2,2)) )
-  def move ( self, dt ):
-    self.x += randint(-2,2)
-    self.y += randint(-2,2)
 
 class newtonian_point ( point_location ):
   def __init__( self, x=0, y=0, vx=0, vy=0 ):
@@ -39,8 +37,5 @@ class newtonian_point ( point_location ):
     self.vy = vy
   def get_motion ( self, dt ):
     return ( (self.x, self.y), (self.x+self.vx, self.y+self.vy) )
-  def move ( self, dt ):
-    self.x += self.vx
-    self.y += self.vy
 
 

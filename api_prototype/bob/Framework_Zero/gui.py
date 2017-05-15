@@ -23,14 +23,24 @@ def expose_event ( widget, event ):
   drawable = widget.window
   colormap = widget.get_colormap()
   gc = widget.get_style().fg_gc[gtk.STATE_NORMAL]
+  # Save the current color
   old_fg = gc.foreground
+  # Clear the screen with black
   gc.foreground = colormap.alloc_color(0,0,0)
   drawable.draw_rectangle(gc, True, 0, 0, width, height)
+  # Draw the current molecule positions
   for m in diff_2d_sim.mols:
     gc.foreground = colormap.alloc_color(int(m.species.color[0]),int(m.species.color[1]),int(m.species.color[2]))
     px = (width/2) + (10*m.pt.x)
     py = (height/2) + (10*m.pt.y)
     drawable.draw_rectangle(gc, True, int(px), int(py), 6, 6)
+  # Draw the history of detected collisions in yellow
+  gc.foreground = colormap.alloc_color(65535, 65535, 0)
+  for coll in diff_2d_sim.collisions:
+    px = (width/2) + (10*coll[0])
+    py = (height/2) + (10*coll[1])
+    drawable.draw_rectangle(gc, True, int(px), int(py), 3, 3)
+  # Restore the previous color
   gc.foreground = old_fg
   return False
 

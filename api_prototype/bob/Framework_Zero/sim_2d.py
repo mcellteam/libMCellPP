@@ -48,11 +48,12 @@ class spiral_point ( point_location ):
     self.cy = y
     self.angle = 0
     self.radius = 0
-  def move ( self, dt ):
+  def get_motion ( self, dt ):
     self.angle += 0.5 # Radians
     self.radius += 0.5
-    self.x = self.cx + ( self.radius * cos(self.angle) )
-    self.y = self.cy + ( self.radius * sin(self.angle) )
+    new_x = self.cx + ( self.radius * cos(self.angle) )
+    new_y = self.cy + ( self.radius * sin(self.angle) )
+    return ( (self.x, self.y), (new_x, new_y) )
 
 
 class diff_2d_sim:
@@ -69,16 +70,18 @@ class diff_2d_sim:
 
     # Create some molecule instances
     self.mols = [
-        molecule(mol_a,brownian_point(1,0)),
-        molecule(mol_a,brownian_point(0,1)),
-        molecule(mol_a,brownian_point(1,2)),
-        molecule(mol_b,point_location(2,0)),
-        molecule(mol_b,point_location(1,1)),
-        molecule(mol_c,newtonian_point(-1,2,-1,0)),
-        molecule(mol_c,newtonian_point(-1,2,0,-1)),
-        molecule(mol_c,newtonian_point(-1,2,1,1)),
+        molecule(mol_a,brownian_point(4,0)),
+        molecule(mol_a,brownian_point(0,4)),
+        molecule(mol_a,brownian_point(8,8)),
+        molecule(mol_b,point_location(4,4)),
+        molecule(mol_b,point_location(-4,-4)),
+        molecule(mol_c,newtonian_point(-4,8,-1,0)),
+        molecule(mol_c,newtonian_point(-4,8,0,-1)),
+        molecule(mol_c,newtonian_point(-4,8,1,1)),
         molecule(mol_s,spiral_point(0,0)),
       ]
+
+    self.collisions = []
 
     # Set some simulation values
     self.t = 0
@@ -87,12 +90,22 @@ class diff_2d_sim:
     # Create a baseline scheduler
     self.scheduler = scheduler()
 
-    self.scheduler.schedule_item ( time_step_action(self,50), [10] )
+    self.scheduler.schedule_item ( time_step_action(self,200), [10] )
     self.scheduler.schedule_item ( diffuse_action(self), [0.5] )
     
   def diffuse ( self ):
-    for m in self.mols:
-      m.pt.move(0.01)
+    print ( "Start diffuse" )
+    # Simple Collision Detection using the "Manhattan Distance" (taxi cab) metric
+    for mi in range(len(self.mols)):
+      m = self.mols[mi]
+      pt_start, pt_end = m.pt.get_motion(0.01)
+      for ti in range (mi+1,len(self.mols)):
+        target_mol = self.mols[ti]
+        if ( abs(target_mol.pt.x - pt_end[0]) < 2 ) and ( abs(target_mol.pt.y - pt_end[1]) < 2 ):
+          print ( "  Collision Detected between " + m.species.name + "(" + str(m.pt.x) + "," + str(m.pt.y) + ") and " + target_mol.species.name + "(" + str(target_mol.pt.x) + "," + str(target_mol.pt.y) + ")" )
+          self.collisions.append ( ( (target_mol.pt.x+pt_end[0])/2.0, (target_mol.pt.y+pt_end[1])/2.0 ) )
+      m.pt.move ( pt_end[0], pt_end[1] )
+    print ( "End diffuse" )
 
   def step ( self ):
     print ( "Before run(1): t=" + str(self.t) )

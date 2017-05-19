@@ -20,6 +20,9 @@ def configure_event ( widget, event ):
 def expose_event ( widget, event ):
   global diff_2d_sim
   x, y, width, height = event.area
+  width, height = widget.window.get_size()
+  x, y = widget.window.get_origin()
+  #__import__('code').interact(local={k: v for ns in (globals(), locals()) for k, v in ns.items()})
   drawable = widget.window
   colormap = widget.get_colormap()
   gc = widget.get_style().fg_gc[gtk.STATE_NORMAL]
@@ -76,7 +79,7 @@ def reset_callback(drawing_area):
 def main():
 
   window = gtk.Window ( gtk.WINDOW_TOPLEVEL )
-  window.set_name ( "Conways Life" )
+  window.set_name ( "2D Diffusion" )
   
   vbox = gtk.VBox ( False, 0 )
   window.add(vbox)

@@ -72,6 +72,7 @@ class diff_2d_sim:
         molecule(mol_a,brownian_point(4,0)),
         molecule(mol_a,brownian_point(0,4)),
         molecule(mol_a,brownian_point(8,8)),
+        molecule(mol_a,brownian_point(-6,1)),
         molecule(mol_b,point_location(4,4)),
         molecule(mol_b,point_location(-4,-4)),
         molecule(mol_c,newtonian_point(-4,8,-1,0)),
@@ -94,7 +95,9 @@ class diff_2d_sim:
     
   def diffuse ( self ):
     print ( "Start diffuse" )
-    # Simple Collision Detection using the "Manhattan Distance" (taxi cab) metric
+    # Simple Collision Detection using distance
+    collision_radius = 3
+    crsq = collision_radius * collision_radius
     for mol_index in range(len(self.mols)):
       m = self.mols[mol_index]
       # Get the start and end points for this molecule's motion for this time step.
@@ -102,7 +105,9 @@ class diff_2d_sim:
       # Check for a collision between this molecule and others along that line
       for target_index in range (mol_index+1,len(self.mols)):
         target_mol = self.mols[target_index]
-        if ( abs(target_mol.pt.x - pt_end[0]) < 2 ) and ( abs(target_mol.pt.y - pt_end[1]) < 2 ):
+        dx = target_mol.pt.x - pt_end[0]
+        dy = target_mol.pt.y - pt_end[1]
+        if ( (dx*dx) + (dy*dy) ) <  crsq:
           print ( "  Collision Detected between " + m.species.name + "(" + str(m.pt.x) + "," + str(m.pt.y) + ") and " + target_mol.species.name + "(" + str(target_mol.pt.x) + "," + str(target_mol.pt.y) + ")" )
           self.collisions.append ( ( (target_mol.pt.x+pt_end[0])/2.0, (target_mol.pt.y+pt_end[1])/2.0 ) )
       m.pt.move ( pt_end[0], pt_end[1] )

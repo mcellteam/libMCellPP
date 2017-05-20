@@ -1,3 +1,4 @@
+import math
 import random
 
 # __import__('code').interact(local={k: v for ns in (globals(), locals()) for k, v in ns.items()})
@@ -7,9 +8,12 @@ import random
 #  _a.update(locals())
 #  __import__('code').interact(local=_a)
 
+
 class location:
+  # Base class supporting any notion of "location"
   def __init__(self):
     pass
+
 
 class point_location (location):
   def __init__( self, x=0, y=0 ):
@@ -17,12 +21,14 @@ class point_location (location):
     self.x = x
     self.y = y
   def get_motion ( self, dt ):
+    # The base class (point_location) doesn't have it's own motion, so return the same points as 'from' and 'to':
     return ( (self.x, self.y), (self.x, self.y) )
   def move ( self, x, y ):
     self.x = x
     self.y = y
   def print_self ( self ):
     print ( "x,y = (" + str(self.x) + "," + str(self.y) )
+
 
 class point_radius (point_location):
   def __init__( self, x=0, y=0, r=0 ):
@@ -38,14 +44,20 @@ class point_radius (point_location):
   def print_self ( self ):
     print ( "x,y = (" + str(self.x) + "," + str(self.y) )
 
+
 class brownian_point ( point_radius ):
   rand = None  # rand is a class variable and must be referenced by class name: brownian_point.r
-  def __init__( self, x=0, y=0, r=0 ):
+  def __init__( self, x=0, y=0, r=0, dc=1 ):
     point_radius.__init__(self, x, y, r)  ### Initialize the Base Class first
     brownian_point.rand = random.Random()
     brownian_point.rand.seed(13)  # Interesting seeds: 4 7 11
+    self.dc = dc
   def get_motion ( self, dt ):
-    return ( (self.x, self.y), (self.x+brownian_point.rand.randint(-2,2), self.y+brownian_point.rand.randint(-2,2)) )
+    ds = math.sqrt(4.0 * 1.0e8 * self.dc * dt)
+    dx = brownian_point.rand.gauss(0.0,ds) * 0.70710678118654752440
+    dy = brownian_point.rand.gauss(0.0,ds) * 0.70710678118654752440
+    return ( (self.x, self.y), (self.x+dx, self.y+dy) )
+
 
 class newtonian_point ( point_radius ):
   def __init__( self, x=0, y=0, vx=0, vy=0, r=0 ):

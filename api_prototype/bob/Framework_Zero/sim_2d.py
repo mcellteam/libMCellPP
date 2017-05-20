@@ -41,12 +41,13 @@ class time_step_action(priority_scheduled_item):
 
 
 class spiral_point ( point_radius ):
-  def __init__( self, x=0, y=0, r=0 ):
-    point_location.__init__(self, x, y)  ### Initialize the Base Class first
-    self.cx = x
-    self.cy = y
-    self.angle = 0
-    self.radius = 0
+  def __init__( self, x=0, y=0, r=0, spiral_angle=0, spiral_radius=0 ):
+    point_radius.__init__(self, x, y, r)  ### Initialize the Base Class first
+    self.cx = x                   # Center x of the spiral
+    self.cy = y                   # Center y of the spiral
+    self.r = r                    # Radius of the point
+    self.angle = spiral_angle     # Current angle of the spiral
+    self.radius = spiral_radius   # Current radius of the spiral
   def get_motion ( self, dt ):
     self.angle += 0.5 # Radians
     self.radius += 0.5
@@ -69,10 +70,10 @@ class diff_2d_sim:
 
     # Create some molecule instances
     self.mols = [
-        molecule(mol_a,brownian_point(4,0)),
-        molecule(mol_a,brownian_point(0,4)),
-        molecule(mol_a,brownian_point(8,8)),
-        molecule(mol_a,brownian_point(-6,1)),
+        molecule(mol_a,brownian_point( x=4,y=0,dc=1e-7)),
+        molecule(mol_a,brownian_point( x=0,y=4,dc=1e-7)),
+        molecule(mol_a,brownian_point( x=8,y=8,dc=1e-7)),
+        molecule(mol_a,brownian_point(x=-6,y=1,dc=1e-7)),
         molecule(mol_b,point_location(4,4)),
         molecule(mol_b,point_location(-4,-4)),
         molecule(mol_c,newtonian_point(-4,8,-1,0)),

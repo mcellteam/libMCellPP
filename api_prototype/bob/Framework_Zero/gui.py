@@ -79,8 +79,8 @@ def back_callback(drawing_area):
   global display_time_index
   if ( display_time_index+len(state_history) ) > 0:
     # It's OK to step backwards
-    print ( "Display buffered data" )
     display_time_index += -1
+    print ( "Display buffered data for index " + str(display_time_index) )
   drawing_area.queue_draw()
   return True
 
@@ -91,8 +91,8 @@ def step_callback(drawing_area):
     buffer_state()  # Save the original state
   if display_time_index < -1:
     # The history is already buffered
-    print ( "Display buffered data" )
     display_time_index += 1
+    print ( "Display buffered data for index " + str(display_time_index) )
   else:
     # Buffer the history and step
     print ( "Display new data" )

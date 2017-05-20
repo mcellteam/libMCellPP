@@ -40,8 +40,8 @@ class time_step_action(priority_scheduled_item):
       #self.sim.scheduler.schedule_item ( diffuse_action(self.sim), [self.sim.t] )
 
 
-class spiral_point ( point_location ):
-  def __init__( self, x=0, y=0 ):
+class spiral_point ( point_radius ):
+  def __init__( self, x=0, y=0, r=0 ):
     point_location.__init__(self, x, y)  ### Initialize the Base Class first
     self.cx = x
     self.cy = y

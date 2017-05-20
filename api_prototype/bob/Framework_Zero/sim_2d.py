@@ -1,6 +1,7 @@
 import sys
 from math import sin
 from math import cos
+from math import sqrt
 
 from scheduler import *
 from location import *
@@ -49,8 +50,8 @@ class spiral_point ( point_radius ):
     self.angle = spiral_angle     # Current angle of the spiral
     self.radius = spiral_radius   # Current radius of the spiral
   def get_motion ( self, dt ):
-    self.angle += 0.5 # Radians
-    self.radius += 0.5
+    self.angle += 0.25 # Radians
+    self.radius += 2
     new_x = self.cx + ( self.radius * cos(self.angle) )
     new_y = self.cy + ( self.radius * sin(self.angle) )
     return ( (self.x, self.y), (new_x, new_y) )
@@ -70,16 +71,16 @@ class diff_2d_sim:
 
     # Create some molecule instances
     self.mols = [
-        molecule(mol_a,brownian_point( x=4,y=0,dc=1e-7)),
-        molecule(mol_a,brownian_point( x=0,y=4,dc=1e-7)),
-        molecule(mol_a,brownian_point( x=8,y=8,dc=1e-7)),
-        molecule(mol_a,brownian_point(x=-6,y=1,dc=1e-7)),
-        molecule(mol_b,point_location(4,4)),
-        molecule(mol_b,point_location(-4,-4)),
-        molecule(mol_c,newtonian_point(-4,8,-1,0)),
-        molecule(mol_c,newtonian_point(-4,8,0,-1)),
-        molecule(mol_c,newtonian_point(-4,8,1,1)),
-        molecule(mol_s,spiral_point(0,0)),
+        molecule ( mol_a, brownian_point(x=40,y=0,dc=1e-5,r=3) ),
+        molecule ( mol_a, brownian_point(x=0,y=40,dc=1e-5,r=3) ),
+        molecule ( mol_a, brownian_point(x=80,y=80,dc=1e-5,r=3) ),
+        molecule ( mol_a, brownian_point(x=-60,y=10,dc=1e-5,r=3) ),
+        molecule ( mol_b, point_location(x=40,y=40) ),
+        molecule ( mol_b, point_location(x=-40,y=-40) ),
+        molecule ( mol_c, newtonian_point(x=-40,y=80,vx=-90,vy=0,r=3) ),
+        molecule ( mol_c, newtonian_point(x=-40,y=80,vx=0,vy=-90,r=3) ),
+        molecule ( mol_c, newtonian_point(x=-40,y=80,vx=90,vy=90,r=3) ),
+        molecule ( mol_s, spiral_point(0,0,r=6) ),
       ]
 
     self.collisions = []
@@ -97,19 +98,25 @@ class diff_2d_sim:
   def diffuse ( self ):
     print ( "Start diffuse" )
     # Simple Collision Detection using distance
-    collision_radius = 3
-    crsq = collision_radius * collision_radius
     for mol_index in range(len(self.mols)):
       m = self.mols[mol_index]
       # Get the start and end points for this molecule's motion for this time step.
       pt_start, pt_end = m.pt.get_motion(0.01)
+      # Get the radius
+      m_rad = 0
+      if issubclass ( m.pt.__class__, point_radius ):
+        m_rad = m.pt.r
       # Check for a collision between this molecule and others along that line
       for target_index in range (mol_index+1,len(self.mols)):
         target_mol = self.mols[target_index]
+        t_rad = 0
+        if issubclass ( target_mol.pt.__class__, point_radius ):
+          t_rad = target_mol.pt.r
         dx = target_mol.pt.x - pt_end[0]
         dy = target_mol.pt.y - pt_end[1]
-        if ( (dx*dx) + (dy*dy) ) <  crsq:
+        if sqrt( (dx*dx) + (dy*dy) ) <  (m_rad+t_rad):
           print ( "  Collision Detected between " + m.species.name + "(" + str(m.pt.x) + "," + str(m.pt.y) + ") and " + target_mol.species.name + "(" + str(target_mol.pt.x) + "," + str(target_mol.pt.y) + ")" )
+          print ( "     Distance = " + str(sqrt( (dx*dx) + (dy*dy) )) + ", and combined radii = " + str(m_rad+t_rad) )
           self.collisions.append ( ( (target_mol.pt.x+pt_end[0])/2.0, (target_mol.pt.y+pt_end[1])/2.0 ) )
       m.pt.move ( pt_end[0], pt_end[1] )
     print ( "End diffuse" )

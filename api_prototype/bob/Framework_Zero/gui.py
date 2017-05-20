@@ -7,6 +7,7 @@ pygtk.require ( '2.0' )
 import gtk
 
 import scheduler
+import location
 import sim_2d
 
 diff_2d_sim = sim_2d.diff_2d_sim()
@@ -43,13 +44,13 @@ def expose_event ( widget, event ):
     current_state = state_history[display_time_index]
     for m in current_state['mols']:
       gc.foreground = colormap.alloc_color(int(m['c'][0]),int(m['c'][1]),int(m['c'][2]))
-      px = (width/2) + (10*m['x'])
-      py = (height/2) + (10*m['y'])
-      drawable.draw_rectangle(gc, True, int(px), int(py), 6, 6)
-    gc.foreground = colormap.alloc_color(65535, 65535, 0)
+      px = (width/2) + (1*m['x'])
+      py = (height/2) + (1*m['y'])
+      drawable.draw_arc(gc, True, int(px)-m['r'], int(py)-m['r'], 2*m['r'], 2*m['r'], 0, 360*64)
+    gc.foreground = colormap.alloc_color(60000, 60000, 60000)
     for coll in current_state['cols']:
-      px = (width/2) + (10*coll['x'])
-      py = (height/2) + (10*coll['y'])
+      px = (width/2) + (1*coll['x'])
+      py = (height/2) + (1*coll['y'])
       drawable.draw_rectangle(gc, True, int(px), int(py), 3, 3)
   # Restore the previous color
   gc.foreground = old_fg
@@ -65,7 +66,10 @@ def buffer_state():
   # Save the current molecule positions for this time
   current_state['mols'] = []
   for m in diff_2d_sim.mols:
-    current_state['mols'].append ( {'name':m.species.name, 'x':m.pt.x, 'y':m.pt.y, 'c':m.species.color} )
+    m_draw = {'name':m.species.name, 'x':m.pt.x, 'y':m.pt.y, 'r':2, 'c':m.species.color}
+    if issubclass ( m.pt.__class__, location.point_radius ):
+      m_draw['r'] = m.pt.r
+    current_state['mols'].append ( m_draw )
   # Save the history of detected collisions for this time
   current_state['cols'] = []
   for coll in diff_2d_sim.collisions:

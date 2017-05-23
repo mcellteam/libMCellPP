@@ -65,10 +65,10 @@ class diff_2d_sim:
     # Simulation specific data
     
     # Create some molecule species
-    mol_a = mol_species('a', (65535,0,0) )
-    mol_b = mol_species('b', (0,65535,0) )
-    mol_c = mol_species('c', (0,0,65535) )
-    mol_s = mol_species('s', (65535,65535,65535) )
+    mol_a = mol_species('a', (1,0,0) )
+    mol_b = mol_species('b', (0,1,0) )
+    mol_c = mol_species('c', (0,0,1) )
+    mol_s = mol_species('s', (1,1,1) )
 
     # Create some molecule instances
     self.mols = [
@@ -93,7 +93,7 @@ class diff_2d_sim:
         reg_polygon_object ( "5-gon", x=0, y=-80, num_faces=5, radius=30 ),
         reg_polygon_object ( "6-gon", x=60, y=-80, num_faces=6, radius=30 ),
         reg_polygon_object ( "7-gon", x=120, y=-80, num_faces=7, radius=30 ),
-        reg_polygon_object ( "24-gon", x=0, y=80, color=(65000,0,0), num_faces=24, radius=50 ),
+        reg_polygon_object ( "24-gon", x=0, y=80, color=(0.9,0,0), num_faces=24, radius=50 ),
       ]
 
     print ( str ( self.objects ) )

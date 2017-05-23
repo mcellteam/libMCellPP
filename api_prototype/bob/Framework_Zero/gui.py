@@ -43,7 +43,7 @@ def expose_event ( widget, event ):
   if len(state_history) > 0:
     current_state = state_history[display_time_index]
     for m in current_state['mols']:
-      gc.foreground = colormap.alloc_color(int(m['c'][0]),int(m['c'][1]),int(m['c'][2]))
+      gc.foreground = colormap.alloc_color(int(65535*m['c'][0]),int(65535*m['c'][1]),int(65535*m['c'][2]))
       px = (width/2) + (1*m['x'])
       py = (height/2) + (1*m['y'])
       drawable.draw_arc(gc, True, int(px)-m['r'], int(py)-m['r'], 2*m['r'], 2*m['r'], 0, 360*64)
@@ -54,7 +54,7 @@ def expose_event ( widget, event ):
       drawable.draw_rectangle(gc, True, int(px), int(py), 3, 3)
     for o in current_state['objs']:
       print ( "Drawing object " + o['name'] )
-      gc.foreground = colormap.alloc_color(int(o['c'][0]),int(o['c'][1]),int(o['c'][2]))
+      gc.foreground = colormap.alloc_color(int(65535*o['c'][0]),int(65535*o['c'][1]),int(65535*o['c'][2]))
       cx = (width/2) + (1*o['x'])
       cy = (height/2) + (1*o['y'])
       for f in o['faces']:

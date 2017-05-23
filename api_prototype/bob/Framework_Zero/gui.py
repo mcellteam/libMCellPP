@@ -52,6 +52,15 @@ def expose_event ( widget, event ):
       px = (width/2) + (1*coll['x'])
       py = (height/2) + (1*coll['y'])
       drawable.draw_rectangle(gc, True, int(px), int(py), 3, 3)
+    for o in current_state['objs']:
+      print ( "Drawing object " + o['name'] )
+      gc.foreground = colormap.alloc_color(int(o['c'][0]),int(o['c'][1]),int(o['c'][2]))
+      cx = (width/2) + (1*o['x'])
+      cy = (height/2) + (1*o['y'])
+      for f in o['faces']:
+        p1 = ( cx+o['x']+o['points'][f[0]][0], cy+o['y']+o['points'][f[0]][1] )
+        p2 = ( cx+o['x']+o['points'][f[1]][0], cy+o['y']+o['points'][f[1]][1] )
+        drawable.draw_line ( gc, p1[0], p1[1], p2[0], p2[1] )
   # Restore the previous color
   gc.foreground = old_fg
   return False
@@ -63,6 +72,7 @@ def buffer_state():
   global state_history
   global display_time_index
   current_state = {}
+  print ( "Buffering state " )
   # Save the current molecule positions for this time
   current_state['mols'] = []
   for m in diff_2d_sim.mols:
@@ -73,8 +83,13 @@ def buffer_state():
   # Save the history of detected collisions for this time
   current_state['cols'] = []
   for coll in diff_2d_sim.collisions:
-    current_state['cols'].append ( {'x':coll[0], 'y':coll[1] } )
+    current_state['cols'].append ( { 'x':coll[0], 'y':coll[1] } )
+  current_state['objs'] = []
+  for obj in diff_2d_sim.objects:
+    print ( "Buffering object " + obj.name )
+    current_state['objs'].append ( { 'name':obj.name, 'x':obj.x, 'y':obj.y, 'c':obj.color, 'points':[p for p in obj.points], 'faces':[f for f in obj.faces] } )
   current_state['t'] = diff_2d_sim.t
+
   state_history.append ( current_state )
 
 

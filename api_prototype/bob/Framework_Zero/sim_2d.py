@@ -6,6 +6,7 @@ from math import sqrt
 from scheduler import *
 from location import *
 from molecules import *
+from geometry import *
 
 # __import__('code').interact(local={k: v for ns in (globals(), locals()) for k, v in ns.items()})
 # Alternative:
@@ -83,6 +84,19 @@ class diff_2d_sim:
         molecule ( mol_s, spiral_point(0,0,r=6) ),
       ]
 
+    # Create a few polygon objects
+    self.objects = [
+        point_face_object ( "Triangle 1", x=30, y=0, points=[[0,100], [50,-10], [-50,-10]] ),
+        point_face_object ( "Square 1", x=-50, y=0, points=[[-90,-90], [-90,90], [90,90], [90,-90]] ),
+        reg_polygon_object ( "3-gon", x=-120, y=-80, num_faces=3, radius=30 ),
+        reg_polygon_object ( "4-gon", x=-60, y=-80, num_faces=4, radius=30 ),
+        reg_polygon_object ( "5-gon", x=0, y=-80, num_faces=5, radius=30 ),
+        reg_polygon_object ( "6-gon", x=60, y=-80, num_faces=6, radius=30 ),
+        reg_polygon_object ( "7-gon", x=120, y=-80, num_faces=7, radius=30 ),
+        reg_polygon_object ( "24-gon", x=0, y=80, color=(65000,0,0), num_faces=24, radius=50 ),
+      ]
+
+    print ( str ( self.objects ) )
     self.collisions = []
 
     # Set some simulation values

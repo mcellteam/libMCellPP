@@ -99,9 +99,12 @@ def step_callback(drawing_area):
     print ( "Display buffered data for index " + str(display_time_index) )
   else:
     # Buffer the history and step
-    print ( "Display new data" )
-    diff_2d_sim.step()
-    buffer_state()
+    if diff_2d_sim.scheduler.items_left() > 0:
+      print ( "Display new data" )
+      diff_2d_sim.step()
+      buffer_state()
+    else:
+      print ( "No events scheduled, cannot advance time." )
   drawing_area.queue_draw()
   return True
 

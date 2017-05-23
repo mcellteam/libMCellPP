@@ -133,6 +133,8 @@ class scheduler(priority_scheduled_item):
         # Call the regular execute function and pop the item
         self.scheduled_items[p].execute()
         self.scheduled_items.pop(p,None)
+  def items_left(self):
+    return ( len(self.scheduled_items) )
   def print_self ( self, depth, prefix="", suffix="" ):
     priorities = sorted(self.scheduled_items.keys())
     print ( self.depth_indent(depth) + prefix + str(self.__class__) + " " + str(priorities) + suffix )

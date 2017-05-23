@@ -2,10 +2,10 @@
 
 ## 1. Simple Simulation with Collisions
 
-![SimpleSim](Simple_Sumulation.png?raw=true "SimpleSim")
+![Simple_Simulation](Simple_Simulation.png?raw=true "Simple_Simulation")
 
 ## 2. Collision History with Small and Large Radius 
 
-![RadiusExample](Radius_Example.png?raw=true "RadiusExample")
+![Radius_Example](Radius_Example.png?raw=true "Radius_Example")
 
 

@@ -102,14 +102,17 @@ class diff_2d_sim:
       m = self.mols[mol_index]
       # Get the start and end points for this molecule's motion for this time step.
       pt_start, pt_end = m.pt.get_motion(0.01)
-      # Get the radius
+      # Assume a default radius of zero
       m_rad = 0
+      # Check if the point for this molecule is a subclass of something with a radius
       if issubclass ( m.pt.__class__, point_radius ):
         m_rad = m.pt.r
       # Check for a collision between this molecule and others along that line
       for target_index in range (mol_index+1,len(self.mols)):
         target_mol = self.mols[target_index]
+        # Assume a radius of zero
         t_rad = 0
+        # Check if the point for this molecule is a subclass of something with a radius
         if issubclass ( target_mol.pt.__class__, point_radius ):
           t_rad = target_mol.pt.r
         dx = target_mol.pt.x - pt_end[0]

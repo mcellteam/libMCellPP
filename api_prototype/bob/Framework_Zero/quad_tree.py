@@ -1,0 +1,644 @@
+#!/usr/bin/env python
+
+# Based on https://gitlab.snl.salk.edu/NeuralNetworkCoding/AssortedPrograms/ ... /BackProp.py
+
+import math
+import random
+
+
+
+global_algorithm = None
+global_canvas = None
+global_window = None
+
+
+def test():
+  global global_window
+  global_window.cmd_callback ( None, "QuadTree" )
+  
+
+
+import pygtk
+pygtk.require('2.0')
+import gobject
+import gtk
+
+
+pixmap = None
+numcolors = 16
+pos_colors = None
+neg_colors = None
+
+# Creating or Resizing the Window generates configure events
+def configure_event_callback ( canvas, event ):
+  global pixmap
+  x,y,width,height = canvas.get_allocation()
+  # print width, height
+  new_pixmap = gtk.gdk.Pixmap(canvas.window, width, height)
+  new_pixmap.draw_rectangle ( canvas.get_style().black_gc, True, 0, 0, width, height )
+  # Copy the old pixmap into the new one
+  if pixmap != None:
+    new_pixmap.draw_drawable(canvas.get_style().black_gc,pixmap,0,0,0,0,-1,-1)
+  pixmap = new_pixmap
+  return True
+
+
+def map_pos_neg_colors ( canvas, gc ):
+  global pos_colors
+  global neg_colors
+  global numcolors
+  if (pos_colors == None) or (neg_colors == None):
+    pos_colors = []
+    neg_colors = []
+    cmap = canvas.get_colormap()
+    for i in range(numcolors):
+      pos_colors.append ( cmap.alloc_color(0, i*65535/numcolors, 0) )
+      neg_colors.append ( cmap.alloc_color(i*65535/numcolors, 0, 0) )
+  gc.background = canvas.get_colormap().alloc_color(0, 0, 0)
+  gc.foreground = canvas.get_colormap().alloc_color(65535, 0, 0)
+
+
+class locatable_object:
+  def __init__ (self, x=0, y=0, c=(0.5,0.5,0.5)):
+    self.x = x
+    self.y = y
+    self.c = c
+    # This class can contain anything else
+    self.highlight = False
+
+class QuadTree:
+  def __init__ ( self, xmin=0, ymin=0, xmax=1, ymax=1, max_objects=10 ):
+    # print ( " Constructing a new QuadTree" )
+    # Range: [min, max)
+    self.xmin = xmin
+    self.xmax = xmax
+    self.ymin = ymin
+    self.ymax = ymax
+    self.max_objects = max_objects
+    self.objects = []
+    self.qne = None
+    self.qnw = None
+    self.qse = None
+    self.qsw = None
+
+  def split ( self ):
+    left_xmin = self.xmin
+    right_xmax = self.xmax
+    left_xmax = left_xmin + ( (self.xmax - self.xmin) / 2.0 )
+    right_xmin = left_xmax
+
+    bot_ymin = self.ymin
+    top_ymax = self.ymax
+    bot_ymax = bot_ymin + ( (self.ymax - self.ymin) / 2.0 )
+    top_ymin = bot_ymax
+
+    self.qne = QuadTree ( right_xmin, top_ymin, right_xmax, top_ymax, self.max_objects )
+    self.qnw = QuadTree ( left_xmin,  top_ymin, left_xmax,  top_ymax, self.max_objects )
+    self.qse = QuadTree ( right_xmin, bot_ymin, right_xmax, bot_ymax, self.max_objects )
+    self.qsw = QuadTree ( left_xmin,  bot_ymin, left_xmax,  bot_ymax, self.max_objects )
+    
+    original_objects = [ o for o in self.objects ]
+    self.objects = []
+
+    for o in original_objects:
+      self.add_object ( o )
+
+  def add_object ( self, o ):
+    # print ( "Adding object at " + str(o.x) + "," + str(o.y) )
+    if self.qne == None:
+      # This is an unsubdivided (or leaf) node
+      # print ( "  Found a leaf node when adding object at " + str(o.x) + "," + str(o.y) )
+      if (len(self.objects) + 1) > self.max_objects:
+        # One more would be too many, so subdivide
+        self.split()
+        self.add_object ( o )
+      else:
+        # It fits, so add it
+        self.objects.append ( o )
+    else:
+      # This is already subdivided so find the right quadrant
+      # o must have an x and y field
+      if o.x < self.xmin + ( (self.xmax - self.xmin) / 2.0 ):
+        # West
+        if o.y < self.ymin + ( (self.ymax - self.ymin) / 2.0 ):
+          # South
+          self.qsw.add_object ( o )
+        else:
+          # North
+          self.qnw.add_object ( o )
+      else:
+        # East
+        if o.y < self.ymin + ( (self.ymax - self.ymin) / 2.0 ):
+          # South
+          self.qse.add_object ( o )
+        else:
+          # North
+          self.qne.add_object ( o )
+
+
+  def find_objects ( self, x, y ):
+    # print ( "Finding objects near " + str(x) + "," + str(y) )
+    if self.qne == None:
+      # This is an unsubdivided (or leaf) node
+      # print ( "  Found a leaf node" )
+      return self.objects
+    else:
+      # This is already subdivided so find the right quadrant
+      # o must have an x and y field
+      if x < self.xmin + ( (self.xmax - self.xmin) / 2.0 ):
+        # West
+        if y < self.ymin + ( (self.ymax - self.ymin) / 2.0 ):
+          # South
+          return self.qsw.find_objects(x,y)
+        else:
+          # North
+          return self.qnw.find_objects(x,y)
+      else:
+        # East
+        if y < self.ymin + ( (self.ymax - self.ymin) / 2.0 ):
+          # South
+          return self.qse.find_objects(x,y)
+        else:
+          # North
+          return self.qne.find_objects(x,y)
+
+
+  def all_objects ( self, already_found ):
+    # print ( "Finding all objects" )
+    if self.qne == None:
+      # This is an unsubdivided (or leaf) node
+      # print ( "  Found a leaf node" )
+      already_found.extend ( self.objects )
+    else:
+      # This is already subdivided so recurse through subquadrants
+      self.qsw.all_objects(already_found)
+      self.qnw.all_objects(already_found)
+      self.qse.all_objects(already_found)
+      self.qne.all_objects(already_found)
+
+
+  def print_self ( self, depth=0 ):
+    print ( "  "*depth + "Range = [" + str(self.xmin) + " < x < " + str(self.xmax) + "] [" + str(self.ymin) + " < y < " + str(self.ymax) + "]" )
+    if self.qne != None:
+      self.qne.print_self ( depth+1 )
+      self.qnw.print_self ( depth+1 )
+      self.qse.print_self ( depth+1 )
+      self.qsw.print_self ( depth+1 )
+    for o in self.objects:
+      print ( "   " + "  "*depth + "Object at: " + str(o.x) + "," + str(o.y) )
+
+
+  def draw ( self, canvas, pixmap, event, xminw, yminw, xmaxw, ymaxw, xoffset, xscale, yoffset, yscale ):
+    drawable = canvas.window
+    gc = canvas.get_style().fg_gc[gtk.STATE_NORMAL]
+    #map_pos_neg_colors ( canvas, gc )
+
+    # Draw the quadrant lines
+    gc.foreground = canvas.get_colormap().alloc_color(30000, 30000, 30000)
+    lx = xoffset + ( xscale * self.xmin )
+    by = yoffset + ( yscale * self.ymin )
+
+    rx = xoffset + ( xscale * self.xmax )
+    ty = yoffset + ( yscale * self.ymax )
+
+    pixmap.draw_rectangle ( gc, False, int(lx), int(by), int(rx-lx), int(ty-by) )
+
+    #for q in self.quadrants:
+    #  q.draw()
+
+    # Draw all the objects that are not highlighted (background)
+    for o in self.objects:
+      if not o.highlight:
+        cx = xoffset + ( xscale * o.x )
+        cy = yoffset + ( yscale * o.y )
+        gc.foreground = canvas.get_colormap().alloc_color(int(30000*o.c[0]),int(30000*o.c[1]),int(30000*o.c[2]))
+        pixmap.draw_rectangle ( gc, True, int(cx)-2, int(cy)-2, 5, 5 )
+
+    # Draw all the objects that are highlighted (foreground)
+    for o in self.objects:
+      if o.highlight:
+        cx = xoffset + ( xscale * o.x )
+        cy = yoffset + ( yscale * o.y )
+        gc.foreground = canvas.get_colormap().alloc_color(int(65535*o.c[0]),int(65535*o.c[1]),int(65535*o.c[2]))
+        pixmap.draw_rectangle ( gc, True, int(cx)-2, int(cy)-2, 5, 5 )
+
+    gc.foreground = canvas.get_colormap().alloc_color(60000, 60000, 60000)
+    if self.qne != None:
+      self.qne.draw ( canvas, pixmap, event, (xmaxw-xminw)/2.0, (ymaxw-yminw)/2.0, xmaxw, ymaxw, xoffset, xscale, yoffset, yscale )
+      self.qnw.draw ( canvas, pixmap, event, xminw, (ymaxw-yminw)/2.0, (xmaxw-xminw)/2.0, ymaxw, xoffset, xscale, yoffset, yscale )
+      self.qse.draw ( canvas, pixmap, event, (xmaxw-xminw)/2.0, yminw, xmaxw, (ymaxw-yminw)/2.0, xoffset, xscale, yoffset, yscale )
+      self.qsw.draw ( canvas, pixmap, event, xminw, yminw, (xmaxw-xminw)/2.0, (ymaxw-yminw)/2.0, xoffset, xscale, yoffset, yscale )
+
+
+class SpatialHash(QuadTree):
+  def __init__ ( self, xmin=0, ymin=0, xmax=1, ymax=1, max_objects=10 ):
+    # print ( " Constructing a new QuadTree" )
+    # Range: [min, max)
+    QuadTree.__init__(self, xmin=xmin, ymin=ymin, xmax=xmax, ymax=ymax, max_objects=max_objects)
+    self.power_of_two = 5
+    self.hash = {}
+    self.list = []
+    self.lastTotalCleared = 0
+
+  def getKeys ( self, obj ):
+    sx = obj.x >> self.power_of_two
+    sy = obj.y >> self.power_of_two
+    ex = (obj.x + obj.width) >> self.power_of_two
+    ey = (obj.y + obj.height) >> self.power_of_two
+    keys = []
+    for y in range(sy,ey+1):
+      for x in range(sx,ex+1):
+        keys.push ( str(x) + ":" + str(y) )
+    return keys
+
+  def clear ( self ):
+    for key in self.hash.keys():
+      self.hash.pop(key)
+
+  def draw ( self, canvas, pixmap, event, xminw, yminw, xmaxw, ymaxw, xoffset, xscale, yoffset, yscale ):
+    # print ("Drawing Spatial Hash")
+    drawable = canvas.window
+    gc = canvas.get_style().fg_gc[gtk.STATE_NORMAL]
+    #map_pos_neg_colors ( canvas, gc )
+
+    # Draw the quadrant lines
+    gc.foreground = canvas.get_colormap().alloc_color(30000, 30000, 30000)
+    lx = xoffset + ( xscale * self.xmin )
+    by = yoffset + ( yscale * self.ymin )
+
+    rx = xoffset + ( xscale * self.xmax )
+    ty = yoffset + ( yscale * self.ymax )
+
+    pixmap.draw_rectangle ( gc, False, int(lx), int(by), int(rx-lx), int(ty-by) )
+
+    #for q in self.quadrants:
+    #  q.draw()
+
+    # Draw all the objects that are not highlighted (background)
+    for o in self.objects:
+      if not o.highlight:
+        cx = xoffset + ( xscale * o.x )
+        cy = yoffset + ( yscale * o.y )
+        gc.foreground = canvas.get_colormap().alloc_color(int(30000*o.c[0]),int(30000*o.c[1]),int(30000*o.c[2]))
+        pixmap.draw_rectangle ( gc, True, int(cx)-2, int(cy)-2, 5, 5 )
+
+    # Draw all the objects that are highlighted (foreground)
+    for o in self.objects:
+      if o.highlight:
+        cx = xoffset + ( xscale * o.x )
+        cy = yoffset + ( yscale * o.y )
+        gc.foreground = canvas.get_colormap().alloc_color(int(65535*o.c[0]),int(65535*o.c[1]),int(65535*o.c[2]))
+        pixmap.draw_rectangle ( gc, True, int(cx)-2, int(cy)-2, 5, 5 )
+
+    gc.foreground = canvas.get_colormap().alloc_color(60000, 60000, 60000)
+    if self.qne != None:
+      self.qne.draw ( canvas, pixmap, event, (xmaxw-xminw)/2.0, (ymaxw-yminw)/2.0, xmaxw, ymaxw, xoffset, xscale, yoffset, yscale )
+      self.qnw.draw ( canvas, pixmap, event, xminw, (ymaxw-yminw)/2.0, (xmaxw-xminw)/2.0, ymaxw, xoffset, xscale, yoffset, yscale )
+      self.qse.draw ( canvas, pixmap, event, (xmaxw-xminw)/2.0, yminw, xmaxw, (ymaxw-yminw)/2.0, xoffset, xscale, yoffset, yscale )
+      self.qsw.draw ( canvas, pixmap, event, xminw, yminw, (xmaxw-xminw)/2.0, (ymaxw-yminw)/2.0, xoffset, xscale, yoffset, yscale )
+
+
+# Needing to repaint the window generates expose events
+def draw_global_algorithm ( canvas, event ):
+  global global_algorithm
+  
+  global pixmap
+  global pos_colors
+  global neg_colors
+  global numcolors
+  x, y, width, height = event.area
+  x=0
+  y=0
+  width, height = canvas.window.get_size()
+
+  drawable = canvas.window
+  gc = canvas.get_style().fg_gc[gtk.STATE_NORMAL]
+  map_pos_neg_colors ( canvas, gc )
+
+  # Fill the background
+  pixmap.draw_rectangle ( canvas.get_style().black_gc, True, 0, 0, width, height )
+
+  if global_algorithm != None:
+
+    xscale = width / (global_algorithm.xmax - global_algorithm.xmin)
+    xoffset = width - (xscale * global_algorithm.xmax)
+
+    yscale = height / (global_algorithm.ymax - global_algorithm.ymin)
+    yoffset = height - (yscale * global_algorithm.ymax)
+
+
+    global_algorithm.draw ( canvas, pixmap, event, x, y, x+width, y+height, xoffset, xscale, yoffset, yscale )
+
+
+  # Restore the original foreground color to black (could save it before drawing)
+  gc.foreground = canvas.get_colormap().alloc_color(0, 0, 0)
+
+  canvas.window.draw_drawable(gc,pixmap,x,y,x,y,width,height)
+  return False
+
+
+
+# Needing to repaint the window generates expose events
+def canvas_expose_callback ( canvas, event ):
+  draw_global_algorithm ( canvas, event )
+  return False
+
+
+
+def mouse_motion_callback ( canvas, event ):
+  global global_algorithm
+
+  width, height = canvas.window.get_size()
+
+  if global_algorithm != None:
+
+    xscale = width / (global_algorithm.xmax - global_algorithm.xmin)
+    xoffset = width - (xscale * global_algorithm.xmax)
+
+    yscale = height / (global_algorithm.ymax - global_algorithm.ymin)
+    yoffset = height - (yscale * global_algorithm.ymax)
+
+    x = (event.x - xoffset) / xscale
+    y = (event.y - yoffset) / yscale
+
+    all_objs = []
+    global_algorithm.all_objects(all_objs)
+    for obj in all_objs:
+      obj.highlight = False
+
+    objs = global_algorithm.find_objects(x, y)
+    #print ( "Mouse moved: " + str(event.x) + "," + str(event.y) + " " + str(xscale) + " " + str(xoffset) + " " + str(yscale) + " " + str(yoffset) + " " + str(x) + " " + str(y) )
+    for obj in objs:
+      obj.highlight = True
+
+    # print ( "Mouse moved: " + str(x) + "," + str(y) + " #: " + str(len(objs)) + " / " + str(len(all_objs)) )
+
+    canvas.queue_draw()
+
+  return False
+
+
+
+
+# Update when a mouse button is pressed
+def button_press_callback ( widget, event ):
+  widget.queue_draw()
+  return True
+
+
+
+
+class menu_window:
+
+  def idle_callback ( self ):
+    global global_canvas
+    global_canvas.queue_draw()
+    print ( "Idle" )
+    return True
+
+  def delete_callback ( self, widget, event, data=None ):
+    gtk.main_quit()
+    return False
+
+  def open_callback ( self, widget, data=None ):
+    print ( "Open with data = " + str(data) )
+    return False
+
+  def save_callback ( self, widget, data=None ):
+    print ( "Save with data = " + str(data) )
+    return False
+
+  def save_as_callback ( self, widget, data=None ):
+    print ( "Save As with data = " + str(data) )
+    return False
+
+  def run_callback ( self, widget, data=None ):
+    global_window.update_statusbar ( "Iterations = None" )
+
+
+
+  def cmd_callback ( self, widget, data=None ):
+    global global_algorithm
+
+    print ( "Command with data = " + str(data) )
+
+    if data == "QuadTree":
+
+      global_algorithm = QuadTree( xmin=-2, ymin=-2, xmax=2, ymax=2, max_objects=5 )
+
+    if data == "SpatialHash":
+
+      global_algorithm = SpatialHash( xmin=-2, ymin=-2, xmax=2, ymax=2, max_objects=5 )
+
+
+    for i in range(1,7):
+      global_algorithm.add_object ( locatable_object(i/10.0, i/10.0, (1.0,0,0)) )
+
+    for i in range(15,20):
+      global_algorithm.add_object ( locatable_object(i/10.0, -i/10.0, (0,1.0,0)) )
+
+    for i in range(100):
+      x = random.gauss(0.75,0.1)
+      y = random.gauss(x, 0.05)
+      global_algorithm.add_object ( locatable_object(x-2, -(1+y), (0.2,0.2,1.0)) )
+
+    for i in range(100):
+      global_algorithm.add_object ( locatable_object(random.gauss(0,0.05), random.gauss(-1,0.05), (1.0,1.0,0.0)) )
+
+    for i in range(100):
+      global_algorithm.add_object ( locatable_object(random.uniform(-2,-1.5), random.uniform(-1,0), (0,1.0,1.0)) )
+
+    for i in range(100):
+      global_algorithm.add_object ( locatable_object(random.gauss(1,.1), random.gauss(1,0.5), (1.0,0,1.0)) )
+
+    for i in range(50):
+      global_algorithm.add_object ( locatable_object(random.uniform(0.1,0.4), random.uniform(2.1,2.2), (0.8,0.6,0)) )
+
+    for i in range(50):
+      global_algorithm.add_object ( locatable_object(random.uniform(0.6,0.9), random.uniform(-2.2,-2.1), (0.8,0.6,0)) )
+
+    for i in range(50):
+      global_algorithm.add_object ( locatable_object(random.uniform(2.1,2.2), random.uniform(0.65,0.85), (0.8,0.6,0)) )
+
+    for i in range(50):
+      global_algorithm.add_object ( locatable_object(random.uniform(-2.2,-2.1), random.uniform(-1.4,-1.1), (0.8,0.6,0)) )
+
+
+    global_window.update_statusbar()
+    global_canvas.queue_draw()
+
+    return False
+
+
+  def dump_callback ( self, widget, data=None ):
+    global global_algorithm
+    global_algorithm.print_self()
+
+
+  def set_cursor_callback ( self, widget, data=None ):
+    self.drawing_area.window.set_cursor ( gtk.gdk.Cursor(gtk.gdk.DRAFT_SMALL) )  # DRAFT_SMALL TARGET SB_UP_ARROW CROSS CROSSHAIR CENTER_PTR CIRCLE DIAMOND_CROSS IRON_CROSS PLUS CROSS_REVERSE DOT DOTBOX FLEUR
+
+  def print_callback ( self, widget, data=None ):
+    return False
+
+
+  def quit_callback ( self, widget, data=None ):
+    print ( "Quit with data = " + str(data) )
+    gtk.main_quit()
+    return False
+
+  def update_statusbar(self, status="Iterations = 0"):
+    # clear any previous message, underflow is allowed
+    self.status_bar.pop(0)
+    self.status_bar.push ( 0, status )
+
+  def add_menu ( self, label ):
+    menu = gtk.Menu()
+    item = gtk.MenuItem(label)
+    item.set_submenu ( menu )
+    item.show()
+    return (menu, item)
+
+  def add_menu_item ( self, parent, callback, label, data, key=None, mask=gtk.gdk.CONTROL_MASK, ):
+    item = gtk.MenuItem(label=label)
+    item.connect ( "activate", callback, data )
+    if key != None:
+      item.add_accelerator("activate", self.accel_group, ord(key), mask, gtk.ACCEL_VISIBLE)
+    parent.append ( item )
+    item.show()
+
+  def add_menu_sep ( self, parent ):
+    item = gtk.SeparatorMenuItem()
+    parent.append ( item )
+    item.show()
+
+
+  def __init__(self):
+    self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+    self.window.set_size_request(800, 800)
+    self.window.set_title ( "Python QuadTree" )
+    self.window.connect ( "delete_event", self.delete_callback )
+    # Prepare for tooltips
+    self.tooltips = gtk.Tooltips()
+
+    self.vbox = gtk.VBox ( homogeneous=False, spacing=0 )
+    self.window.add(self.vbox)  # The window can only contain one child object
+
+    self.window.show() # Must show before usable to create any pixmaps
+
+    self.menu_bar = gtk.MenuBar()
+    self.accel_group = gtk.AccelGroup()
+    self.window.add_accel_group(self.accel_group)
+
+
+    (self.file_menu, self.file_item) = self.add_menu ( "_File" )
+
+    self.add_menu_item ( self.file_menu, self.open_callback, "_Open...", "Open", 'O' )
+    self.add_menu_sep  ( self.file_menu )
+    self.add_menu_item ( self.file_menu, self.save_callback, "_Save", "Save", 'S' )
+    self.add_menu_item ( self.file_menu, self.save_as_callback, "Save _As...", "Save As...", 'S', mask=gtk.gdk.CONTROL_MASK|gtk.gdk.SHIFT_MASK )
+    self.add_menu_sep  ( self.file_menu )
+    self.add_menu_item ( self.file_menu, self.quit_callback, "_Quit", "Quit", 'Q' )
+
+    (self.algorithm_menu, self.algorithm_item) = self.add_menu ( "_Algorithm" )
+
+    self.add_menu_item ( self.algorithm_menu, self.cmd_callback, "QuadTree", "QuadTree" )
+    self.add_menu_item ( self.algorithm_menu, self.cmd_callback, "SpatialHash", "SpatialHash" )
+
+    (self.display_menu, self.display_item) = self.add_menu ( "_Display" )
+
+    self.add_menu_item ( self.display_menu, self.dump_callback, "Dump", "DUMP" )
+
+    (self.run_menu, self.run_item) = self.add_menu ( "_Run" )
+
+    self.add_menu_item ( self.run_menu, self.run_callback, "_Converge", "RUN_-1", 'C' )
+    self.add_menu_sep  ( self.run_menu )
+    self.add_menu_item ( self.run_menu, self.run_callback, "Run _1", "RUN_1", '1' )
+    self.add_menu_item ( self.run_menu, self.run_callback, "Run _2", "RUN_2", '2' )
+    self.add_menu_item ( self.run_menu, self.run_callback, "Run _3", "RUN_3", '3' )
+    self.add_menu_item ( self.run_menu, self.run_callback, "Run _4", "RUN_4", '4' )
+    self.add_menu_item ( self.run_menu, self.run_callback, "Run _5", "RUN_5", '5' )
+    self.add_menu_item ( self.run_menu, self.run_callback, "Run 10", "RUN_10" )
+    self.add_menu_item ( self.run_menu, self.run_callback, "Run 100", "RUN_100" )
+    self.add_menu_item ( self.run_menu, self.run_callback, "Run 1000", "RUN_1000", 'K' )
+    self.add_menu_item ( self.run_menu, self.run_callback, "Run 10000", "RUN_10000" )
+    self.add_menu_item ( self.run_menu, self.run_callback, "Run 100000", "RUN_100000" )
+    self.add_menu_item ( self.run_menu, self.run_callback, "Run 1000000", "RUN_1000000", 'M' )
+    self.add_menu_sep  ( self.run_menu )
+    self.add_menu_item ( self.run_menu, self.cmd_callback, "_Restart", "Restart", 'R' )
+    self.add_menu_sep  ( self.run_menu )
+    self.add_menu_item ( self.run_menu, self.cmd_callback, "_Start", "Start" )
+    self.add_menu_item ( self.run_menu, self.cmd_callback, "Sto_p", "Stop" )
+    self.add_menu_item ( self.run_menu, self.cmd_callback, "Rese_t", "Reset" )
+
+    (self.print_menu, self.print_item) = self.add_menu ( "_Print" )
+
+    self.add_menu_item ( self.print_menu, self.print_callback, "Print 1", 1 )
+    self.add_menu_item ( self.print_menu, self.print_callback, "Print 2", 2 )
+    self.add_menu_item ( self.print_menu, self.print_callback, "Print 4", 4 )
+    self.add_menu_item ( self.print_menu, self.print_callback, "Print 10", 10 )
+    self.add_menu_item ( self.print_menu, self.print_callback, "Print 100", 100 )
+    self.add_menu_item ( self.print_menu, self.print_callback, "Print 1000", 1000 )
+    self.add_menu_item ( self.print_menu, self.print_callback, "Print 10000", 10000 )
+    self.add_menu_item ( self.print_menu, self.print_callback, "Print 100000", 100000 )
+    self.add_menu_item ( self.print_menu, self.print_callback, "Print 1000000", 1000000 )
+
+
+    self.menu_bar.append ( self.file_item )
+    self.menu_bar.append ( self.algorithm_item )
+    self.menu_bar.append ( self.display_item )
+    self.menu_bar.append ( self.run_item )
+    self.menu_bar.append ( self.print_item )
+
+    self.vbox.pack_start(self.menu_bar, expand=False, fill=False, padding=0)
+    self.menu_bar.show()
+
+
+
+    self.drawing_area = gtk.DrawingArea()
+    global global_canvas
+    global_canvas = self.drawing_area
+
+    self.drawing_area.connect ( "configure_event", configure_event_callback )
+    self.drawing_area.connect ( "expose_event", canvas_expose_callback )
+    self.drawing_area.connect ( "button_press_event", button_press_callback )
+    self.drawing_area.connect ( "motion_notify_event", mouse_motion_callback )
+
+    self.drawing_area.connect ( "realize", self.set_cursor_callback )
+
+    self.drawing_area.set_events ( gtk.gdk.EXPOSURE_MASK
+                                 | gtk.gdk.LEAVE_NOTIFY_MASK
+                                 | gtk.gdk.BUTTON_PRESS_MASK
+                                 | gtk.gdk.POINTER_MOTION_MASK
+                                 | gtk.gdk.POINTER_MOTION_HINT_MASK )
+
+    self.drawing_area.grab_focus()
+
+    self.vbox.pack_start(self.drawing_area, expand=True, fill=True, padding=0)
+    self.drawing_area.show()
+
+
+
+
+    self.status_bar = gtk.Statusbar()
+    self.vbox.pack_start(self.status_bar, expand=False, fill=True, padding=0)
+    self.status_bar.show()
+
+    self.vbox.show()
+
+    self.update_statusbar()
+
+
+    #__import__('code').interact(local = locals())
+
+
+
+def main():
+  test()
+  gtk.main()
+
+if __name__ == '__main__':
+  global global_window
+  menu_win = menu_window()
+  global_window = menu_win
+  main()

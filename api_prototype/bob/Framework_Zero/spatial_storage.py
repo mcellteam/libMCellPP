@@ -15,14 +15,20 @@ class locatable_object:
     # This class can contain anything else
     self.highlight = False
 
-class QuadTree:
-  def __init__ ( self, xmin=0, ymin=0, xmax=1, ymax=1, max_objects=10 ):
-    # print ( " Constructing a new QuadTree" )
-    # Range: [min, max)
+class SpatialStorage:
+  def __init__ ( self, xmin=0, ymin=0, xmax=1, ymax=1 ):
     self.xmin = xmin
     self.xmax = xmax
     self.ymin = ymin
     self.ymax = ymax
+  def print_self ( self, depth=0 ):
+    print ( "  "*depth + "Range = [" + str(self.xmin) + " < x < " + str(self.xmax) + "] [" + str(self.ymin) + " < y < " + str(self.ymax) + "]" )
+
+class QuadTree(SpatialStorage):
+  def __init__ ( self, xmin=0, ymin=0, xmax=1, ymax=1, max_objects=10 ):
+    # print ( " Constructing a new QuadTree" )
+    SpatialStorage.__init__(self, xmin=xmin, ymin=ymin, xmax=xmax, ymax=ymax) # Initialize parent first
+    # Range: [min, max)
     self.max_objects = max_objects
     self.objects = []
     self.qne = None
@@ -127,7 +133,8 @@ class QuadTree:
 
 
   def print_self ( self, depth=0 ):
-    print ( "  "*depth + "Range = [" + str(self.xmin) + " < x < " + str(self.xmax) + "] [" + str(self.ymin) + " < y < " + str(self.ymax) + "]" )
+    SpatialStorage.print_self(self, depth) # Call parent first
+    # print ( "  "*depth + "Range = [" + str(self.xmin) + " < x < " + str(self.xmax) + "] [" + str(self.ymin) + " < y < " + str(self.ymax) + "]" )
     if self.qne != None:
       self.qne.print_self ( depth+1 )
       self.qnw.print_self ( depth+1 )
@@ -173,6 +180,7 @@ class QuadTree:
 
     gc.foreground = canvas.get_colormap().alloc_color(60000, 60000, 60000)
     if self.qne != None:
+      # Draw each quadrant recursively
       self.qne.draw ( canvas, pixmap, event, (xmaxw-xminw)/2.0, (ymaxw-yminw)/2.0, xmaxw, ymaxw, xoffset, xscale, yoffset, yscale )
       self.qnw.draw ( canvas, pixmap, event, xminw, (ymaxw-yminw)/2.0, (xmaxw-xminw)/2.0, ymaxw, xoffset, xscale, yoffset, yscale )
       self.qse.draw ( canvas, pixmap, event, (xmaxw-xminw)/2.0, yminw, xmaxw, (ymaxw-yminw)/2.0, xoffset, xscale, yoffset, yscale )
@@ -180,16 +188,49 @@ class QuadTree:
 
 
 class SpatialHash(QuadTree):
-  def __init__ ( self, xmin=0, ymin=0, xmax=1, ymax=1, max_objects=10 ):
+  # Note that this could be heirarchical as well with SpatialHash objects as "leaves" in other SpatialHash objects
+  def __init__ ( self, xmin=0, ymin=0, xmax=1, ymax=1, spatial_resolution=1.0 ):
     # print ( " Constructing a new QuadTree" )
     # Range: [min, max)
-    QuadTree.__init__(self, xmin=xmin, ymin=ymin, xmax=xmax, ymax=ymax, max_objects=max_objects)
-    self.power_of_two = 5
-    self.hash = {}
-    self.list = []
-    self.lastTotalCleared = 0
+    SpatialStorage.__init__(self, xmin=xmin, ymin=ymin, xmax=xmax, ymax=ymax) # Initialize parent first
+    self.spatial_resolution = spatial_resolution
+    self.object_dict = {}
 
+  def add_object ( self, o ):
+    # o must have an x and y field
+    xkey = int ( round ( o.x / self.spatial_resolution ) )
+    ykey = int ( round ( o.y / self.spatial_resolution ) )
+    key = str(xkey) + ":" + str(ykey)
+    # print ( "Spatial Hash Key: " + key )
+    if key in self.object_dict:
+      self.object_dict[key]['objs'].append(o)
+    else:
+      self.object_dict[key] = { 'xkey':xkey, 'ykey':ykey, 'objs':[o] }
+
+  def find_objects ( self, x, y ):
+    xkey = int ( round ( x / self.spatial_resolution ) )
+    ykey = int ( round ( y / self.spatial_resolution ) )
+    key = str(xkey) + ":" + str(ykey)
+    # print ( "Finding objects with Spatial Hash Key: " + key )
+    if key in self.object_dict:
+      # print ( "Found some" )
+      return self.object_dict[key]['objs']
+    else:
+      # print ( "Found none" )
+      return []
+
+  def all_objects ( self, already_found ):
+    # print ( "Finding all objects" )
+    for k in self.object_dict:
+      olist = self.object_dict[k]['objs']
+      already_found.extend ( olist )
+
+
+
+
+  """
   def getKeys ( self, obj ):
+    # Gets the multiple keys that reside in this object (can be large for a large object)
     sx = obj.x >> self.power_of_two
     sy = obj.y >> self.power_of_two
     ex = (obj.x + obj.width) >> self.power_of_two
@@ -200,9 +241,20 @@ class SpatialHash(QuadTree):
         keys.push ( str(x) + ":" + str(y) )
     return keys
 
+
   def clear ( self ):
     for key in self.hash.keys():
       self.hash.pop(key)
+  """
+
+  def print_self ( self, depth=0 ):
+    SpatialStorage.print_self(self, depth) # Call parent first
+    for k in self.object_dict:
+      olist = self.object_dict[k]['objs']
+      for o in olist:
+        print ( "   " + "  "*depth + "Object at: " + str(o.x) + "," + str(o.y) )
+
+
 
   def draw ( self, canvas, pixmap, event, xminw, yminw, xmaxw, ymaxw, xoffset, xscale, yoffset, yscale ):
     # print ("Drawing Spatial Hash")
@@ -210,8 +262,9 @@ class SpatialHash(QuadTree):
     gc = canvas.get_style().fg_gc[gtk.STATE_NORMAL]
     #map_pos_neg_colors ( canvas, gc )
 
-    # Draw the quadrant lines
+    # Draw the cell bounds
     gc.foreground = canvas.get_colormap().alloc_color(30000, 30000, 30000)
+
     lx = xoffset + ( xscale * self.xmin )
     by = yoffset + ( yscale * self.ymin )
 
@@ -220,30 +273,36 @@ class SpatialHash(QuadTree):
 
     pixmap.draw_rectangle ( gc, False, int(lx), int(by), int(rx-lx), int(ty-by) )
 
-    #for q in self.quadrants:
-    #  q.draw()
+    for k in self.object_dict:
+      o = self.object_dict[k]
+      xkey = o['xkey']
+      ykey = o['ykey']
+      #print ( "Drawing cell: " + k + " at " + str(xkey) + "," + str(ykey) + " with " + str(len(o['objs'])) + " objects" )
+      #print ( "  offsets, scales = " + str(xoffset) + " " + str(yoffset) + " " + str(xscale) + " " + str(yscale) )
+      cell_x = xoffset + ( xscale * (int ( xkey * self.spatial_resolution )) )
+      cell_y = yoffset + ( yscale * (int ( ykey * self.spatial_resolution )) )
+      cell_w = int ( xscale * self.spatial_resolution )
+      cell_h = int ( yscale * self.spatial_resolution )
+      #print ( "  draw_rectangle ( " + str(cell_x) + ", " + str(cell_y) + ", " + str(cell_w) + ", " + str(cell_h) + " )" )
+      ### Doesn't work yet: pixmap.draw_rectangle ( gc, False, int(cell_x), int(cell_y), int(cell_w), int(cell_h) )
 
     # Draw all the objects that are not highlighted (background)
-    for o in self.objects:
-      if not o.highlight:
-        cx = xoffset + ( xscale * o.x )
-        cy = yoffset + ( yscale * o.y )
-        gc.foreground = canvas.get_colormap().alloc_color(int(30000*o.c[0]),int(30000*o.c[1]),int(30000*o.c[2]))
-        pixmap.draw_rectangle ( gc, True, int(cx)-2, int(cy)-2, 5, 5 )
+    for k in self.object_dict:
+      olist = self.object_dict[k]['objs']
+      for o in olist:
+        if not o.highlight:
+          cx = xoffset + ( xscale * o.x )
+          cy = yoffset + ( yscale * o.y )
+          gc.foreground = canvas.get_colormap().alloc_color(int(30000*o.c[0]),int(30000*o.c[1]),int(30000*o.c[2]))
+          pixmap.draw_rectangle ( gc, True, int(cx)-2, int(cy)-2, 5, 5 )
 
     # Draw all the objects that are highlighted (foreground)
-    for o in self.objects:
-      if o.highlight:
-        cx = xoffset + ( xscale * o.x )
-        cy = yoffset + ( yscale * o.y )
-        gc.foreground = canvas.get_colormap().alloc_color(int(65535*o.c[0]),int(65535*o.c[1]),int(65535*o.c[2]))
-        pixmap.draw_rectangle ( gc, True, int(cx)-2, int(cy)-2, 5, 5 )
-
-    gc.foreground = canvas.get_colormap().alloc_color(60000, 60000, 60000)
-    if self.qne != None:
-      self.qne.draw ( canvas, pixmap, event, (xmaxw-xminw)/2.0, (ymaxw-yminw)/2.0, xmaxw, ymaxw, xoffset, xscale, yoffset, yscale )
-      self.qnw.draw ( canvas, pixmap, event, xminw, (ymaxw-yminw)/2.0, (xmaxw-xminw)/2.0, ymaxw, xoffset, xscale, yoffset, yscale )
-      self.qse.draw ( canvas, pixmap, event, (xmaxw-xminw)/2.0, yminw, xmaxw, (ymaxw-yminw)/2.0, xoffset, xscale, yoffset, yscale )
-      self.qsw.draw ( canvas, pixmap, event, xminw, yminw, (xmaxw-xminw)/2.0, (ymaxw-yminw)/2.0, xoffset, xscale, yoffset, yscale )
-
+    for k in self.object_dict:
+      olist = self.object_dict[k]['objs']
+      for o in olist:
+        if o.highlight:
+          cx = xoffset + ( xscale * o.x )
+          cy = yoffset + ( yscale * o.y )
+          gc.foreground = canvas.get_colormap().alloc_color(int(65535*o.c[0]),int(65535*o.c[1]),int(65535*o.c[2]))
+          pixmap.draw_rectangle ( gc, True, int(cx)-2, int(cy)-2, 5, 5 )
 

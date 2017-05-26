@@ -16,7 +16,7 @@ global_window = None
 
 def test():
   global global_window
-  global_window.cmd_callback ( None, "QuadTree" )
+  global_window.cmd_callback ( None, "SpatialHash" )
   
 
 
@@ -135,6 +135,7 @@ def mouse_motion_callback ( canvas, event ):
 
     objs = global_algorithm.find_objects(x, y)
     #print ( "Mouse moved: " + str(event.x) + "," + str(event.y) + " " + str(xscale) + " " + str(xoffset) + " " + str(yscale) + " " + str(yoffset) + " " + str(x) + " " + str(y) )
+    #print ( "Found " + str(len(objs)) + " objects" )
     for obj in objs:
       obj.highlight = True
 
@@ -195,7 +196,7 @@ class menu_window:
 
     if data == "SpatialHash":
 
-      global_algorithm = SpatialHash( xmin=-2, ymin=-2, xmax=2, ymax=2, max_objects=5 )
+      global_algorithm = SpatialHash( xmin=-2, ymin=-2, xmax=2, ymax=2, spatial_resolution=0.2 )
 
 
     for i in range(1,7):
@@ -283,7 +284,7 @@ class menu_window:
   def __init__(self):
     self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
     self.window.set_size_request(800, 800)
-    self.window.set_title ( "Python QuadTree" )
+    self.window.set_title ( "Python Spatial Storage" )
     self.window.connect ( "delete_event", self.delete_callback )
     # Prepare for tooltips
     self.tooltips = gtk.Tooltips()

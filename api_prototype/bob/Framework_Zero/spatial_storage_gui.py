@@ -10,6 +10,8 @@ import math
 import random
 
 global_algorithm = None
+global_data = []
+
 global_canvas = None
 global_window = None
 
@@ -187,49 +189,59 @@ class menu_window:
 
   def cmd_callback ( self, widget, data=None ):
     global global_algorithm
+    global global_data
 
     print ( "Command with data = " + str(data) )
 
     if data == "QuadTree":
-
       global_algorithm = QuadTree( xmin=-2, ymin=-2, xmax=2, ymax=2, max_objects=5 )
+      for obj in global_data:
+        global_algorithm.add_object ( obj )
 
     if data == "SpatialHash":
-
       global_algorithm = SpatialHash( xmin=-2, ymin=-2, xmax=2, ymax=2, spatial_resolution=0.2 )
+      for obj in global_data:
+        global_algorithm.add_object ( obj )
 
+    if data == "RANDOM":
 
-    for i in range(1,7):
-      global_algorithm.add_object ( locatable_object(i/10.0, i/10.0, (1.0,0,0)) )
+      global_data = []
 
-    for i in range(15,20):
-      global_algorithm.add_object ( locatable_object(i/10.0, -i/10.0, (0,1.0,0)) )
+      for i in range(1,7):
+        global_data.append ( locatable_object(i/10.0, i/10.0, (1.0,0,0)) )
 
-    for i in range(100):
-      x = random.gauss(0.75,0.1)
-      y = random.gauss(x, 0.05)
-      global_algorithm.add_object ( locatable_object(x-2, -(1+y), (0.2,0.2,1.0)) )
+      for i in range(15,20):
+        global_data.append ( locatable_object(i/10.0, -i/10.0, (0,1.0,0)) )
 
-    for i in range(100):
-      global_algorithm.add_object ( locatable_object(random.gauss(0,0.05), random.gauss(-1,0.05), (1.0,1.0,0.0)) )
+      for i in range(100):
+        x = random.gauss(0.75,0.1)
+        y = random.gauss(x, 0.05)
+        global_data.append ( locatable_object(x-2, -(1+y), (0.2,0.2,1.0)) )
 
-    for i in range(100):
-      global_algorithm.add_object ( locatable_object(random.uniform(-2,-1.5), random.uniform(-1,0), (0,1.0,1.0)) )
+      for i in range(100):
+        global_data.append ( locatable_object(random.gauss(0,0.05), random.gauss(-1,0.05), (1.0,1.0,0.0)) )
 
-    for i in range(100):
-      global_algorithm.add_object ( locatable_object(random.gauss(1,.1), random.gauss(1,0.5), (1.0,0,1.0)) )
+      for i in range(100):
+        global_data.append ( locatable_object(random.uniform(-2,-1.5), random.uniform(-1,0), (0,1.0,1.0)) )
 
-    for i in range(50):
-      global_algorithm.add_object ( locatable_object(random.uniform(0.1,0.4), random.uniform(2.1,2.2), (0.8,0.6,0)) )
+      for i in range(100):
+        global_data.append ( locatable_object(random.gauss(1,.1), random.gauss(1,0.5), (1.0,0,1.0)) )
 
-    for i in range(50):
-      global_algorithm.add_object ( locatable_object(random.uniform(0.6,0.9), random.uniform(-2.2,-2.1), (0.8,0.6,0)) )
+      for i in range(50):
+        global_data.append ( locatable_object(random.uniform(0.1,0.4), random.uniform(2.1,2.2), (0.8,0.6,0)) )
 
-    for i in range(50):
-      global_algorithm.add_object ( locatable_object(random.uniform(2.1,2.2), random.uniform(0.65,0.85), (0.8,0.6,0)) )
+      for i in range(50):
+        global_data.append ( locatable_object(random.uniform(0.6,0.9), random.uniform(-2.2,-2.1), (0.8,0.6,0)) )
 
-    for i in range(50):
-      global_algorithm.add_object ( locatable_object(random.uniform(-2.2,-2.1), random.uniform(-1.4,-1.1), (0.8,0.6,0)) )
+      for i in range(50):
+        global_data.append ( locatable_object(random.uniform(2.1,2.2), random.uniform(0.65,0.85), (0.8,0.6,0)) )
+
+      for i in range(50):
+        global_data.append ( locatable_object(random.uniform(-2.2,-2.1), random.uniform(-1.4,-1.1), (0.8,0.6,0)) )
+
+      global_algorithm.clear()
+      for obj in global_data:
+        global_algorithm.add_object ( obj )
 
 
     global_window.update_statusbar()
@@ -313,8 +325,9 @@ class menu_window:
     self.add_menu_item ( self.algorithm_menu, self.cmd_callback, "QuadTree", "QuadTree" )
     self.add_menu_item ( self.algorithm_menu, self.cmd_callback, "SpatialHash", "SpatialHash" )
 
-    (self.display_menu, self.display_item) = self.add_menu ( "_Display" )
+    (self.display_menu, self.display_item) = self.add_menu ( "_Data" )
 
+    self.add_menu_item ( self.display_menu, self.cmd_callback, "Random", "RANDOM" )
     self.add_menu_item ( self.display_menu, self.dump_callback, "Dump", "DUMP" )
 
     (self.run_menu, self.run_item) = self.add_menu ( "_Run" )

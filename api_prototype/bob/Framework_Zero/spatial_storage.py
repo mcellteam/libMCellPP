@@ -121,6 +121,12 @@ class QuadTree(SpatialStorage):
           # North
           return self.qne.find_objects(x,y)
 
+  def clear ( self ):
+    self.objects = []
+    self.qne = None
+    self.qnw = None
+    self.qse = None
+    self.qsw = None
 
   def all_objects ( self, already_found ):
     # print ( "Finding all objects" )
@@ -224,6 +230,9 @@ class SpatialHash(SpatialStorage):
     else:
       # print ( "Found none" )
       return []
+
+  def clear ( self ):
+    self.object_dict = {}
 
   def all_objects ( self, already_found ):
     # print ( "Finding all objects" )

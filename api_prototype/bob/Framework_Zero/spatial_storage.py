@@ -206,7 +206,7 @@ class SpatialHash(SpatialStorage):
     # o must have an x and y field
     xkey = int ( round ( o.x / self.spatial_resolution ) )
     ykey = int ( round ( o.y / self.spatial_resolution ) )
-    key = str(xkey) + ":" + str(ykey)
+    key = (xkey, ykey)
     # print ( "Spatial Hash Key: " + key )
     if key in self.object_dict:
       self.object_dict[key]['objs'].append(o)
@@ -216,7 +216,7 @@ class SpatialHash(SpatialStorage):
   def find_objects ( self, x, y ):
     xkey = int ( round ( x / self.spatial_resolution ) )
     ykey = int ( round ( y / self.spatial_resolution ) )
-    key = str(xkey) + ":" + str(ykey)
+    key = (xkey, ykey)
     # print ( "Finding objects with Spatial Hash Key: " + key )
     if key in self.object_dict:
       # print ( "Found some" )

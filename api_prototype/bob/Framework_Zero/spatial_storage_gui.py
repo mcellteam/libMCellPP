@@ -16,12 +16,6 @@ global_canvas = None
 global_window = None
 
 
-def test():
-  global global_window
-  global_window.cmd_callback ( None, "SpatialHash" )
-  
-
-
 import pygtk
 pygtk.require('2.0')
 import gobject
@@ -197,13 +191,14 @@ class menu_window:
     return False
 
   def run_callback ( self, widget, data=None ):
-    global_window.update_statusbar ( "Iterations = None" )
+    global_window.update_statusbar ( "Running ..." )
 
 
 
   def cmd_callback ( self, widget, data=None ):
     global global_algorithm
     global global_data
+    global global_window
 
     print ( "Command with data = " + str(data) )
 
@@ -211,11 +206,13 @@ class menu_window:
       global_algorithm = QuadTree( xmin=-2, ymin=-2, xmax=2, ymax=2, max_objects=5 )
       for obj in global_data:
         global_algorithm.add_object ( obj )
+      global_window.update_statusbar ( "QuadTree" )
 
     if data == "SpatialHash":
       global_algorithm = SpatialHash( xmin=-2, ymin=-2, xmax=2, ymax=2, spatial_resolution=0.2 )
       for obj in global_data:
         global_algorithm.add_object ( obj )
+      global_window.update_statusbar ( "SpatialHash" )
 
     if data == "RANDOM":
 
@@ -258,7 +255,7 @@ class menu_window:
         global_algorithm.add_object ( obj )
 
 
-    global_window.update_statusbar()
+    # global_window.update_statusbar()
     global_canvas.queue_draw()
 
     return False
@@ -281,7 +278,7 @@ class menu_window:
     gtk.main_quit()
     return False
 
-  def update_statusbar(self, status="Iterations = 0"):
+  def update_statusbar(self, status=""):
     # clear any previous message, underflow is allowed
     self.status_bar.pop(0)
     self.status_bar.push ( 0, status )
@@ -430,8 +427,11 @@ class menu_window:
 
 
 def main():
-  test()
+  global global_window
+  global_window.cmd_callback ( None, "QuadTree" )
+  global_window.cmd_callback ( None, "RANDOM" )
   gtk.main()
+
 
 if __name__ == '__main__':
   global global_window

@@ -1,5 +1,6 @@
 import math
 import random
+import time
 
 import pygtk
 pygtk.require('2.0')
@@ -19,6 +20,9 @@ class locatable_object:
 
 class SpatialStorage:
   def __init__ ( self, xmin=0, ymin=0, xmax=1, ymax=1 ):
+    self.last_update_time = 1e308  # This is a very very long time away
+    self.step = False
+    self.display_interval = 1.0
     self.xmin = xmin
     self.xmax = xmax
     self.ymin = ymin
@@ -62,15 +66,83 @@ class QuadTree(SpatialStorage):
     for o in original_objects:
       self.add_object ( o )
 
-  def add_object ( self, o ):
-    # print ( "Adding object at " + str(o.x) + "," + str(o.y) )
+  def add_object ( self, o, depth=0 ):
+    if depth > 30:
+      # print ( "Depth>30 while adding object at " + str(o.x) + "," + str(o.y) )
+
+      # When points are allowed to leave the original box, they are mapped to the edges and corners.
+      # If points diffuse naturally, they will fan out to cover an infinite space.
+      # The region of space containing the original box and the space directly above, below, left and right
+      #    will eventually be small (like lines and points) compared to the entire area of the diffusion.
+      #    These large spaces map to the corners of the original box, and those corners will continue to subdivide.
+      #    Eventually, their recursion depth will overflow the max recursion depth if not checked by some mechanism.
+      #
+      # Here's what it looks like where the original box is represented by the "#" character in the center:
+      #
+      #                                H
+      #                                H
+      #                                H
+      #                                H
+      #                                H
+      #                                H
+      #                                H
+      #                                H
+      #                                H
+      #                                H
+      #                                H
+      #   =============================#===============================
+      #                                H
+      #                                H
+      #                                H
+      #                                H
+      #                                H
+      #                                H
+      #                                H
+      #                                H
+      #                                H
+      #                                H
+      #                                H
+      #
+      # There will be a very small fraction of the points remaining in the original box.
+      # There will also be a small fraction of the points that fall on the two lines. They will map to the edges.
+      # The great majority of points will be in the 4 large quadrant areas which map to the four corners.
+      # As a result, those 4 corners will eventually contain all of the points. If each subdivision can only
+      # have a small number of points (less than "max_objects"), then they will have to split many many times
+      # to hold all their points. This splitting creates increased depth which exceeds the recursion depth.
+      #
+      # Note that this is only a problem because the algorithm continues to subdivide boxes within the original
+      #    constrained area rather than expanding its area. It's compounded by a small "max_objects" per box.
+      #    The small "max_objects" forces more depth than would otherwise be required.
+      #    For a reaction/diffusion system, there should be a limit on the subdivision that reflects the mean
+      #    distance a molecule might travel in a single time step. Subdividing any smaller than that creates
+      #    more work when finding collisions. So the smallest size should be on the order of the distance of
+      #    reaction partners in a single time step.
+
+      # For these cases, just add the items at the last leaf (for now).
+      # Basically ignore the "max_objects" constraint when the depth becomes too deep.
+
+      # Append the object here rather than lose it
+      if self.qne == None:
+        # This is an unsubdivided (or leaf) node
+        self.objects.append ( o )
+      else:
+        # This is already subdivided so find a leaf
+        next_qne = self.qne
+        while next_qne.qne != None:
+          next_qne = next_qne.qne
+        # This is now a leaf node
+        next_qne.objects.append ( o )
+      # Stop any running
+      self.step = True
+      self.last_update_time = 1e308
+      return
     if self.qne == None:
       # This is an unsubdivided (or leaf) node
       # print ( "  Found a leaf node when adding object at " + str(o.x) + "," + str(o.y) )
       if (len(self.objects) + 1) > self.max_objects:
         # One more would be too many, so subdivide
         self.split()
-        self.add_object ( o )
+        self.add_object ( o, depth+1 )
       else:
         # It fits, so add it
         self.objects.append ( o )
@@ -81,18 +153,18 @@ class QuadTree(SpatialStorage):
         # West
         if o.y < self.ymin + ( (self.ymax - self.ymin) / 2.0 ):
           # South
-          self.qsw.add_object ( o )
+          self.qsw.add_object ( o, depth+1 )
         else:
           # North
-          self.qnw.add_object ( o )
+          self.qnw.add_object ( o, depth+1 )
       else:
         # East
         if o.y < self.ymin + ( (self.ymax - self.ymin) / 2.0 ):
           # South
-          self.qse.add_object ( o )
+          self.qse.add_object ( o, depth+1 )
         else:
           # North
-          self.qne.add_object ( o )
+          self.qne.add_object ( o, depth+1 )
 
 
   def find_objects ( self, x, y ):
@@ -128,6 +200,22 @@ class QuadTree(SpatialStorage):
     self.qse = None
     self.qsw = None
 
+  def update ( self ):
+    if self.step or ( (time.time() - self.last_update_time) > self.display_interval ):
+      # print ("Update QuadTree" )
+      all_objs = []
+      self.all_objects(all_objs)
+      self.clear()
+      for o in all_objs:
+        o.x += random.gauss(0,0.1)
+        o.y += random.gauss(0,0.1)
+        self.add_object(o)
+      if self.step:
+        self.last_update_time = 1e308
+        self.step = False
+      else:
+        self.last_update_time = time.time()
+
   def all_objects ( self, already_found ):
     # print ( "Finding all objects" )
     if self.qne == None:
@@ -152,6 +240,10 @@ class QuadTree(SpatialStorage):
       self.qsw.print_self ( depth+1 )
     for o in self.objects:
       print ( "   " + "  "*depth + "Object at: " + str(o.x) + "," + str(o.y) )
+    if depth == 0:
+      all = []
+      self.all_objects(all)
+      print ( "Total objects = " + str(len(all)) )
 
 
   def draw ( self, canvas, pixmap, event, xminw, yminw, xmaxw, ymaxw, xoffset, xscale, yoffset, yscale ):
@@ -233,6 +325,20 @@ class SpatialHash(SpatialStorage):
 
   def clear ( self ):
     self.object_dict = {}
+
+  def update ( self ):
+    if self.step or ( (time.time() - self.last_update_time) > self.display_interval ):
+      # print ("Updating SpatialHash" )
+      for k in self.object_dict:
+        olist = self.object_dict[k]['objs']
+        for o in olist:
+          o.x += random.gauss(0,0.1)
+          o.y += random.gauss(0,0.1)
+      if self.step:
+        self.last_update_time = 1e308
+        self.step = False
+      else:
+        self.last_update_time = time.time()
 
   def all_objects ( self, already_found ):
     # print ( "Finding all objects" )

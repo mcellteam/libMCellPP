@@ -8,6 +8,7 @@ from spatial_storage import SpatialHash
 
 import math
 import random
+import time
 
 global_algorithm = None
 global_data = []
@@ -168,11 +169,23 @@ def button_press_callback ( widget, event ):
 
 class menu_window:
 
+  """
   def idle_callback ( self ):
     global global_canvas
     global_canvas.queue_draw()
     print ( "Idle" )
     return True
+  """
+
+  def background_callback ( self, arg1, data=None ):
+    # print ( "Background work with arg1 = " + str(arg1) )
+    global global_algorithm
+    global global_canvas
+    global_algorithm.update()
+    global_canvas.queue_draw()
+    return True
+
+
 
   def delete_callback ( self, widget, event, data=None ):
     gtk.main_quit()
@@ -190,9 +203,23 @@ class menu_window:
     print ( "Save As with data = " + str(data) )
     return False
 
-  def run_callback ( self, widget, data=None ):
+  """
+  def cmd_callback ( self, widget, data=None ):
     global_window.update_statusbar ( "Running ..." )
 
+  def cmd_callback ( self, widget, data=None ):
+    global global_algorithm
+    global global_data
+    global global_canvas
+    global global_window
+    # gobject.idle_add ( self.idle_callback )
+    dt = 1.0
+    if data != None:
+      # Get from dt_#
+      dt = float(data[3:])
+    global_algorithm.display_interval = dt
+    global_window.update_statusbar ( "Running ..." )
+  """
 
 
   def cmd_callback ( self, widget, data=None ):
@@ -202,19 +229,28 @@ class menu_window:
 
     print ( "Command with data = " + str(data) )
 
-    if data == "QuadTree":
+    if data == "Step":
+      global_algorithm.step = True
+
+    if data == "Start":
+      global_algorithm.last_update_time = time.time()
+
+    elif data == "Stop":
+      global_algorithm.last_update_time = 1e308  # This is a very very long time away
+
+    elif data == "QuadTree":
       global_algorithm = QuadTree( xmin=-2, ymin=-2, xmax=2, ymax=2, max_objects=5 )
       for obj in global_data:
         global_algorithm.add_object ( obj )
       global_window.update_statusbar ( "QuadTree" )
 
-    if data == "SpatialHash":
+    elif data == "SpatialHash":
       global_algorithm = SpatialHash( xmin=-2, ymin=-2, xmax=2, ymax=2, spatial_resolution=0.2 )
       for obj in global_data:
         global_algorithm.add_object ( obj )
       global_window.update_statusbar ( "SpatialHash" )
 
-    if data == "RANDOM":
+    elif data == "RANDOM":
 
       global_data = []
 
@@ -254,8 +290,29 @@ class menu_window:
       for obj in global_data:
         global_algorithm.add_object ( obj )
 
+    elif data[0:9] == "GAUSSIAN_":
+      n = int(data[9:])
+      global_data = []
+      for i in range(n):
+        global_data.append ( locatable_object(random.gauss(0,.1), random.gauss(0,0.1), (0.0,1.0,0.0)) )
+      global_algorithm.clear()
+      for obj in global_data:
+        global_algorithm.add_object ( obj )
 
-    # global_window.update_statusbar()
+    elif data == "DIAGONAL_10":
+      global_data = []
+      for i in range(0,10):
+        global_data.append ( locatable_object(i/10.0, i/10.0, (1.0,0,0)) )
+      global_algorithm.clear()
+      for obj in global_data:
+        global_algorithm.add_object ( obj )
+
+    elif data[0:3] == "DT_":
+      # Get from DT_#
+      dt = float(data[3:])
+      print ( "dt = " + str(dt) )
+      global_algorithm.display_interval = dt
+
     global_canvas.queue_draw()
 
     return False
@@ -271,7 +328,6 @@ class menu_window:
 
   def print_callback ( self, widget, data=None ):
     return False
-
 
   def quit_callback ( self, widget, data=None ):
     print ( "Quit with data = " + str(data) )
@@ -326,7 +382,7 @@ class menu_window:
 
     self.add_menu_item ( self.file_menu, self.open_callback, "_Open...", "Open", 'O' )
     self.add_menu_sep  ( self.file_menu )
-    self.add_menu_item ( self.file_menu, self.save_callback, "_Save", "Save", 'S' )
+    self.add_menu_item ( self.file_menu, self.save_callback, "_Save", "Save" )
     self.add_menu_item ( self.file_menu, self.save_as_callback, "Save _As...", "Save As...", 'S', mask=gtk.gdk.CONTROL_MASK|gtk.gdk.SHIFT_MASK )
     self.add_menu_sep  ( self.file_menu )
     self.add_menu_item ( self.file_menu, self.quit_callback, "_Quit", "Quit", 'Q' )
@@ -338,30 +394,33 @@ class menu_window:
 
     (self.display_menu, self.display_item) = self.add_menu ( "_Data" )
 
-    self.add_menu_item ( self.display_menu, self.cmd_callback, "Random", "RANDOM" )
+    self.add_menu_item ( self.display_menu, self.cmd_callback, "Clusters", "RANDOM" )
+    self.add_menu_item ( self.display_menu, self.cmd_callback, "Gaussian 10", "GAUSSIAN_10" )
+    self.add_menu_item ( self.display_menu, self.cmd_callback, "Gaussian 100", "GAUSSIAN_100" )
+    self.add_menu_item ( self.display_menu, self.cmd_callback, "Gaussian 1000", "GAUSSIAN_1000" )
+    self.add_menu_item ( self.display_menu, self.cmd_callback, "Gaussian 10000", "GAUSSIAN_10000" )
+    self.add_menu_item ( self.display_menu, self.cmd_callback, "Diagonal 10", "DIAGONAL_10" )
+
     self.add_menu_item ( self.display_menu, self.dump_callback, "Dump", "DUMP" )
 
     (self.run_menu, self.run_item) = self.add_menu ( "_Run" )
 
-    self.add_menu_item ( self.run_menu, self.run_callback, "_Converge", "RUN_-1", 'C' )
-    self.add_menu_sep  ( self.run_menu )
-    self.add_menu_item ( self.run_menu, self.run_callback, "Run _1", "RUN_1", '1' )
-    self.add_menu_item ( self.run_menu, self.run_callback, "Run _2", "RUN_2", '2' )
-    self.add_menu_item ( self.run_menu, self.run_callback, "Run _3", "RUN_3", '3' )
-    self.add_menu_item ( self.run_menu, self.run_callback, "Run _4", "RUN_4", '4' )
-    self.add_menu_item ( self.run_menu, self.run_callback, "Run _5", "RUN_5", '5' )
-    self.add_menu_item ( self.run_menu, self.run_callback, "Run 10", "RUN_10" )
-    self.add_menu_item ( self.run_menu, self.run_callback, "Run 100", "RUN_100" )
-    self.add_menu_item ( self.run_menu, self.run_callback, "Run 1000", "RUN_1000", 'K' )
-    self.add_menu_item ( self.run_menu, self.run_callback, "Run 10000", "RUN_10000" )
-    self.add_menu_item ( self.run_menu, self.run_callback, "Run 100000", "RUN_100000" )
-    self.add_menu_item ( self.run_menu, self.run_callback, "Run 1000000", "RUN_1000000", 'M' )
-    self.add_menu_sep  ( self.run_menu )
-    self.add_menu_item ( self.run_menu, self.cmd_callback, "_Restart", "Restart", 'R' )
-    self.add_menu_sep  ( self.run_menu )
-    self.add_menu_item ( self.run_menu, self.cmd_callback, "_Start", "Start" )
+    self.add_menu_item ( self.run_menu, self.cmd_callback, "Step", "Step", 'S' )
+    self.add_menu_item ( self.run_menu, self.cmd_callback, "Start", "Start" )
     self.add_menu_item ( self.run_menu, self.cmd_callback, "Sto_p", "Stop" )
-    self.add_menu_item ( self.run_menu, self.cmd_callback, "Rese_t", "Reset" )
+    #self.add_menu_sep  ( self.run_menu )
+    #self.add_menu_item ( self.run_menu, self.cmd_callback, "Rese_t", "Reset" )
+    self.add_menu_sep  ( self.run_menu )
+    self.add_menu_item ( self.run_menu, self.cmd_callback, "dt _0.0",  "DT_0.0"      )
+    self.add_menu_item ( self.run_menu, self.cmd_callback, "dt 0.1",   "DT_0.1"      )
+    self.add_menu_item ( self.run_menu, self.cmd_callback, "dt 0.2",   "DT_0.2"      )
+    self.add_menu_item ( self.run_menu, self.cmd_callback, "dt 0.5",   "DT_0.5"      )
+    self.add_menu_item ( self.run_menu, self.cmd_callback, "dt _1.0",  "DT_1",   '1' )
+    self.add_menu_item ( self.run_menu, self.cmd_callback, "dt _2.0",  "DT_2",   '2' )
+    self.add_menu_item ( self.run_menu, self.cmd_callback, "dt _3.0",  "DT_3",   '3' )
+    self.add_menu_item ( self.run_menu, self.cmd_callback, "dt _4.0",  "DT_4",   '4' )
+    self.add_menu_item ( self.run_menu, self.cmd_callback, "dt _5.0",  "DT_5",   '5' )
+    self.add_menu_item ( self.run_menu, self.cmd_callback, "dt 10.0",  "DT_10"       )
 
     (self.print_menu, self.print_item) = self.add_menu ( "_Print" )
 
@@ -428,13 +487,13 @@ class menu_window:
 
 def main():
   global global_window
+  global_window = menu_window()
+  # Make a few calls to initialize the otherwise blank window
   global_window.cmd_callback ( None, "QuadTree" )
   global_window.cmd_callback ( None, "RANDOM" )
+  gtk.idle_add ( global_window.background_callback, "Arg1" )
   gtk.main()
 
 
 if __name__ == '__main__':
-  global global_window
-  menu_win = menu_window()
-  global_window = menu_win
   main()

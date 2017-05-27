@@ -15,6 +15,8 @@ class locatable_object:
     # This class can contain anything else
     self.highlight = False
 
+
+
 class SpatialStorage:
   def __init__ ( self, xmin=0, ymin=0, xmax=1, ymax=1 ):
     self.xmin = xmin
@@ -23,6 +25,8 @@ class SpatialStorage:
     self.ymax = ymax
   def print_self ( self, depth=0 ):
     print ( "  "*depth + "Range = [" + str(self.xmin) + " < x < " + str(self.xmax) + "] [" + str(self.ymin) + " < y < " + str(self.ymax) + "]" )
+
+
 
 class QuadTree(SpatialStorage):
   def __init__ ( self, xmin=0, ymin=0, xmax=1, ymax=1, max_objects=10 ):
@@ -229,10 +233,11 @@ class SpatialHash(SpatialStorage):
 
   def print_self ( self, depth=0 ):
     SpatialStorage.print_self(self, depth) # Call parent first
-    for k in self.object_dict:
+    for k in sorted(self.object_dict):
       olist = self.object_dict[k]['objs']
+      print ( "  " + "  "*depth + "Spatial Key: " + str(k) )
       for o in olist:
-        print ( "   " + "  "*depth + "Object at: " + str(o.x) + "," + str(o.y) )
+        print ( "    " + "  "*depth + "Object at: " + str(o.x) + "," + str(o.y) )
 
   def draw ( self, canvas, pixmap, event, xminw, yminw, xmaxw, ymaxw, xoffset, xscale, yoffset, yscale ):
     # print ("Drawing Spatial Hash")
@@ -250,21 +255,6 @@ class SpatialHash(SpatialStorage):
     ty = yoffset + ( yscale * self.ymax )
 
     pixmap.draw_rectangle ( gc, False, int(lx), int(by), int(rx-lx), int(ty-by) )
-
-    """
-    for k in self.object_dict:
-      o = self.object_dict[k]
-      xkey = o['xkey']
-      ykey = o['ykey']
-      print ( "Drawing cell: " + k + " at " + str(xkey) + "," + str(ykey) + " with " + str(len(o['objs'])) + " objects" )
-      print ( "  offsets, scales = " + str(xoffset) + " " + str(yoffset) + " " + str(xscale) + " " + str(yscale) )
-      cell_x = xoffset + ( xscale * (int ( xkey * self.spatial_resolution )) )
-      cell_y = yoffset + ( yscale * (int ( ykey * self.spatial_resolution )) )
-      cell_w = int ( xscale * self.spatial_resolution )
-      cell_h = int ( yscale * self.spatial_resolution )
-      print ( "  draw_rectangle ( " + str(cell_x) + ", " + str(cell_y) + ", " + str(cell_w) + ", " + str(cell_h) + " )" )
-      pixmap.draw_rectangle ( gc, False, int(cell_x), int(cell_y), int(cell_w), int(cell_h) )
-    """
 
     # Draw bounds around all objects
     gc.foreground = canvas.get_colormap().alloc_color(30000, 30000, 30000)

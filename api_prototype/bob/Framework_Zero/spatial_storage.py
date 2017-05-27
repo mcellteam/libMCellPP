@@ -266,6 +266,16 @@ class SpatialHash(SpatialStorage):
       pixmap.draw_rectangle ( gc, False, int(cell_x), int(cell_y), int(cell_w), int(cell_h) )
     """
 
+    # Draw bounds around all objects
+    gc.foreground = canvas.get_colormap().alloc_color(30000, 30000, 30000)
+    for k in self.object_dict:
+      olist = self.object_dict[k]['objs']
+      for o in olist:
+        res = self.spatial_resolution
+        cx = xoffset + int ( xscale * round(o.x/res) * res )
+        cy = yoffset + int ( yscale * round(o.y/res) * res )
+        pixmap.draw_rectangle ( gc, False, int(cx-(xscale*res/2.0)), int(cy-(yscale*res/2.0)), int(xscale*res), int(yscale*res) )
+
     # Draw all the objects that are not highlighted (background)
     for k in self.object_dict:
       olist = self.object_dict[k]['objs']
@@ -285,18 +295,6 @@ class SpatialHash(SpatialStorage):
           cy = yoffset + ( yscale * o.y )
           gc.foreground = canvas.get_colormap().alloc_color(int(65535*o.c[0]),int(65535*o.c[1]),int(65535*o.c[2]))
           pixmap.draw_rectangle ( gc, True, int(cx)-2, int(cy)-2, 5, 5 )
-
-
-    # Draw bounds around the hightlighted objects
-    for k in self.object_dict:
-      olist = self.object_dict[k]['objs']
-      for o in olist:
-        if o.highlight:
-          res = self.spatial_resolution
-          cx = xoffset + int ( xscale * int(o.x/res) * res )
-          cy = yoffset + int ( yscale * int(o.y/res) * res )
-          gc.foreground = canvas.get_colormap().alloc_color(int(65535*o.c[0]),int(65535*o.c[1]),int(65535*o.c[2]))
-          pixmap.draw_rectangle ( gc, False, int(cx-(xscale*res/2.0)), int(cy-(yscale*res/2.0)), int(xscale*res), int(yscale*res) )
 
 
 

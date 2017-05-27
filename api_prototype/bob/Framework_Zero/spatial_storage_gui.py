@@ -148,6 +148,20 @@ def mouse_motion_callback ( canvas, event ):
   return False
 
 
+def mouse_scroll_callback ( canvas, event ):
+  print ( "Mouse Scroll Callback with event: " + str(event) )
+  if event.direction == gtk.gdk.SCROLL_UP:
+    print ( "Mouse scrolled up" )
+  elif event.direction == gtk.gdk.SCROLL_DOWN:
+    print ( "Mouse scrolled down" )
+  elif event.direction == gtk.gdk.SCROLL_LEFT:
+    print ( "Mouse scrolled left" )
+  elif event.direction == gtk.gdk.SCROLL_RIGHT:
+    print ( "Mouse scrolled right" )
+  else:
+    print ( "Mouse scrolled other?" )
+
+
 
 
 # Update when a mouse button is pressed
@@ -384,6 +398,7 @@ class menu_window:
     self.drawing_area.connect ( "expose_event", canvas_expose_callback )
     self.drawing_area.connect ( "button_press_event", button_press_callback )
     self.drawing_area.connect ( "motion_notify_event", mouse_motion_callback )
+    self.drawing_area.connect ( "scroll_event", mouse_scroll_callback )
 
     self.drawing_area.connect ( "realize", self.set_cursor_callback )
 

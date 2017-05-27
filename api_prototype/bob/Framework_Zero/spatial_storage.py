@@ -187,7 +187,9 @@ class QuadTree(SpatialStorage):
       self.qsw.draw ( canvas, pixmap, event, xminw, yminw, (xmaxw-xminw)/2.0, (ymaxw-yminw)/2.0, xoffset, xscale, yoffset, yscale )
 
 
-class SpatialHash(QuadTree):
+
+
+class SpatialHash(SpatialStorage):
   # Note that this could be heirarchical as well with SpatialHash objects as "leaves" in other SpatialHash objects
   def __init__ ( self, xmin=0, ymin=0, xmax=1, ymax=1, spatial_resolution=1.0 ):
     # print ( " Constructing a new QuadTree" )
@@ -225,36 +227,12 @@ class SpatialHash(QuadTree):
       olist = self.object_dict[k]['objs']
       already_found.extend ( olist )
 
-
-
-
-  """
-  def getKeys ( self, obj ):
-    # Gets the multiple keys that reside in this object (can be large for a large object)
-    sx = obj.x >> self.power_of_two
-    sy = obj.y >> self.power_of_two
-    ex = (obj.x + obj.width) >> self.power_of_two
-    ey = (obj.y + obj.height) >> self.power_of_two
-    keys = []
-    for y in range(sy,ey+1):
-      for x in range(sx,ex+1):
-        keys.push ( str(x) + ":" + str(y) )
-    return keys
-
-
-  def clear ( self ):
-    for key in self.hash.keys():
-      self.hash.pop(key)
-  """
-
   def print_self ( self, depth=0 ):
     SpatialStorage.print_self(self, depth) # Call parent first
     for k in self.object_dict:
       olist = self.object_dict[k]['objs']
       for o in olist:
         print ( "   " + "  "*depth + "Object at: " + str(o.x) + "," + str(o.y) )
-
-
 
   def draw ( self, canvas, pixmap, event, xminw, yminw, xmaxw, ymaxw, xoffset, xscale, yoffset, yscale ):
     # print ("Drawing Spatial Hash")
@@ -273,18 +251,20 @@ class SpatialHash(QuadTree):
 
     pixmap.draw_rectangle ( gc, False, int(lx), int(by), int(rx-lx), int(ty-by) )
 
+    """
     for k in self.object_dict:
       o = self.object_dict[k]
       xkey = o['xkey']
       ykey = o['ykey']
-      #print ( "Drawing cell: " + k + " at " + str(xkey) + "," + str(ykey) + " with " + str(len(o['objs'])) + " objects" )
-      #print ( "  offsets, scales = " + str(xoffset) + " " + str(yoffset) + " " + str(xscale) + " " + str(yscale) )
+      print ( "Drawing cell: " + k + " at " + str(xkey) + "," + str(ykey) + " with " + str(len(o['objs'])) + " objects" )
+      print ( "  offsets, scales = " + str(xoffset) + " " + str(yoffset) + " " + str(xscale) + " " + str(yscale) )
       cell_x = xoffset + ( xscale * (int ( xkey * self.spatial_resolution )) )
       cell_y = yoffset + ( yscale * (int ( ykey * self.spatial_resolution )) )
       cell_w = int ( xscale * self.spatial_resolution )
       cell_h = int ( yscale * self.spatial_resolution )
-      #print ( "  draw_rectangle ( " + str(cell_x) + ", " + str(cell_y) + ", " + str(cell_w) + ", " + str(cell_h) + " )" )
-      ### Doesn't work yet: pixmap.draw_rectangle ( gc, False, int(cell_x), int(cell_y), int(cell_w), int(cell_h) )
+      print ( "  draw_rectangle ( " + str(cell_x) + ", " + str(cell_y) + ", " + str(cell_w) + ", " + str(cell_h) + " )" )
+      pixmap.draw_rectangle ( gc, False, int(cell_x), int(cell_y), int(cell_w), int(cell_h) )
+    """
 
     # Draw all the objects that are not highlighted (background)
     for k in self.object_dict:
@@ -305,4 +285,19 @@ class SpatialHash(QuadTree):
           cy = yoffset + ( yscale * o.y )
           gc.foreground = canvas.get_colormap().alloc_color(int(65535*o.c[0]),int(65535*o.c[1]),int(65535*o.c[2]))
           pixmap.draw_rectangle ( gc, True, int(cx)-2, int(cy)-2, 5, 5 )
+
+
+    # Draw bounds around the hightlighted objects
+    for k in self.object_dict:
+      olist = self.object_dict[k]['objs']
+      for o in olist:
+        if o.highlight:
+          res = self.spatial_resolution
+          cx = xoffset + int ( xscale * int(o.x/res) * res )
+          cy = yoffset + int ( yscale * int(o.y/res) * res )
+          gc.foreground = canvas.get_colormap().alloc_color(int(65535*o.c[0]),int(65535*o.c[1]),int(65535*o.c[2]))
+          pixmap.draw_rectangle ( gc, False, int(cx-(xscale*res/2.0)), int(cy-(yscale*res/2.0)), int(xscale*res), int(yscale*res) )
+
+
+
 

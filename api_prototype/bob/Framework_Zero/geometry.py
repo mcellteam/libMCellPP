@@ -50,7 +50,7 @@ class reg_polygon_object (point_face_object):
     points = []
     delta = 2 * math.pi / num_faces
     for i in range(num_faces):
-      points.append ( [int(radius*math.cos(i*delta)), int(radius*math.sin(i*delta))] )
+      points.append ( [int(round(radius*math.cos(i*delta))), int(round(radius*math.sin(i*delta)))] )
     point_face_object.__init__(self, name=name, x=x, y=y, color=color, points=points)  ### Initialize the Base Class with points
   def get_motion ( self, dt ):
     # The point_face_object class motion isn't defined yet

@@ -29,6 +29,21 @@ class SpatialStorage:
     self.ymax = ymax
   def print_self ( self, depth=0 ):
     print ( "  "*depth + "Range = [" + str(self.xmin) + " < x < " + str(self.xmax) + "] [" + str(self.ymin) + " < y < " + str(self.ymax) + "]" )
+  def update ( self ):
+    if self.step or ( (time.time() - self.last_update_time) > self.display_interval ):
+      # print ("Update SpatialStorage" )
+      all_objs = []
+      self.all_objects(all_objs)
+      self.clear()
+      for o in all_objs:
+        o.x += random.gauss(0,0.1)
+        o.y += random.gauss(0,0.1)
+        self.add_object(o)
+      if self.step:
+        self.last_update_time = 1e308
+        self.step = False
+      else:
+        self.last_update_time = time.time()
 
 
 
@@ -117,7 +132,23 @@ class QuadTree(SpatialStorage):
       #    distance a molecule might travel in a single time step. Subdividing any smaller than that creates
       #    more work when finding collisions. So the smallest size should be on the order of the distance of
       #    reaction partners in a single time step.
-
+      #
+      # May 29th, 2017
+      #
+      # The description above is correct, however, there's another effect that makes matters even worse.
+      # When the maximum objects per box is small, the bounding boxes (especially the corner boxes) will
+      # be accounting for objects in large areas extending either laterally or diagonally from the box.
+      # For example, a left edge box will account for all objects extending to its left. This will cause
+      # it to subdivide as many times as needed to account for all those objects. This is why the edges
+      # are often finely divided. For a finite number of objects, these edge boxes can continue to subdivide
+      # and eventually account for all objects. But the situation may be different for a corner box because
+      # subdividing does not always subdivide the objects. Any objects that are beyond BOTH the horizontal
+      # AND vertical bounds (far upper left, for example) of the box will cause the box to subdivide, but
+      # all those objects will be delegated to the fartherest (upper-left-most, for example) subdivision
+      # which must subdivide again. Since these "outside" objects cannot ever be subdivided by divisions
+      # drawn within the limits of the box, the process will repeat until either a set limit is reached or
+      # the maximum recursion depth is exceeded.
+      #
       # For these cases, just add the items at the last leaf (for now).
       # Basically ignore the "max_objects" constraint when the depth becomes too deep.
 
@@ -200,22 +231,6 @@ class QuadTree(SpatialStorage):
     self.qse = None
     self.qsw = None
 
-  def update ( self ):
-    if self.step or ( (time.time() - self.last_update_time) > self.display_interval ):
-      # print ("Update QuadTree" )
-      all_objs = []
-      self.all_objects(all_objs)
-      self.clear()
-      for o in all_objs:
-        o.x += random.gauss(0,0.1)
-        o.y += random.gauss(0,0.1)
-        self.add_object(o)
-      if self.step:
-        self.last_update_time = 1e308
-        self.step = False
-      else:
-        self.last_update_time = time.time()
-
   def all_objects ( self, already_found ):
     # print ( "Finding all objects" )
     if self.qne == None:
@@ -245,7 +260,7 @@ class QuadTree(SpatialStorage):
       self.all_objects(all)
       print ( "Total objects = " + str(len(all)) )
 
-
+  """
   def draw ( self, canvas, pixmap, event, xminw, yminw, xmaxw, ymaxw, xoffset, xscale, yoffset, yscale ):
     drawable = canvas.window
     gc = canvas.get_style().fg_gc[gtk.STATE_NORMAL]
@@ -287,6 +302,49 @@ class QuadTree(SpatialStorage):
       self.qnw.draw ( canvas, pixmap, event, xminw, (ymaxw-yminw)/2.0, (xmaxw-xminw)/2.0, ymaxw, xoffset, xscale, yoffset, yscale )
       self.qse.draw ( canvas, pixmap, event, (xmaxw-xminw)/2.0, yminw, xmaxw, (ymaxw-yminw)/2.0, xoffset, xscale, yoffset, yscale )
       self.qsw.draw ( canvas, pixmap, event, xminw, yminw, (xmaxw-xminw)/2.0, (ymaxw-yminw)/2.0, xoffset, xscale, yoffset, yscale )
+  """
+
+
+  def draw_app ( self, canvas, event, zpa, level=0 ):
+    # print ( "  "*level + "  Drawing QuadTree on " + str(canvas))
+    width, height = canvas.window.get_size()  # This is the area of the entire window
+    drawable = canvas.window
+    colormap = canvas.get_colormap()
+    gc = canvas.get_style().fg_gc[gtk.STATE_NORMAL]
+    # Save the current color
+    old_fg = gc.foreground
+
+    if level == 0:
+      # Clear the screen with black
+      gc.foreground = colormap.alloc_color(0,0,0)
+      drawable.draw_rectangle(gc, True, 0, 0, width, height)
+
+    # Draw the cell bounds
+    gc.foreground = canvas.get_colormap().alloc_color(30000, 30000, 30000)
+    # print ( "  "*level + "   App bounds: %f %f %f %f" % (self.xmin,self.xmax,self.ymin,self.ymax) )
+    # print ( "  "*level + "   Win bounds: %d %d %d %d" % (zpa.wxi(self.xmin), zpa.wyi(self.ymin), zpa.wwi(self.xmax-self.xmin), zpa.whi(self.ymax-self.ymin)) )
+    drawable.draw_rectangle ( gc, False, zpa.wxi(self.xmin), zpa.wyi(self.ymin), zpa.wwi(self.xmax-self.xmin), zpa.whi(self.ymax-self.ymin) )
+
+    # Draw all the objects that are not highlighted (background)
+    for o in self.objects:
+      if not o.highlight:
+        gc.foreground = canvas.get_colormap().alloc_color(int(30000*o.c[0]),int(30000*o.c[1]),int(30000*o.c[2]))
+        drawable.draw_rectangle ( gc, True, zpa.wxi(o.x)-2, zpa.wyi(o.y)-2, 5,5 )
+
+
+    # Draw all the objects that are highlighted (foreground)
+    for o in self.objects:
+      if o.highlight:
+        gc.foreground = canvas.get_colormap().alloc_color(int(65535*o.c[0]),int(65535*o.c[1]),int(65535*o.c[2]))
+        drawable.draw_rectangle ( gc, True, zpa.wxi(o.x)-2, zpa.wyi(o.y)-2, 5,5 )
+
+    gc.foreground = canvas.get_colormap().alloc_color(60000, 60000, 60000)
+    if self.qne != None:
+      # Draw each quadrant recursively
+      self.qne.draw_app ( canvas, event, zpa, level=level+1 )
+      self.qnw.draw_app ( canvas, event, zpa, level=level+1 )
+      self.qse.draw_app ( canvas, event, zpa, level=level+1 )
+      self.qsw.draw_app ( canvas, event, zpa, level=level+1 )
 
 
 
@@ -326,19 +384,6 @@ class SpatialHash(SpatialStorage):
   def clear ( self ):
     self.object_dict = {}
 
-  def update ( self ):
-    if self.step or ( (time.time() - self.last_update_time) > self.display_interval ):
-      # print ("Updating SpatialHash" )
-      for k in self.object_dict:
-        olist = self.object_dict[k]['objs']
-        for o in olist:
-          o.x += random.gauss(0,0.1)
-          o.y += random.gauss(0,0.1)
-      if self.step:
-        self.last_update_time = 1e308
-        self.step = False
-      else:
-        self.last_update_time = time.time()
 
   def all_objects ( self, already_found ):
     # print ( "Finding all objects" )
@@ -354,6 +399,7 @@ class SpatialHash(SpatialStorage):
       for o in olist:
         print ( "    " + "  "*depth + "Object at: " + str(o.x) + "," + str(o.y) )
 
+  """
   def draw ( self, canvas, pixmap, event, xminw, yminw, xmaxw, ymaxw, xoffset, xscale, yoffset, yscale ):
     # print ("Drawing Spatial Hash")
     drawable = canvas.window
@@ -369,7 +415,7 @@ class SpatialHash(SpatialStorage):
     rx = xoffset + ( xscale * self.xmax )
     ty = yoffset + ( yscale * self.ymax )
 
-    pixmap.draw_rectangle ( gc, False, int(lx), int(by), int(rx-lx), int(ty-by) )
+    # pixmap.draw_rectangle ( gc, False, int(lx), int(by), int(rx-lx), int(ty-by) )
 
     # Draw bounds around all objects
     gc.foreground = canvas.get_colormap().alloc_color(30000, 30000, 30000)
@@ -400,6 +446,54 @@ class SpatialHash(SpatialStorage):
           cy = yoffset + ( yscale * o.y )
           gc.foreground = canvas.get_colormap().alloc_color(int(65535*o.c[0]),int(65535*o.c[1]),int(65535*o.c[2]))
           pixmap.draw_rectangle ( gc, True, int(cx)-2, int(cy)-2, 5, 5 )
+  """
+
+  def draw_app ( self, canvas, event, zpa ):
+    # print ("Drawing Spatial Hash on " + str(canvas))
+    width, height = canvas.window.get_size()  # This is the area of the entire window
+    drawable = canvas.window
+    colormap = canvas.get_colormap()
+    gc = canvas.get_style().fg_gc[gtk.STATE_NORMAL]
+    # Save the current color
+    old_fg = gc.foreground
+
+    # Clear the screen with black
+    gc.foreground = colormap.alloc_color(0,0,0)
+    drawable.draw_rectangle(gc, True, 0, 0, width, height)
+
+    # Draw the cell bounds
+    gc.foreground = canvas.get_colormap().alloc_color(30000, 30000, 30000)
+    
+    # print ( "App bounds: %f %f %f %f" % (self.xmin,self.xmax,self.ymin,self.ymax) )
+    # print ( "Win bounds: %d %d %d %d" % (zpa.wxi(self.xmin), zpa.wyi(self.ymin), zpa.wwi(self.xmax-self.xmin), zpa.whi(self.ymax-self.ymin)) )
+
+    # drawable.draw_rectangle ( gc, False, zpa.wxi(self.xmin), zpa.wyi(self.ymin), zpa.wwi(self.xmax-self.xmin), zpa.whi(self.ymax-self.ymin) )
+
+    # Draw bounds around all objects
+    gc.foreground = canvas.get_colormap().alloc_color(30000, 30000, 30000)
+    for k in self.object_dict:
+      olist = self.object_dict[k]['objs']
+      for o in olist:
+        res = self.spatial_resolution
+        cx = round(o.x/res) * res
+        cy = round(o.y/res) * res
+        drawable.draw_rectangle ( gc, False, zpa.wxi(cx-(res/2.0)), zpa.wyi(cy-(res/2.0)), zpa.wwi(res), zpa.whi(res) )
+
+    # Draw all the objects that are not highlighted (background)
+    for k in self.object_dict:
+      olist = self.object_dict[k]['objs']
+      for o in olist:
+        if not o.highlight:
+          gc.foreground = canvas.get_colormap().alloc_color(int(30000*o.c[0]),int(30000*o.c[1]),int(30000*o.c[2]))
+          drawable.draw_rectangle ( gc, True, zpa.wxi(o.x)-2, zpa.wyi(o.y)-2, 5,5 )
+
+    # Draw all the objects that are highlighted (foreground)
+    for k in self.object_dict:
+      olist = self.object_dict[k]['objs']
+      for o in olist:
+        if o.highlight:
+          gc.foreground = canvas.get_colormap().alloc_color(int(65535*o.c[0]),int(65535*o.c[1]),int(65535*o.c[2]))
+          drawable.draw_rectangle ( gc, True, zpa.wxi(o.x)-2, zpa.wyi(o.y)-2, 5,5 )
 
 
 

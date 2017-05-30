@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Based on https://gitlab.snl.salk.edu/NeuralNetworkCoding/AssortedPrograms/ ... /BackProp.py
+#__import__('code').interact(local = locals())
 
 from spatial_storage import locatable_object
 from spatial_storage import QuadTree
@@ -10,120 +10,56 @@ import math
 import random
 import time
 
-global_algorithm = None
-global_data = []
-
-global_canvas = None
-global_window = None
-
-
 import pygtk
 pygtk.require('2.0')
 import gobject
 import gtk
 
+import app_window
 
-pixmap = None
-numcolors = 16
-pos_colors = None
-neg_colors = None
+global_algorithm = None
+global_data = []
 
-# Creating or Resizing the Window generates configure events
-def configure_event_callback ( canvas, event ):
-  global pixmap
-  x,y,width,height = canvas.get_allocation()
-  # print width, height
-  new_pixmap = gtk.gdk.Pixmap(canvas.window, width, height)
-  new_pixmap.draw_rectangle ( canvas.get_style().black_gc, True, 0, 0, width, height )
-  # Copy the old pixmap into the new one
-  if pixmap != None:
-    new_pixmap.draw_drawable(canvas.get_style().black_gc,pixmap,0,0,0,0,-1,-1)
-  pixmap = new_pixmap
-  return True
-
-
-def map_pos_neg_colors ( canvas, gc ):
-  global pos_colors
-  global neg_colors
-  global numcolors
-  if (pos_colors == None) or (neg_colors == None):
-    pos_colors = []
-    neg_colors = []
-    cmap = canvas.get_colormap()
-    for i in range(numcolors):
-      pos_colors.append ( cmap.alloc_color(0, i*65535/numcolors, 0) )
-      neg_colors.append ( cmap.alloc_color(i*65535/numcolors, 0, 0) )
-  gc.background = canvas.get_colormap().alloc_color(0, 0, 0)
-  gc.foreground = canvas.get_colormap().alloc_color(65535, 0, 0)
-
-
-
-
-
-
+global_canvas = None
+global_window = None
+global_zpa = None
 
 # Needing to repaint the window generates expose events
-def draw_global_algorithm ( canvas, event ):
+def expose_callback ( widget, event, zpa ):
   global global_algorithm
-  
-  global pixmap
-  global pos_colors
-  global neg_colors
-  global numcolors
-  x, y, width, height = event.area
-  x=0
-  y=0
-  width, height = canvas.window.get_size()
+  # print ( "expose_callback" )
 
-  drawable = canvas.window
-  gc = canvas.get_style().fg_gc[gtk.STATE_NORMAL]
-  map_pos_neg_colors ( canvas, gc )
+  width, height = widget.window.get_size()  # This is the area of the entire window
+  drawable = widget.window
+  colormap = widget.get_colormap()
+  gc = widget.get_style().fg_gc[gtk.STATE_NORMAL]
+  # Save the current color
+  old_fg = gc.foreground
 
-  # Fill the background
-  pixmap.draw_rectangle ( canvas.get_style().black_gc, True, 0, 0, width, height )
+  # Clear the screen with black
+  gc.foreground = colormap.alloc_color(0,0,0)
+  drawable.draw_rectangle(gc, True, 0, 0, width, height)
 
-  if global_algorithm != None:
+  if global_algorithm == None:
+    #print ( "Select an algorithm" )
+    pass
+  else:
+    global_algorithm.draw_app ( widget, event, zpa )
 
-    xscale = width / (global_algorithm.xmax - global_algorithm.xmin)
-    xoffset = width - (xscale * global_algorithm.xmax)
-
-    yscale = height / (global_algorithm.ymax - global_algorithm.ymin)
-    yoffset = height - (yscale * global_algorithm.ymax)
-
-
-    global_algorithm.draw ( canvas, pixmap, event, x, y, x+width, y+height, xoffset, xscale, yoffset, yscale )
-
-
-  # Restore the original foreground color to black (could save it before drawing)
-  gc.foreground = canvas.get_colormap().alloc_color(0, 0, 0)
-
-  canvas.window.draw_drawable(gc,pixmap,x,y,x,y,width,height)
+  gc.foreground = old_fg
   return False
-
-
-
-# Needing to repaint the window generates expose events
-def canvas_expose_callback ( canvas, event ):
-  draw_global_algorithm ( canvas, event )
-  return False
-
-
 
 def mouse_motion_callback ( canvas, event ):
+  # print ( "Mouse moved: " )
   global global_algorithm
+  global global_zpa
 
   width, height = canvas.window.get_size()
 
-  if global_algorithm != None:
+  if (global_algorithm != None) and (global_zpa != None):
 
-    xscale = width / (global_algorithm.xmax - global_algorithm.xmin)
-    xoffset = width - (xscale * global_algorithm.xmax)
-
-    yscale = height / (global_algorithm.ymax - global_algorithm.ymin)
-    yoffset = height - (yscale * global_algorithm.ymax)
-
-    x = (event.x - xoffset) / xscale
-    y = (event.y - yoffset) / yscale
+    x = global_zpa.x(event.x)
+    y = global_zpa.y(event.y-2)
 
     all_objs = []
     global_algorithm.all_objects(all_objs)
@@ -138,362 +74,310 @@ def mouse_motion_callback ( canvas, event ):
 
     # print ( "Mouse moved: " + str(x) + "," + str(y) + " #: " + str(len(objs)) + " / " + str(len(all_objs)) )
 
-    canvas.queue_draw()
-
+    global_zpa.queue_draw()
   return False
 
 
-def mouse_scroll_callback ( canvas, event ):
-  print ( "Mouse Scroll Callback with event: " + str(event) )
-  if event.direction == gtk.gdk.SCROLL_UP:
-    print ( "Mouse scrolled up" )
-  elif event.direction == gtk.gdk.SCROLL_DOWN:
-    print ( "Mouse scrolled down" )
-  elif event.direction == gtk.gdk.SCROLL_LEFT:
-    print ( "Mouse scrolled left" )
-  elif event.direction == gtk.gdk.SCROLL_RIGHT:
-    print ( "Mouse scrolled right" )
-  else:
-    print ( "Mouse scrolled other?" )
+def menu_callback ( widget, data=None ):
+  global global_algorithm
+  global global_zpa
+  global global_data
+  #print ( "Menu callback called with data = " + str(data) )
+  #print ( "  widget = " + str(widget) )
+  if data == "Debug":
+    __import__('code').interact(local = locals())
+
+  if data == "Step":
+    global_algorithm.step = True
+
+  if data == "Start":
+    global_algorithm.last_update_time = time.time()
+
+  elif data == "Stop":
+    global_algorithm.last_update_time = 1e308  # This is a very very long time away
+
+  elif (len(data) >=8) and (data[0:8] == "QuadTree"):
+    max_objects = 5
+    if (len(data) > 19) and (data[0:19] == "QuadTree_Max_Items_"):
+      max_objects = int(data[19:])
+    global_algorithm = QuadTree( xmin=-2, ymin=-2, xmax=2, ymax=2, max_objects=max_objects )
+    for obj in global_data:
+      global_algorithm.add_object ( obj )
+    #global_window.update_statusbar ( "QuadTree" )
+
+  elif data == "SpatialHash":
+    global_algorithm = SpatialHash( xmin=-2, ymin=-2, xmax=2, ymax=2, spatial_resolution=0.2 )
+    for obj in global_data:
+      global_algorithm.add_object ( obj )
+    #global_window.update_statusbar ( "SpatialHash" )
+
+  elif (len(data) > 9) and (data[0:9] == "GAUSSIAN_"):
+    n = int(data[9:])
+    global_data = []
+    for i in range(n):
+      global_data.append ( locatable_object(random.gauss(0,.1), random.gauss(0,0.1), (0.0,1.0,0.0)) )
+    if global_zpa != None:
+      global_zpa.set_x_scale ( -2.0,   60, 2.0, 340 )
+      global_zpa.set_y_scale ( -2.0,   10, 2.0, 290 )
+    global_algorithm.clear()
+    for obj in global_data:
+      global_algorithm.add_object ( obj )
+
+  elif data == "CLUSTERS":
+
+    global_data = []
+
+    for i in range(1,7):
+      global_data.append ( locatable_object(i/10.0, i/10.0, (1.0,0,0)) )
+
+    for i in range(15,20):
+      global_data.append ( locatable_object(i/10.0, -i/10.0, (0,1.0,0)) )
+
+    for i in range(100):
+      x = random.gauss(0.75,0.1)
+      y = random.gauss(x, 0.05)
+      global_data.append ( locatable_object(x-2, -(1+y), (0.2,0.2,1.0)) )
+
+    for i in range(100):
+      global_data.append ( locatable_object(random.gauss(0,0.05), random.gauss(-1,0.05), (1.0,1.0,0.0)) )
+
+    for i in range(100):
+      global_data.append ( locatable_object(random.uniform(-2,-1.5), random.uniform(-1,0), (0,1.0,1.0)) )
+
+    for i in range(100):
+      global_data.append ( locatable_object(random.gauss(1,.1), random.gauss(1,0.5), (1.0,0,1.0)) )
+
+    for i in range(50):
+      global_data.append ( locatable_object(random.uniform(0.1,0.4), random.uniform(2.1,2.2), (0.8,0.6,0)) )
+
+    for i in range(50):
+      global_data.append ( locatable_object(random.uniform(0.6,0.9), random.uniform(-2.2,-2.1), (0.8,0.6,0)) )
+
+    for i in range(50):
+      global_data.append ( locatable_object(random.uniform(2.1,2.2), random.uniform(0.65,0.85), (0.8,0.6,0)) )
+
+    for i in range(50):
+      global_data.append ( locatable_object(random.uniform(-2.2,-2.1), random.uniform(-1.4,-1.1), (0.8,0.6,0)) )
+
+    if global_zpa != None:
+      global_zpa.set_x_scale ( -2.0,   60, 2.0, 340 )
+      global_zpa.set_y_scale ( -2.0,   10, 2.0, 290 )
+
+    if global_algorithm != None:
+      global_algorithm.clear()
+      for obj in global_data:
+        global_algorithm.add_object ( obj )
+
+  elif data == "DIAGONAL_10":
+    global_data = []
+    for i in range(0,10):
+      global_data.append ( locatable_object(i/10.0, i/10.0, (1.0,0,0)) )
+    if global_zpa != None:
+      global_zpa.set_x_scale ( -2.0,   60, 2.0, 340 )
+      global_zpa.set_y_scale ( -2.0,   10, 2.0, 290 )
+    global_algorithm.clear()
+    for obj in global_data:
+      global_algorithm.add_object ( obj )
+
+  elif (len(data) > 3) and (data[0:3] == "DT_"):
+    # Get from DT_#
+    dt = float(data[3:])
+    print ( "dt = " + str(dt) )
+    global_algorithm.display_interval = dt
 
 
+  if global_zpa != None:
+    global_zpa.queue_draw()
+
+  return False
+
+def step_callback(zpa):
+  menu_callback ( None, "Step" )
+  return True
+
+def run_callback(zpa):
+  menu_callback ( None, "Start" )
+  return True
+
+def stop_callback(zpa):
+  menu_callback ( None, "Stop" )
+  return True
 
 
-# Update when a mouse button is pressed
-def button_press_callback ( widget, event ):
-  widget.queue_draw()
+def reset_callback(zpa):
+  zpa.reset_view()
+  zpa.queue_draw()
+  return True
+
+
+def background_callback ( zpa ):
+  # print ( "Background work with zpa = " + str(zpa) )
+  # print ( "Background work with arg2 = " + str(arg2) )
+  global global_algorithm
+  global global_zpa
+
+  if global_algorithm != None:
+    global_algorithm.update()
+
+  if global_zpa != None:
+    global_zpa.queue_draw()
+
   return True
 
 
 
-
-class menu_window:
-
-  """
-  def idle_callback ( self ):
-    global global_canvas
-    global_canvas.queue_draw()
-    print ( "Idle" )
-    return True
-  """
-
-  def background_callback ( self, arg1, data=None ):
-    # print ( "Background work with arg1 = " + str(arg1) )
-    global global_algorithm
-    global global_canvas
-    global_algorithm.update()
-    global_canvas.queue_draw()
-    return True
-
-
-
-  def delete_callback ( self, widget, event, data=None ):
-    gtk.main_quit()
-    return False
-
-  def open_callback ( self, widget, data=None ):
-    print ( "Open with data = " + str(data) )
-    return False
-
-  def save_callback ( self, widget, data=None ):
-    print ( "Save with data = " + str(data) )
-    return False
-
-  def save_as_callback ( self, widget, data=None ):
-    print ( "Save As with data = " + str(data) )
-    return False
-
-  """
-  def cmd_callback ( self, widget, data=None ):
-    global_window.update_statusbar ( "Running ..." )
-
-  def cmd_callback ( self, widget, data=None ):
-    global global_algorithm
-    global global_data
-    global global_canvas
-    global global_window
-    # gobject.idle_add ( self.idle_callback )
-    dt = 1.0
-    if data != None:
-      # Get from dt_#
-      dt = float(data[3:])
-    global_algorithm.display_interval = dt
-    global_window.update_statusbar ( "Running ..." )
-  """
-
-
-  def cmd_callback ( self, widget, data=None ):
-    global global_algorithm
-    global global_data
-    global global_window
-
-    print ( "Command with data = " + str(data) )
-
-    if data == "Step":
-      global_algorithm.step = True
-
-    if data == "Start":
-      global_algorithm.last_update_time = time.time()
-
-    elif data == "Stop":
-      global_algorithm.last_update_time = 1e308  # This is a very very long time away
-
-    elif data == "QuadTree":
-      global_algorithm = QuadTree( xmin=-2, ymin=-2, xmax=2, ymax=2, max_objects=5 )
-      for obj in global_data:
-        global_algorithm.add_object ( obj )
-      global_window.update_statusbar ( "QuadTree" )
-
-    elif data == "SpatialHash":
-      global_algorithm = SpatialHash( xmin=-2, ymin=-2, xmax=2, ymax=2, spatial_resolution=0.2 )
-      for obj in global_data:
-        global_algorithm.add_object ( obj )
-      global_window.update_statusbar ( "SpatialHash" )
-
-    elif data == "RANDOM":
-
-      global_data = []
-
-      for i in range(1,7):
-        global_data.append ( locatable_object(i/10.0, i/10.0, (1.0,0,0)) )
-
-      for i in range(15,20):
-        global_data.append ( locatable_object(i/10.0, -i/10.0, (0,1.0,0)) )
-
-      for i in range(100):
-        x = random.gauss(0.75,0.1)
-        y = random.gauss(x, 0.05)
-        global_data.append ( locatable_object(x-2, -(1+y), (0.2,0.2,1.0)) )
-
-      for i in range(100):
-        global_data.append ( locatable_object(random.gauss(0,0.05), random.gauss(-1,0.05), (1.0,1.0,0.0)) )
-
-      for i in range(100):
-        global_data.append ( locatable_object(random.uniform(-2,-1.5), random.uniform(-1,0), (0,1.0,1.0)) )
-
-      for i in range(100):
-        global_data.append ( locatable_object(random.gauss(1,.1), random.gauss(1,0.5), (1.0,0,1.0)) )
-
-      for i in range(50):
-        global_data.append ( locatable_object(random.uniform(0.1,0.4), random.uniform(2.1,2.2), (0.8,0.6,0)) )
-
-      for i in range(50):
-        global_data.append ( locatable_object(random.uniform(0.6,0.9), random.uniform(-2.2,-2.1), (0.8,0.6,0)) )
-
-      for i in range(50):
-        global_data.append ( locatable_object(random.uniform(2.1,2.2), random.uniform(0.65,0.85), (0.8,0.6,0)) )
-
-      for i in range(50):
-        global_data.append ( locatable_object(random.uniform(-2.2,-2.1), random.uniform(-1.4,-1.1), (0.8,0.6,0)) )
-
-      global_algorithm.clear()
-      for obj in global_data:
-        global_algorithm.add_object ( obj )
-
-    elif data[0:9] == "GAUSSIAN_":
-      n = int(data[9:])
-      global_data = []
-      for i in range(n):
-        global_data.append ( locatable_object(random.gauss(0,.1), random.gauss(0,0.1), (0.0,1.0,0.0)) )
-      global_algorithm.clear()
-      for obj in global_data:
-        global_algorithm.add_object ( obj )
-
-    elif data == "DIAGONAL_10":
-      global_data = []
-      for i in range(0,10):
-        global_data.append ( locatable_object(i/10.0, i/10.0, (1.0,0,0)) )
-      global_algorithm.clear()
-      for obj in global_data:
-        global_algorithm.add_object ( obj )
-
-    elif data[0:3] == "DT_":
-      # Get from DT_#
-      dt = float(data[3:])
-      print ( "dt = " + str(dt) )
-      global_algorithm.display_interval = dt
-
-    global_canvas.queue_draw()
-
-    return False
-
-
-  def dump_callback ( self, widget, data=None ):
-    global global_algorithm
-    global_algorithm.print_self()
-
-
-  def set_cursor_callback ( self, widget, data=None ):
-    self.drawing_area.window.set_cursor ( gtk.gdk.Cursor(gtk.gdk.DRAFT_SMALL) )  # DRAFT_SMALL TARGET SB_UP_ARROW CROSS CROSSHAIR CENTER_PTR CIRCLE DIAMOND_CROSS IRON_CROSS PLUS CROSS_REVERSE DOT DOTBOX FLEUR
-
-  def print_callback ( self, widget, data=None ):
-    return False
-
-  def quit_callback ( self, widget, data=None ):
-    print ( "Quit with data = " + str(data) )
-    gtk.main_quit()
-    return False
-
-  def update_statusbar(self, status=""):
-    # clear any previous message, underflow is allowed
-    self.status_bar.pop(0)
-    self.status_bar.push ( 0, status )
-
-  def add_menu ( self, label ):
-    menu = gtk.Menu()
-    item = gtk.MenuItem(label)
-    item.set_submenu ( menu )
-    item.show()
-    return (menu, item)
-
-  def add_menu_item ( self, parent, callback, label, data, key=None, mask=gtk.gdk.CONTROL_MASK, ):
-    item = gtk.MenuItem(label=label)
-    item.connect ( "activate", callback, data )
-    if key != None:
-      item.add_accelerator("activate", self.accel_group, ord(key), mask, gtk.ACCEL_VISIBLE)
-    parent.append ( item )
-    item.show()
-
-  def add_menu_sep ( self, parent ):
-    item = gtk.SeparatorMenuItem()
-    parent.append ( item )
-    item.show()
-
-
-  def __init__(self):
-    self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-    self.window.set_size_request(800, 800)
-    self.window.set_title ( "Python Spatial Storage" )
-    self.window.connect ( "delete_event", self.delete_callback )
-    # Prepare for tooltips
-    self.tooltips = gtk.Tooltips()
-
-    self.vbox = gtk.VBox ( homogeneous=False, spacing=0 )
-    self.window.add(self.vbox)  # The window can only contain one child object
-
-    self.window.show() # Must show before usable to create any pixmaps
-
-    self.menu_bar = gtk.MenuBar()
-    self.accel_group = gtk.AccelGroup()
-    self.window.add_accel_group(self.accel_group)
-
-
-    (self.file_menu, self.file_item) = self.add_menu ( "_File" )
-
-    self.add_menu_item ( self.file_menu, self.open_callback, "_Open...", "Open", 'O' )
-    self.add_menu_sep  ( self.file_menu )
-    self.add_menu_item ( self.file_menu, self.save_callback, "_Save", "Save" )
-    self.add_menu_item ( self.file_menu, self.save_as_callback, "Save _As...", "Save As...", 'S', mask=gtk.gdk.CONTROL_MASK|gtk.gdk.SHIFT_MASK )
-    self.add_menu_sep  ( self.file_menu )
-    self.add_menu_item ( self.file_menu, self.quit_callback, "_Quit", "Quit", 'Q' )
-
-    (self.algorithm_menu, self.algorithm_item) = self.add_menu ( "_Algorithm" )
-
-    self.add_menu_item ( self.algorithm_menu, self.cmd_callback, "QuadTree", "QuadTree" )
-    self.add_menu_item ( self.algorithm_menu, self.cmd_callback, "SpatialHash", "SpatialHash" )
-
-    (self.display_menu, self.display_item) = self.add_menu ( "_Data" )
-
-    self.add_menu_item ( self.display_menu, self.cmd_callback, "Clusters", "RANDOM" )
-    self.add_menu_item ( self.display_menu, self.cmd_callback, "Gaussian 10", "GAUSSIAN_10" )
-    self.add_menu_item ( self.display_menu, self.cmd_callback, "Gaussian 100", "GAUSSIAN_100" )
-    self.add_menu_item ( self.display_menu, self.cmd_callback, "Gaussian 1000", "GAUSSIAN_1000" )
-    self.add_menu_item ( self.display_menu, self.cmd_callback, "Gaussian 10000", "GAUSSIAN_10000" )
-    self.add_menu_item ( self.display_menu, self.cmd_callback, "Diagonal 10", "DIAGONAL_10" )
-
-    self.add_menu_item ( self.display_menu, self.dump_callback, "Dump", "DUMP" )
-
-    (self.run_menu, self.run_item) = self.add_menu ( "_Run" )
-
-    self.add_menu_item ( self.run_menu, self.cmd_callback, "Step", "Step", 'S' )
-    self.add_menu_item ( self.run_menu, self.cmd_callback, "Start", "Start" )
-    self.add_menu_item ( self.run_menu, self.cmd_callback, "Sto_p", "Stop" )
-    #self.add_menu_sep  ( self.run_menu )
-    #self.add_menu_item ( self.run_menu, self.cmd_callback, "Rese_t", "Reset" )
-    self.add_menu_sep  ( self.run_menu )
-    self.add_menu_item ( self.run_menu, self.cmd_callback, "dt _0.0",  "DT_0.0"      )
-    self.add_menu_item ( self.run_menu, self.cmd_callback, "dt 0.1",   "DT_0.1"      )
-    self.add_menu_item ( self.run_menu, self.cmd_callback, "dt 0.2",   "DT_0.2"      )
-    self.add_menu_item ( self.run_menu, self.cmd_callback, "dt 0.5",   "DT_0.5"      )
-    self.add_menu_item ( self.run_menu, self.cmd_callback, "dt _1.0",  "DT_1",   '1' )
-    self.add_menu_item ( self.run_menu, self.cmd_callback, "dt _2.0",  "DT_2",   '2' )
-    self.add_menu_item ( self.run_menu, self.cmd_callback, "dt _3.0",  "DT_3",   '3' )
-    self.add_menu_item ( self.run_menu, self.cmd_callback, "dt _4.0",  "DT_4",   '4' )
-    self.add_menu_item ( self.run_menu, self.cmd_callback, "dt _5.0",  "DT_5",   '5' )
-    self.add_menu_item ( self.run_menu, self.cmd_callback, "dt 10.0",  "DT_10"       )
-
-    (self.print_menu, self.print_item) = self.add_menu ( "_Print" )
-
-    self.add_menu_item ( self.print_menu, self.print_callback, "Print 1", 1 )
-    self.add_menu_item ( self.print_menu, self.print_callback, "Print 2", 2 )
-    self.add_menu_item ( self.print_menu, self.print_callback, "Print 4", 4 )
-    self.add_menu_item ( self.print_menu, self.print_callback, "Print 10", 10 )
-    self.add_menu_item ( self.print_menu, self.print_callback, "Print 100", 100 )
-    self.add_menu_item ( self.print_menu, self.print_callback, "Print 1000", 1000 )
-    self.add_menu_item ( self.print_menu, self.print_callback, "Print 10000", 10000 )
-    self.add_menu_item ( self.print_menu, self.print_callback, "Print 100000", 100000 )
-    self.add_menu_item ( self.print_menu, self.print_callback, "Print 1000000", 1000000 )
-
-
-    self.menu_bar.append ( self.file_item )
-    self.menu_bar.append ( self.algorithm_item )
-    self.menu_bar.append ( self.display_item )
-    self.menu_bar.append ( self.run_item )
-    self.menu_bar.append ( self.print_item )
-
-    self.vbox.pack_start(self.menu_bar, expand=False, fill=False, padding=0)
-    self.menu_bar.show()
-
-
-
-    self.drawing_area = gtk.DrawingArea()
-    global global_canvas
-    global_canvas = self.drawing_area
-
-    self.drawing_area.connect ( "configure_event", configure_event_callback )
-    self.drawing_area.connect ( "expose_event", canvas_expose_callback )
-    self.drawing_area.connect ( "button_press_event", button_press_callback )
-    self.drawing_area.connect ( "motion_notify_event", mouse_motion_callback )
-    self.drawing_area.connect ( "scroll_event", mouse_scroll_callback )
-
-    self.drawing_area.connect ( "realize", self.set_cursor_callback )
-
-    self.drawing_area.set_events ( gtk.gdk.EXPOSURE_MASK
-                                 | gtk.gdk.LEAVE_NOTIFY_MASK
-                                 | gtk.gdk.BUTTON_PRESS_MASK
-                                 | gtk.gdk.POINTER_MOTION_MASK
-                                 | gtk.gdk.POINTER_MOTION_HINT_MASK )
-
-    self.drawing_area.grab_focus()
-
-    self.vbox.pack_start(self.drawing_area, expand=True, fill=True, padding=0)
-    self.drawing_area.show()
-
-
-
-
-    self.status_bar = gtk.Statusbar()
-    self.vbox.pack_start(self.status_bar, expand=False, fill=True, padding=0)
-    self.status_bar.show()
-
-    self.vbox.show()
-
-    self.update_statusbar()
-
-
-    #__import__('code').interact(local = locals())
-
-
-
 def main():
-  global global_window
-  global_window = menu_window()
-  # Make a few calls to initialize the otherwise blank window
-  global_window.cmd_callback ( None, "QuadTree" )
-  global_window.cmd_callback ( None, "RANDOM" )
-  gtk.idle_add ( global_window.background_callback, "Arg1" )
-  gtk.main()
+  print ( 80 * "=" )
 
+  window = gtk.Window ( gtk.WINDOW_TOPLEVEL )
+  window.set_title ( "User Window Testing" )
+
+  window.connect ( "destroy", lambda w: gtk.main_quit() )
+
+  vbox = gtk.VBox ( homogeneous=False, spacing=0 )
+  window.add(vbox)
+
+  window.show() # Must show before usable to create any pixmaps
+  vbox.show()
+
+  accel_group = gtk.AccelGroup()
+  window.add_accel_group(accel_group)
+
+  zpa = app_window.zoom_pan_area(window,400,300,"SquareWin")
+  global global_zpa
+  global_zpa = zpa
+
+  menu_bar = gtk.MenuBar()
+  vbox.pack_start(menu_bar, expand=False, fill=False, padding=0)
+  """
+  (file_menu, file_item) = zpa.add_menu ( "_File" )
+
+  zpa.add_menu_item ( file_menu, menu_callback, "_Open...", "Open", 'O' )
+  zpa.add_menu_sep  ( file_menu )
+  zpa.add_menu_item ( file_menu, menu_callback, "_Save", "Save" )
+  zpa.add_menu_item ( file_menu, menu_callback, "Save _As...", "Save As...", 'S', mask=gtk.gdk.CONTROL_MASK|gtk.gdk.SHIFT_MASK )
+  zpa.add_menu_sep  ( file_menu )
+  zpa.add_menu_item ( file_menu, menu_callback, "_Quit", "Quit", 'Q' )
+  """
+
+  (algorithm_menu, algorithm_item) = zpa.add_menu ( "_Algorithm" )
+  if True:
+    zpa.add_menu_item ( algorithm_menu, menu_callback, "_QuadTree", "QuadTree" )
+    (quadtree_menu, quadtree_item) = zpa.add_menu ( "QuadTree Options" )
+    if True:
+      zpa.add_menu_item ( quadtree_menu, menu_callback, "Max Items 1", "QuadTree_Max_Items_1" )
+      zpa.add_menu_item ( quadtree_menu, menu_callback, "Max Items 2", "QuadTree_Max_Items_2" )
+      zpa.add_menu_item ( quadtree_menu, menu_callback, "Max Items 5", "QuadTree_Max_Items_5" )
+      zpa.add_menu_item ( quadtree_menu, menu_callback, "Max Items 10", "QuadTree_Max_Items_10" )
+      zpa.add_menu_item ( quadtree_menu, menu_callback, "Max Items 20", "QuadTree_Max_Items_20" )
+      zpa.add_menu_item ( quadtree_menu, menu_callback, "Max Items 50", "QuadTree_Max_Items_50" )
+      zpa.add_menu_item ( quadtree_menu, menu_callback, "Max Items 100", "QuadTree_Max_Items_100" )
+    algorithm_menu.append ( quadtree_item )
+    zpa.add_menu_item ( algorithm_menu, menu_callback, "SpatialHash", "SpatialHash" )
+
+  (display_menu, display_item) = zpa.add_menu ( "_Data" )
+  if True:
+    zpa.add_menu_item ( display_menu, menu_callback, "Clusters", "CLUSTERS" )
+    zpa.add_menu_item ( display_menu, menu_callback, "Gaussian 10", "GAUSSIAN_10" )
+    zpa.add_menu_item ( display_menu, menu_callback, "Gaussian 100", "GAUSSIAN_100" )
+    zpa.add_menu_item ( display_menu, menu_callback, "Gaussian 1000", "GAUSSIAN_1000" )
+    zpa.add_menu_item ( display_menu, menu_callback, "Gaussian 10000", "GAUSSIAN_10000" )
+    zpa.add_menu_item ( display_menu, menu_callback, "Diagonal 10", "DIAGONAL_10" )
+    zpa.add_menu_item ( display_menu, menu_callback, "Dump", "DUMP" )
+
+  (run_menu, run_item) = zpa.add_menu ( "_Run" )
+  if True:
+    zpa.add_menu_item ( run_menu, menu_callback, "Step", "Step", 'S' )
+    zpa.add_menu_item ( run_menu, menu_callback, "_Start", "Start" )
+    zpa.add_menu_item ( run_menu, menu_callback, "Sto_p", "Stop" )
+    zpa.add_menu_item ( run_menu, menu_callback, "Rese_t View", "Reset" )
+    zpa.add_menu_sep  ( run_menu )
+    zpa.add_menu_item ( run_menu, menu_callback, "dt _0.0",  "DT_0.0"      )
+    zpa.add_menu_item ( run_menu, menu_callback, "dt 0.01",  "DT_0.01"     )
+    zpa.add_menu_item ( run_menu, menu_callback, "dt 0.1",   "DT_0.1"      )
+    zpa.add_menu_item ( run_menu, menu_callback, "dt 0.2",   "DT_0.2"      )
+    zpa.add_menu_item ( run_menu, menu_callback, "dt 0.5",   "DT_0.5"      )
+    zpa.add_menu_item ( run_menu, menu_callback, "dt _1.0",  "DT_1",   '1' )
+    zpa.add_menu_item ( run_menu, menu_callback, "dt _2.0",  "DT_2",   '2' )
+    zpa.add_menu_item ( run_menu, menu_callback, "dt _3.0",  "DT_3",   '3' )
+    zpa.add_menu_item ( run_menu, menu_callback, "dt _4.0",  "DT_4",   '4' )
+    zpa.add_menu_item ( run_menu, menu_callback, "dt _5.0",  "DT_5",   '5' )
+    zpa.add_menu_item ( run_menu, menu_callback, "dt 10.0",  "DT_10"       )
+    zpa.add_menu_sep  ( run_menu )
+    zpa.add_menu_item ( run_menu, menu_callback, "De_bug", "Debug" )
+
+  """
+  (print_menu, print_item) = zpa.add_menu ( "_Print" )
+
+  print_intervals = [1, 2, 4, 10, 100, 1000, 10000, 100000, 1000000]
+  for i in print_intervals:
+    zpa.add_menu_item ( print_menu, menu_callback, "Print "+str(i), i )
+  """
+
+  """
+  menu_bar.append ( file_item )
+  """
+  menu_bar.append ( algorithm_item )
+  menu_bar.append ( display_item )
+  menu_bar.append ( run_item )
+  """
+  menu_bar.append ( print_item )
+  """
+
+  menu_bar.show()
+
+
+  ###########
+  
+  drawing_area = zpa.get_drawing_area()
+  drawing_area.connect ( "expose_event", expose_callback, zpa )
+  drawing_area.connect ( "motion_notify_event", mouse_motion_callback )
+
+  reset_callback ( zpa )
+
+  ###########
+  
+  vbox.pack_start(drawing_area, True, True, 0)
+
+  drawing_area.show()
+  drawing_area.grab_focus()
+
+  hbox = gtk.HBox ( True, 0 )
+  hbox.show()
+  vbox.pack_start ( hbox, False, False, 0 )
+
+  step_button = gtk.Button("Step")
+  hbox.pack_start ( step_button, True, True, 0 )
+  step_button.connect_object ( "clicked", step_callback, zpa )
+  step_button.show()
+
+  run_button = gtk.Button("Run")
+  hbox.pack_start ( run_button, True, True, 0 )
+  run_button.connect_object ( "clicked", run_callback, zpa )
+  run_button.show()
+
+  stop_button = gtk.Button("Stop")
+  hbox.pack_start ( stop_button, True, True, 0 )
+  stop_button.connect_object ( "clicked", stop_callback, zpa )
+  stop_button.show()
+
+  redraw_button = gtk.Button("Reset View")
+  hbox.pack_start ( redraw_button, True, True, 0 )
+  redraw_button.connect_object ( "clicked", reset_callback, zpa )
+  redraw_button.show()
+
+
+  window.show()
+
+  zpa.set_cursor ( gtk.gdk.HAND2 )
+
+  # gtk.idle_add ( reset_callback, zpa )
+  menu_callback ( None, "QuadTree" )
+  menu_callback ( None, "CLUSTERS" )
+  gtk.idle_add ( background_callback, zpa )
+
+  gtk.main()
+  return 0
 
 if __name__ == '__main__':
   main()

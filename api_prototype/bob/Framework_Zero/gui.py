@@ -213,7 +213,7 @@ def main():
 
   # Create a top-level GTK window
   window = gtk.Window ( gtk.WINDOW_TOPLEVEL )
-  window.set_name ( "2D Diffusion" )
+  window.set_title ( "2D Diffusion" )
 
   # Create a zoom/pan area to hold all of the drawing
   zpa = app_window.zoom_pan_area(window,600,500,"2D Diffusion")

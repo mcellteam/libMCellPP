@@ -18,7 +18,7 @@ pkg_config = `pkg-config --cflags --libs gtk+-2.0`
 
 
 gui: gui.c makefile
-	gcc gui.c -o gui $(pkg_config)
+	gcc gui.c -o gui -lm $(pkg_config)
 
 .PHONY: clean
 clean:

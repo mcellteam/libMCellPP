@@ -256,7 +256,7 @@ def button_release_callback ( widget, event ):
 
 
 def mouse_motion_callback ( canvas, event ):
-  width, height = canvas.window.get_size()
+  # width, height = canvas.window.get_size()
   if event.state == 0:
     #print ( "Hover: x = " + str(event.x) + ", y = " + str(event.y) + "  state = " + str(event.state) )
     pass

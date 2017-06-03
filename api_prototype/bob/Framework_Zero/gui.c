@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <gtk/gtk.h>
+#include <math.h>
 
 static void menuitem_response ( gchar * );
 
@@ -15,10 +16,173 @@ typedef struct shape_struct {
 
 static shape *shapes = NULL;
 
+typedef struct zoom_pan_area_struct {
+  double x_offset;
+  double y_offset;
+  double x_scale;
+  double y_scale;
+  int aspect_fixed; // bool
+  long scroll_count;
+  double scroll_factor;
+  double zoom_scale;
+  int dragging; // bool
+  int last_x;
+  int last_y;
+} zoom_pan_area;
+
+static zoom_pan_area zpa;
+
+static void set_zoom_pan_defaults() {
+  zpa.x_offset = 0.0;
+  zpa.y_offset = 0.0;
+  zpa.x_scale = 1.0;
+  zpa.y_scale = 1.0;
+  zpa.aspect_fixed = TRUE;
+  zpa.scroll_count = 0;
+  zpa.scroll_factor = 1.25;
+  zpa.zoom_scale = 1.0;
+  zpa.dragging = FALSE;
+  zpa.last_x = 0;
+  zpa.last_y = 0;
+}
+
+static void set_x_scale ( double user_x1, int win_x1, double user_x2, int win_x2 ) {
+  zpa.x_scale  = (win_x2 - win_x1) / (user_x2 - user_x1);
+  zpa.x_offset = win_x1 - ( user_x1 * zpa.x_scale );
+}
+
+static void set_y_scale ( double user_y1, int win_y1, double user_y2, int win_y2 ) {
+  zpa.y_scale  = (win_y2 - win_y1) / (user_y2 - user_y1);
+  zpa.y_offset = win_y1 - ( user_y1 * zpa.y_scale );
+}
+
+static double wx ( double user_x ) {
+  return ( zpa.x_offset + (user_x * zpa.x_scale * zpa.zoom_scale ) );
+}
+static double wy ( double user_y ) {
+  return ( zpa.y_offset + (user_y * zpa.y_scale * zpa.zoom_scale ) );
+}
+static double ww ( double user_w ) {
+  return ( user_w * zpa.x_scale * zpa.zoom_scale );
+}
+static double wh ( double user_h ) {
+  return ( user_h * zpa.y_scale * zpa.zoom_scale );
+}
+
+static int wxi ( double user_x ) {
+  return ( (int)(round(wx(user_x))) );
+}
+static int wyi ( double user_y ) {
+  return ( (int)(round(wy(user_y))) );
+}
+static int wwi ( double user_w ) {
+  return ( (int)(round(ww(user_w))) );
+}
+static int whi ( double user_h ) {
+  return ( (int)(round(wh(user_h))) );
+}
+
+static double x ( int win_x ) {
+  return ( (win_x - zpa.x_offset) / (zpa.x_scale * zpa.zoom_scale) );
+}
+static double y ( int win_y ) {
+  return ( (win_y - zpa.y_offset) / (zpa.y_scale * zpa.zoom_scale) );
+}
+static double w ( int win_w ) {
+  return ( win_w / (zpa.x_scale * zpa.zoom_scale) );
+}
+static double h ( int win_h ) {
+  return ( win_h / (zpa.y_scale * zpa.zoom_scale) );
+}
+
+static void zoom_at_point ( int zoom_delta, int at_x, int at_y ) {
+  // First save the mouse location in user space before the zoom
+  double user_x_at_zoom = x(at_x);
+  double user_y_at_zoom = y(at_y);
+  // Perform the zoom by changing the zoom scale
+  zpa.scroll_count += zoom_delta;
+  zpa.zoom_scale = pow (zpa.scroll_factor, zpa.scroll_count);
+  // Get the new window coordinates of the previously saved user space location
+  int win_x_after_zoom = wx ( user_x_at_zoom );
+  int win_y_after_zoom = wy ( user_y_at_zoom );
+  // Adjust the offsets (window coordinates) to keep user point at same location
+  zpa.x_offset += at_x - win_x_after_zoom;
+  zpa.y_offset += at_y - win_y_after_zoom;
+}
+
+
+static gboolean mouse_scroll_callback( GtkWidget *widget, GdkEventScroll *event, gpointer data )
+{
+  // g_print ( "Got a mouse scroll event with data = %ld\n", (long)data );
+  // g_print ( "  location = %lg,%lg", event->x, event->y );
+  if (event->direction == GDK_SCROLL_UP) {
+    // g_print ( "    up\n" );
+    zoom_at_point (  1, event->x, event->y );
+  } else if (event->direction == GDK_SCROLL_DOWN) {
+    // g_print ( "    down\n" );
+    zoom_at_point ( -1, event->x, event->y );
+  }
+  gdk_window_invalidate_rect (widget->window, NULL, TRUE);
+  return TRUE;
+}
+
+
+
+
+static gboolean button_press_callback ( GtkWidget *widget, GdkEventButton *event ) {
+  if (event->button == 1) {
+    // g_print ( "button press\n" );
+    zpa.last_x = event->x;
+    zpa.last_y = event->y;
+    zpa.dragging = TRUE;
+  }
+  gdk_window_invalidate_rect (widget->window, NULL, TRUE);
+  return TRUE;  // Event has been handled, do not propagate further
+}
+
+static gboolean button_release_callback ( GtkWidget *widget, GdkEventButton *event ) {
+  if (event->button == 1) {
+    // g_print ( "button release\n" );
+    zpa.x_offset += (event->x - zpa.last_x);
+    zpa.y_offset += (event->y - zpa.last_y);
+    zpa.last_x = event->x;
+    zpa.last_y = event->y;
+    zpa.dragging = FALSE;
+  }
+  gdk_window_invalidate_rect (widget->window, NULL, TRUE);
+  return TRUE;  // Event has been handled, do not propagate further
+}
+
+static gboolean mouse_motion_callback( GtkWidget *widget, GdkEventMotion *event, gpointer data ) {
+  int x, y;
+  GdkModifierType state;
+
+  if (event->is_hint) {
+    gdk_window_get_pointer (event->window, &x, &y, &state);
+  } else {
+    x = event->x;
+    y = event->y;
+    state = event->state;
+  }
+
+  // g_print ( "Got a mouse motion event with data = %ld\n", (long)data );
+  // g_print ( "  location = %lg,%lg\n", event->x, event->y );
+  // g_print ( "  state = %d\n", state );
+
+  if (state == 0) {
+  } else if (state == 256) {
+    zpa.x_offset += (x - zpa.last_x);
+    zpa.y_offset += (y - zpa.last_y);
+    zpa.last_x = x;
+    zpa.last_y = y;
+    gdk_window_invalidate_rect (widget->window, NULL, TRUE);
+  }
+  return TRUE;
+}
 
 static gboolean expose_event_callback( GtkWidget *widget, GdkEventExpose *event, gpointer data )
 {
-  g_print ( "Got an expose event with data = %d\n", (int)data );
+  // g_print ( "Got an expose event with data = %ld\n", (long)data );
   /* Redraw the screen from the backing pixmap */
   //gdk_draw_drawable (widget->window, widget->style->fg_gc[gtk_widget_get_state (widget)], pixmap,
   //                   event->area.x, event->area.y, event->area.x, event->area.y, event->area.width, event->area.height);
@@ -45,7 +209,7 @@ static gboolean expose_event_callback( GtkWidget *widget, GdkEventExpose *event,
     gdk_colormap_alloc_color ( colormap, &color, FALSE, TRUE );
     gdk_gc_set_foreground ( gc, &color );
     // g_print ( "  Drawing Circle: x = %d, y = %d, w = %d, h = %d\n", sx, sy, sw, sh );
-    gdk_draw_arc ( widget->window, gc, FALSE, sx, sy, sw, sh, 0, 360*64 );
+    gdk_draw_arc ( widget->window, gc, FALSE, wxi(sx), wyi(sy), ww(sw), wh(sh), 0, 360*64 );
     next_shape = next_shape->next;
   }
   return TRUE;
@@ -115,6 +279,10 @@ int main( int   argc, char *argv[] )
   char buf[128];
   int i;
 
+  set_zoom_pan_defaults();
+  set_x_scale ( 0.0, 0, 100.0, 100 );
+  set_x_scale ( 0.0, 0, 100.0, 100 );
+
   gtk_init (&argc, &argv);
 
   // Create a top-level GTK window
@@ -177,10 +345,17 @@ int main( int   argc, char *argv[] )
 
   // Create the drawing area
   drawing_area = gtk_drawing_area_new();
-  g_signal_connect (drawing_area, "expose_event", G_CALLBACK (expose_event_callback), (gpointer)3);
+  g_signal_connect ( drawing_area, "expose_event", G_CALLBACK (expose_event_callback), (gpointer)3 );
+  g_signal_connect ( drawing_area, "scroll_event", G_CALLBACK (mouse_scroll_callback), (gpointer)3 );
+  g_signal_connect ( drawing_area, "button_press_event", G_CALLBACK (button_press_callback), (gpointer)3 );
+  g_signal_connect ( drawing_area, "button_release_event", G_CALLBACK (button_release_callback), (gpointer)3 );
+  g_signal_connect ( drawing_area, "motion_notify_event", G_CALLBACK (mouse_motion_callback), (gpointer)3 );
+  gtk_widget_set_events (drawing_area, (gint)(GDK_EXPOSURE_MASK | GDK_SCROLL_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK) );
   gtk_widget_set_size_request ( drawing_area, (gint)600, (gint)500 );
   gtk_box_pack_start ( GTK_BOX(vbox), drawing_area, TRUE, TRUE, 0 );
   gtk_widget_show ( drawing_area );
+
+
 
 
   // Create a horizontal box to hold application buttons

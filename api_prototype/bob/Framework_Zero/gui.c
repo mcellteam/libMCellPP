@@ -4,10 +4,7 @@
 #include <stdio.h>
 #include <gtk/gtk.h>
 
-static gboolean button_press ( GtkWidget *, GdkEvent * );
 static void menuitem_response ( gchar * );
-
-
 
 typedef struct shape_struct {
   char type;
@@ -120,20 +117,25 @@ int main( int   argc, char *argv[] )
 
   gtk_init (&argc, &argv);
 
+  // Create a top-level GTK window
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  // gtk_widget_set_size_request ( GTK_WIDGET ( window ), 200, 100 );
   gtk_window_set_title ( GTK_WINDOW ( window ), "2D Diffusion" );
+
   g_signal_connect ( window, "delete-event", G_CALLBACK ( gtk_main_quit ), NULL );
 
 
+  // Create a vertical box to hold the menu, drawing area, and buttons
   vbox = gtk_vbox_new ( FALSE, 0 );
   gtk_container_add ( GTK_CONTAINER ( window ), vbox );
   gtk_widget_show ( vbox );
 
 
+  // Create a menu bar and add it to the vertical box
+  menu_bar = gtk_menu_bar_new();
+  gtk_box_pack_start ( GTK_BOX(vbox), menu_bar, FALSE, FALSE, 2 );
 
+  // Create an "Options" menu
   menu = gtk_menu_new();
-
   menu_item = gtk_menu_item_new_with_label ( "Toggle Legend" );
   gtk_menu_shell_append ( GTK_MENU_SHELL ( menu ), menu_item );
   g_signal_connect_swapped ( menu_item, "activate", G_CALLBACK ( menuitem_response ), (gpointer) g_strdup("ToggleLegend") );
@@ -143,6 +145,7 @@ int main( int   argc, char *argv[] )
   gtk_menu_item_set_submenu ( GTK_MENU_ITEM (options_menu), menu );
 
 
+  // Create a "Speed" menu
   menu = gtk_menu_new();
 
   menu_item = gtk_menu_item_new_with_label ( "Fast" );
@@ -164,16 +167,15 @@ int main( int   argc, char *argv[] )
   gtk_widget_show ( speed_menu );
   gtk_menu_item_set_submenu ( GTK_MENU_ITEM (speed_menu), menu );
 
-  menu_bar = gtk_menu_bar_new();
+  // Append the menus to the menu bar itself
   gtk_menu_shell_append ( GTK_MENU_SHELL ( menu_bar ), options_menu );
   gtk_menu_shell_append ( GTK_MENU_SHELL ( menu_bar ), speed_menu );
 
-
-
-  gtk_box_pack_start ( GTK_BOX(vbox), menu_bar, FALSE, FALSE, 2 );
+  // Show the menu bar itself (everything must be shown!!)
   gtk_widget_show ( menu_bar );
 
 
+  // Create the drawing area
   drawing_area = gtk_drawing_area_new();
   g_signal_connect (drawing_area, "expose_event", G_CALLBACK (expose_event_callback), (gpointer)3);
   gtk_widget_set_size_request ( drawing_area, (gint)600, (gint)500 );
@@ -181,9 +183,12 @@ int main( int   argc, char *argv[] )
   gtk_widget_show ( drawing_area );
 
 
-
+  // Create a horizontal box to hold application buttons
   hbox = gtk_hbox_new ( TRUE, 0 );
   gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
+  gtk_widget_show ( hbox );
+
+  // Add some application specific buttons and their callbacks
 
   button = gtk_button_new_with_label ( "Circle" );
   g_signal_connect (button, "clicked", G_CALLBACK (button_callback), (gpointer)"Circle");
@@ -205,23 +210,15 @@ int main( int   argc, char *argv[] )
   gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0);
   gtk_widget_show (button);
 
-  gtk_widget_show ( hbox );
-
+  // Show the main window
   gtk_widget_show  (window);
 
+  // Turn control over to GTK to run everything from here onward.
   gtk_main ();
 
   return 0;
 }
 
-static gboolean button_press ( GtkWidget *widget, GdkEvent *event ) {
-  if ( event->type == GDK_BUTTON_PRESS ) {
-    GdkEventButton *bevent = (GdkEventButton *) event;
-    gtk_menu_popup ( GTK_MENU (widget), NULL, NULL, NULL, NULL, bevent->button, bevent->time );
-    return TRUE;
-  }
-  return FALSE;
-}
 
 static void menuitem_response ( gchar *string ) {
   printf ( "%s\n", string );

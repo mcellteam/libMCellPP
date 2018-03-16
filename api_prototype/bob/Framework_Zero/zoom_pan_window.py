@@ -59,11 +59,11 @@ class zoom_pan_window:
 
   def wx ( user_x ):
     return ( self.x_offset + (user_x * self.x_scale ) )
-  def wy ( user_y )
+  def wy ( user_y ):
     return ( self.y_offset + (user_y * self.y_scale ) )
-  def ww ( user_w )
+  def ww ( user_w ):
     return ( user_w * self.x_scale )
-  def wh ( user_h )
+  def wh ( user_h ):
     return ( user_h * self.y_scale )
 
   def x ( win_x ):
@@ -84,9 +84,9 @@ class zoom_pan_window:
     self.y_scale  = float(win_y2 - win_y1) / (user_y2 - user_y1)
     self.y_offset = win_y1 - ( user_y1 * self.y_scale )
     
-  def set_fixed_aspect ( True ):
+  def set_fixed_aspect ( fixed_aspect ):
     pass
-  def set_scroll_factor ( 1.1 ):
+  def set_scroll_factor ( scroll_factor ):
     pass
 
   def get_x_min ():
@@ -368,7 +368,7 @@ class zoom_pan_window:
 
 def main():
   global global_window
-  global_window = menu_window()
+  global_window = zoom_pan_window()
   # Make a few calls to initialize the otherwise blank window
   #global_window.cmd_callback ( None, "QuadTree" )
   #global_window.cmd_callback ( None, "RANDOM" )

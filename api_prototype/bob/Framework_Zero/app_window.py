@@ -260,7 +260,7 @@ def mouse_motion_callback ( canvas, event ):
   if event.state == 0:
     #print ( "Hover: x = " + str(event.x) + ", y = " + str(event.y) + "  state = " + str(event.state) )
     pass
-  elif event.state == 256:  # left button -> 256   middle button -> 512   right button -> 1024
+  elif event.state & gtk.gdk.BUTTON1_MASK:
     #print ( "Drag:  x = " + str(event.x) + ", y = " + str(event.y) + "  state = " + str(event.state) )
     #__import__('code').interact(local = locals())
     global_zpa.x_offset += (event.x - global_zpa.last_x)

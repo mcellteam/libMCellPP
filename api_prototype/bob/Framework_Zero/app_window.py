@@ -273,27 +273,30 @@ def mouse_motion_callback ( canvas, event ):
 
 
 def key_press_callback ( widget, event ):
-  # print ( "Key press event: " + str(event.keyval) + " = " + str(event) )
-  # __import__('code').interact(local = locals())
-  global global_zpa
-  if event.keyval == 65363:  # Right arrow: increase the x offset
-    # print ("increasing offset from " + str(global_zpa.x_offset) )
-    global_zpa.x_offset += -10
-    # print ("                    to " + str(global_zpa.x_offset) )
-  if event.keyval == 65361:  # Left arrow: decrease the x offset
-    # print ("decreasing offset from " + str(global_zpa.x_offset) )
-    global_zpa.x_offset += 10
-    # print ("                    to " + str(global_zpa.x_offset) )
-  if event.keyval == 65362:  # Up arrow: increase the y offset
-    # print ("increasing offset from " + str(global_zpa.y_offset) )
-    global_zpa.y_offset += 10
-    # print ("                    to " + str(global_zpa.y_offset) )
-  if event.keyval == 65364:  # Down arrow: decrease the y offset
-    # print ("decreasing offset from " + str(global_zpa.y_offset) )
-    global_zpa.y_offset += -10
-    # print ("                    to " + str(global_zpa.y_offset) )
-  widget.queue_draw()
-  return True  # Event has been handled, do not propagate further
+  print ( "Key press event: " + str(event.keyval) + " = " + str(event) )
+  handled = False
+  if event.type == gtk.gdk.KEY_PRESS:
+    # __import__('code').interact(local={k: v for ns in (globals(), locals()) for k, v in ns.items()})
+    global global_zpa
+    if event.keyval == 65363:  # Right arrow: increase the x offset
+      # print ("increasing offset from " + str(global_zpa.x_offset) )
+      global_zpa.x_offset += -10
+      # print ("                    to " + str(global_zpa.x_offset) )
+    if event.keyval == 65361:  # Left arrow: decrease the x offset
+      # print ("decreasing offset from " + str(global_zpa.x_offset) )
+      global_zpa.x_offset += 10
+      # print ("                    to " + str(global_zpa.x_offset) )
+    if event.keyval == 65362:  # Up arrow: increase the y offset
+      # print ("increasing offset from " + str(global_zpa.y_offset) )
+      global_zpa.y_offset += 10
+      # print ("                    to " + str(global_zpa.y_offset) )
+    if event.keyval == 65364:  # Down arrow: decrease the y offset
+      # print ("decreasing offset from " + str(global_zpa.y_offset) )
+      global_zpa.y_offset += -10
+      # print ("                    to " + str(global_zpa.y_offset) )
+    widget.queue_draw()
+    handled = True  # Event has been handled, do not propagate further
+  return handled
 
 """
 def reset_callback(zpa):

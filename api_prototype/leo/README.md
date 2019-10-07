@@ -12,7 +12,7 @@ Introducing modify_x() was my solution to accommodating dynamic modeling. A good
 
 Using pm.make_object(), there should be 2 ways to define an object:
 
-I. Basic (box, sphere, cylinder, etc.)
+**I. Basic (box, sphere, cylinder, etc.)**
 
 Allows for quick and simple geometry definition. \
 Description Parameters:
@@ -27,7 +27,7 @@ rotate_about = [1,0,0]  # rotates about a line created by this point and the pre
 extrude_length = 1
 ```
 
-II. Advanced (irregular or nonsymmetric shapes)
+**II. Advanced (irregular or nonsymmetric shapes)**
 
 Allows for more complicated geometry definition. \
 Description Parameters:

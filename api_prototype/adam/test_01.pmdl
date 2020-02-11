@@ -1,0 +1,20 @@
+
+time_step = 1e-6
+
+# 4 spaces used as indentation	
+molecule A:
+	diffusion_constant_3d = 1e-6
+
+release rel_a:
+	shape = 'spherical' # not a keyword, but still can be checked statically
+	location = [0, 0, 0]  # array or n-tuple - doesn't matter
+	site_diameter = 0 
+	molecule = A
+	number_to_release = 1
+	release_probability = 1
+	
+	
+# reactions ... how to make it compatible with bngl?
+
+# or use sections? 
+# -> this structure style is more extensible

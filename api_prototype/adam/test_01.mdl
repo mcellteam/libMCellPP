@@ -1,0 +1,26 @@
+# ITERATIONS are not allowed
+
+TIME_STEP = 1e-6
+
+DEFINE_MOLECULES
+{
+  A()
+  {
+  	// TODO: extend with 
+    DIFFUSION_CONSTANT_3D = 1e-6
+  }
+}
+
+INSTANTIATE Scene OBJECT
+{
+  rel_a RELEASE_SITE
+  {
+   SHAPE = SPHERICAL
+   LOCATION = [0, 0, 0]
+   SITE_DIAMETER = 0
+   MOLECULE = A()
+   NUMBER_TO_RELEASE = 1
+   RELEASE_PROBABILITY = 1
+  }
+}
+ 

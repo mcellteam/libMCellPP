@@ -1,4 +1,4 @@
-# ITERATIONS are not allowed
+// ITERATIONS are not allowed
 
 TIME_STEP = 1e-6
 

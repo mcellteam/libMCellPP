@@ -1,0 +1,66 @@
+
+# includes needed
+
+# bngl version
+
+begin parameters
+   # certain parameter names have special meaning
+   # parameter does not have to be defined
+   time_step 1e-6
+end parameters
+
+# what should be keywords and what context-sensitive IDs?
+# everything except for section names will be context-sensitive IDs?
+# -> maybe yes..
+
+# need some way how to extend BNGL base constructs 
+# with struct-like initialization needed for MCell attributes
+begin molecule types
+	A(	
+		B~0~P,
+		diffusion_constant_3d = 1e-6 # the equality operator is incosistent with parameters 
+	)
+	
+	or 
+	A(
+		B~0~P,
+    ) { 
+		diffusion_constant_3d = 1e-6 
+    }
+    	
+    or
+	A(
+		B~0~P,
+    )  
+	.diffusion_constant_3d = 1e-6 
+    .??
+    
+    
+    
+end molecule types
+
+# what can I put into 
+# begin species?
+
+# should we make a new section?
+begin releases
+    rel_1(
+        # named parameters
+        # it would be nice to generate 
+        # these parts of code somehow, because the Python API will use the 
+        # same attributes
+        # -> generate parts of a parser from the python interface
+        #    ??
+        # other ways to share?
+    	shape = 'spherical', # comma is optional? - no, obligatory - same as molecule types
+    	location = [0, 0, 0],
+		site_diameter = 0,
+		molecule = A,
+		number_to_release = 1,
+		release_probability = 1, # last comma is allowed    	
+    )
+end releases
+
+begin observables
+	Molecules A_total  A()
+end observables

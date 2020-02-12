@@ -1,4 +1,17 @@
+# includes
+# similar system as in generated Scene.main.mdl
 
+# our own BNGL?
+
+# is there something standard that we can use?
+# this looks like a very simple language
+
+# multi line comments using """ ... """ - same as in python
+
+
+# each line starts is either with a keyword or another id
+# ids are definitions of parameters 
+# TODO: how to make parameters accessible from Python code?
 time_step = 1e-6
 
 # 4 spaces used as indentation	
@@ -18,3 +31,7 @@ release rel_a:
 
 # or use sections? 
 # -> this structure style is more extensible
+
+
+# generate language from API?
+# rel_a = world.add_release('rel_a', shape='spherical', ... )

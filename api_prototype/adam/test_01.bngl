@@ -3,11 +3,30 @@
 
 # bngl version
 
+# no compartments initially -> associate compartments with geometry (later)
+# use Bob's coverter internally? 
+#  -> other preprocessor types?
+
+# preprocessor -> from some HDL language?
+# we cannot use '#'
+# e.g. https://www.design-reuse.com/articles/45979/system-verilog-macro-a-powerful-feature-for-design-verification-projects.html
+#
+
+
+# 
+units mcell # or put into parameters? -> no, must be defined before everything else? -> weird
+
+
 begin parameters
    # certain parameter names have special meaning
    # parameter does not have to be defined
    time_step 1e-6
 end parameters
+
+# new sections are single-worded
+begin geometry 
+   #...
+end geometry
 
 # what should be keywords and what context-sensitive IDs?
 # everything except for section names will be context-sensitive IDs?
@@ -18,9 +37,14 @@ end parameters
 begin molecule types
 	A(	
 		B~0~P,
-		diffusion_constant_3d = 1e-6 # the equality operator is incosistent with parameters 
+		.diffusion_constant_3d = 1e-6 # the equality operator is incosistent with parameters 
 	)
 	
+    A(    
+        B~0~P,
+        diffusion_constant_3d = 1e-6 
+    )
+    
 	or 
 	A(
 		B~0~P,
@@ -52,6 +76,9 @@ begin releases
         # -> generate parts of a parser from the python interface
         #    ??
         # other ways to share?
+        #
+        # 
+        # 
     	shape = 'spherical', # comma is optional? - no, obligatory - same as molecule types
     	location = [0, 0, 0],
 		site_diameter = 0,
@@ -61,6 +88,15 @@ begin releases
     )
 end releases
 
+# Support 
 begin observables
 	Molecules A_total  A()
 end observables
+
+
+begin python
+# shared functions?
+#def calculate_release_rate():
+
+# are there are some functions in BNGL?
+end python

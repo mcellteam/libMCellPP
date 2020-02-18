@@ -1,0 +1,92 @@
+
+# TODO - figure out how to do the same thing using existing BNGL
+begin releases 
+    
+    pmca_p0_pre_rel (
+        .shape = Scene.a001[axon_membrane],
+        .molecule = pmca_p0', # apostrophe has special meaning in python, comma as well - how to deal with this?
+        # parsing will definitelly neeed to be 2-pass
+        .density = density_pmca_pre*(1-pmca_bound_frac),
+        .release_probability = 1     
+    )
+    
+    ca_pre_rel ( 
+        .shape = Scene.a001,
+        .molecule = ca
+        .concentration = conc_ca,
+        .release_probability = 1     
+    )
+
+  # TODO 
+  pmca_p1_pre_rel RELEASE_SITE
+  {
+   SHAPE = Scene.a001[axon_membrane]
+   MOLECULE = pmca_p1'
+   DENSITY = density_pmca_pre*pmca_bound_frac
+   RELEASE_PROBABILITY = 1
+  }
+  calbindin_h0m0_pre_rel RELEASE_SITE
+  {
+   SHAPE = Scene.a001
+   MOLECULE = calbindin_h0m0
+   CONCENTRATION = conc_calbindin*calbindin_h0m0_fraction
+   RELEASE_PROBABILITY = 1
+  }
+  calbindin_h0m1_pre_rel RELEASE_SITE
+  {
+   SHAPE = Scene.a001
+   MOLECULE = calbindin_h0m1
+   CONCENTRATION = conc_calbindin*calbindin_h0m1_fraction
+   RELEASE_PROBABILITY = 1
+  }
+  calbindin_h0m2_pre_rel RELEASE_SITE
+  {
+   SHAPE = Scene.a001
+   MOLECULE = calbindin_h0m2
+   CONCENTRATION = conc_calbindin*calbindin_h0m2_fraction
+   RELEASE_PROBABILITY = 1
+  }
+  calbindin_h1m0_pre_rel RELEASE_SITE
+  {
+   SHAPE = Scene.a001
+   MOLECULE = calbindin_h1m0
+   CONCENTRATION = conc_calbindin*calbindin_h1m0_fraction
+   RELEASE_PROBABILITY = 1
+  }
+  calbindin_h1m1_pre_rel RELEASE_SITE
+  {
+   SHAPE = Scene.a001
+   MOLECULE = calbindin_h1m1
+   CONCENTRATION = conc_calbindin*calbindin_h1m1_fraction
+   RELEASE_PROBABILITY = 1
+  }
+  calbindin_h1m2_pre_rel RELEASE_SITE
+  {
+   SHAPE = Scene.a001
+   MOLECULE = calbindin_h1m2
+   CONCENTRATION = conc_calbindin*calbindin_h1m2_fraction
+   RELEASE_PROBABILITY = 1
+  }
+  calbindin_h2m0_pre_rel RELEASE_SITE
+  {
+   SHAPE = Scene.a001
+   MOLECULE = calbindin_h2m0
+   CONCENTRATION = conc_calbindin*calbindin_h2m0_fraction
+   RELEASE_PROBABILITY = 1
+  }
+  calbindin_h2m1_pre_rel RELEASE_SITE
+  {
+   SHAPE = Scene.a001
+   MOLECULE = calbindin_h2m1
+   CONCENTRATION = conc_calbindin*calbindin_h2m1_fraction
+   RELEASE_PROBABILITY = 1
+  }
+  calbindin_h2m2_pre_rel RELEASE_SITE
+  {
+   SHAPE = Scene.a001
+   MOLECULE = calbindin_h2m2
+   CONCENTRATION = conc_calbindin*calbindin_h2m2_fraction
+   RELEASE_PROBABILITY = 1
+  }
+}
+

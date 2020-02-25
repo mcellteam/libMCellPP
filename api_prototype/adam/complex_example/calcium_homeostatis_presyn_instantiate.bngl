@@ -1,30 +1,38 @@
 
-# TODO - figure out how to do the same thing using existing BNGL
-begin releases 
-    
-    pmca_p0_pre_rel (
-        .shape = Scene.a001[axon_membrane],
-        .molecule = pmca_p0', # apostrophe has special meaning in python, comma as well - how to deal with this?
-        # parsing will definitelly neeed to be 2-pass
-        .density = density_pmca_pre*(1-pmca_bound_frac),
-        .release_probability = 1     
-    )
-    
-    ca_pre_rel ( 
-        .shape = Scene.a001,
-        .molecule = ca
-        .concentration = conc_ca,
-        .release_probability = 1     
-    )
+# standalone subsystem instantiation
+begin instantiate geometry # better name?
+  a001 ( 
+    .geometry = a001
+  )
+end instantiate geometry  
+
+# TODO - come up with equivalents for BNGL
+# something else that we might need to instantiate?
+begin instantiate releases
+  
+  pmca_p0_pre_rel (
+    .shape = Scene.a001[axon_membrane]
+    .molecule = pmca_p0' # apostrophe has special meaning in python, comma as well - how to deal with this?
+    # parsing will definitelly neeed to be 2-pass
+    .density = density_pmca_pre*(1-pmca_bound_frac)
+    .release_probability = 1   
+  )
+  
+  ca_pre_rel ( 
+    .shape = Scene.a001
+    .molecule = ca
+    .concentration = conc_ca
+    .release_probability = 1   
+  )
+
+  pmca_p1_pre_rel (
+    .shape = Scene.a001[axon_membrane]
+    .molecule = pmca_p1'
+    .density = density_pmca_pre*pmca_bound_frac
+    .release_probability = 1   
+  )
 
   # TODO 
-  pmca_p1_pre_rel RELEASE_SITE
-  {
-   SHAPE = Scene.a001[axon_membrane]
-   MOLECULE = pmca_p1'
-   DENSITY = density_pmca_pre*pmca_bound_frac
-   RELEASE_PROBABILITY = 1
-  }
   calbindin_h0m0_pre_rel RELEASE_SITE
   {
    SHAPE = Scene.a001
@@ -89,4 +97,4 @@ begin releases
    RELEASE_PROBABILITY = 1
   }
 }
-
+end instantiate releases

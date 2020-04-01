@@ -109,7 +109,8 @@ class MoleculeType:
                 raise ValueError('Only objects of Component can be passed when spacializing a MoleculeType.')        
             res.components.append(v)    
         
-        # note: here we can check that the components that we got are a subset of all_components
+        # note: here could be a check that the components that we got are a subset of all_components,
+        # but it would be probably better to do semantic checks in C++ code
         return res 
         
     # prints out the declaration of the component in BNGL (template information)  

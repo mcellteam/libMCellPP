@@ -106,7 +106,7 @@ class MoleculeType:
 
         for v in args:
             if type(v) != Component:
-                raise ValueError('Only objects of Component can be passed when spacializing a MoleculeType.')        
+                raise ValueError('Only objects of Component can be passed when specializing a MoleculeType.')        
             res.components.append(v)    
         
         # note: here could be a check that the components that we got are a subset of all_components,
@@ -188,18 +188,11 @@ print("Component declaration:")
 print(C.to_decl_str())   
 print("")
 
-# the following examples use a component name override because 'b', 'l' or 'r' might collide
-b_comp = Component(
-    name = 'b' 
-) # no states  
 
-l_comp = Component(
-    name = 'l' 
-) # no states  
+b = Component() # no states  
+l = Component()
+r = Component()
 
-r_comp = Component(
-    name = 'r' 
-) # no states  
 
 CaM = MoleculeType(
     name = 'CaM',
@@ -211,7 +204,7 @@ CaMKII = MoleculeType(
     name = 'CaM',
     diff_const =10.0,
     # we need to specify new names for our components
-    components = [b_comp(), Y286(), r_comp(), l_comp()]    
+    components = [b(), Y286(), r(), l()]    
 )
     
 print("Molecule type declaration:")
@@ -222,7 +215,7 @@ print("Molecule type declaration:")
 print(CaMKII.to_decl_str())
 print("")
 
-mol_type_inst = CaMKII( b_comp(), l_comp(), r_comp() )
+mol_type_inst = CaMKII( b(), l(), r() )
 
 print("Molecule type instance:")
 print(mol_type_inst)
@@ -232,8 +225,8 @@ print("")
 # serves as a pattern when used in a reaction
 cplx = Complex( 
     # Y286('0') means Y286~0
-    CaMKII( b_comp(), Y286('0'), l_comp(bond=1), r_comp() ),
-    CaMKII( b_comp(), l_comp(), r_comp(bond=1) )
+    CaMKII( b(), Y286('0'), l(bond=1), r() ),
+    CaMKII( b(), l(), r(bond=1) )
 )
 
 print("Complex instance:")

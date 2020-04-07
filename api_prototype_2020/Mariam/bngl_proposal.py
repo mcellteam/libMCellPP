@@ -15,7 +15,7 @@ STATE_UNSET = 'state_unset'
 # regarding states and bonds, e.g. which are unset, which are don't care  
 # 
 
-class Component:
+class ComponentType:
     def __init__(self, states=[], name=''):
         
         # name and allowed_states serve for component template
@@ -52,7 +52,7 @@ class Component:
         # set component state
         if state != STATE_UNSET:
             if state not in self.allowed_states:
-                msg = 'Component ' + self.name + ': state ' + state + ' is not in allowed states ' + str(self.allowed_states) + '.'
+                msg = 'ComponentType ' + self.name + ': state ' + state + ' is not in allowed states ' + str(self.allowed_states) + '.'
                 raise ValueError(msg)
             else:
                 self.state = state
@@ -88,9 +88,12 @@ class Component:
             
         
 class MoleculeType:
-    def __init__(self, name, diff_const, components=[]):
+    def __init__(self, diff_const, name = '', components=[]):
         # name, diff_const, and all_components serve for component template
-        self.name = name
+        if name: 
+            self.name = name
+        else:
+            self.name = varname() # store the name of the created object variable (maintained with shallow copy)
         self.diff_const = diff_const
         self.all_components = components
         
@@ -105,8 +108,8 @@ class MoleculeType:
         res = copy.deepcopy(self)
 
         for v in args:
-            if type(v) != Component:
-                raise ValueError('Only objects of Component can be passed when specializing a MoleculeType.')        
+            if type(v) != ComponentType:
+                raise ValueError('Only objects of ComponentType can be passed when specializing a MoleculeType.')        
             res.components.append(v)    
         
         # note: here could be a check that the components that we got are a subset of all_components,
@@ -172,36 +175,34 @@ class RxnRule:
         pass
             
     
-C = Component(   
+C = ComponentType(   
     states = [0,1,2]
 )
 
-N = Component(
+N = ComponentType(
     states = [0,1,2]
 )
 
-Y286 = Component(
+Y286 = ComponentType(
     states = ['0','P']
 )
 
-print("Component declaration:")
+print("ComponentType declaration:")
 print(C.to_decl_str())   
 print("")
 
 
-b = Component() # no states  
-l = Component()
-r = Component()
+b = ComponentType() # no states  
+l = ComponentType()
+r = ComponentType()
 
 
 CaM = MoleculeType(
-    name = 'CaM',
     diff_const =10.0,
     components = [C(), N()]
 )
 
 CaMKII = MoleculeType(
-    name = 'CaM',
     diff_const =10.0,
     # we need to specify new names for our components
     components = [b(), Y286(), r(), l()]    

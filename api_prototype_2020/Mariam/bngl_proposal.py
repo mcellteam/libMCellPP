@@ -204,7 +204,6 @@ CaM = MoleculeType(
 
 CaMKII = MoleculeType(
     diff_const =10.0,
-    # we need to specify new names for our components
     components = [b(), Y286(), r(), l()]    
 )
     

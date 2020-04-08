@@ -15,9 +15,7 @@ STATE_UNSET = 'state_unset'
 # regarding states and bonds, e.g. which are unset, which are don't care  
 # 
 
-# needed to make names shorter, definition with 5 compionents did not fit a single line
-
-class CompType:
+class ComponentType:
     def __init__(self, states=[], name=''):
         
         # name and allowed_states serve for component template
@@ -30,7 +28,12 @@ class CompType:
         self.allowed_states = []  
         for s in states:
             self.allowed_states.append(str(s))
-        
+
+    # called when the object is called as a function
+    # creates an instance from a previously created template 
+    def inst(self, state=STATE_UNSET, bond=BOND_NONE):
+        return ComponentInstance(self, state, bond)
+
     # prints out the declaration of the component in BNGL (template information)
     def __str__(self):
         res = self.name
@@ -39,14 +42,23 @@ class CompType:
             res += '~' + s  
 
         return res
-        
-            
-class CompInst:
-    def __init__(self, component_type: CompType, state:str=STATE_UNSET, bond:int=BOND_NONE):
+
+
+class ComponentInstance:
+    def __init__(self, component_type: ComponentType, state:str=STATE_UNSET, bond:int=BOND_NONE):
         self.component_type = component_type
-        # we can check
-        self.state = str(state)
         self.bond = bond
+        self.state = STATE_UNSET
+        
+        state = str(state)
+        # set component state
+        if state != STATE_UNSET:
+            if state not in self.component_type.allowed_states:
+                msg = 'ComponentType ' + self.component_type.name + ': state ' + state + ' is not in allowed states ' + str(self.allowed_states) + '.'
+                raise ValueError(msg)
+            else:
+                self.state = state
+
     
     def __str__(self):
         res = self.component_type.name
@@ -60,15 +72,9 @@ class CompInst:
             else:
                 res += '!' + str(self.bond)
         
-        return res
-    
-    
-# same as CompInst, only a different name  
-class CompPattern(CompInst):                
-    pass 
+        return res            
         
-        
-class MolType:
+class MoleculeType:
     def __init__(self, diff_const, name = '', components=[]):
         # name, diff_const, and all_components serve for component template
         if name: 
@@ -79,11 +85,16 @@ class MolType:
         
         self.components = []
         for ct in components:
-            if type(ct) != CompType:
-                raise ValueError('Only objects of CompType can be passed as MolType components.')        
+            if type(ct) != ComponentType:
+                raise ValueError('Only objects of ComponentType can be passed as MoleculeType components.')        
             self.components.append(ct)        
         self.all_components = components
-       
+        
+
+    def inst(self, *args):
+        return MoleculeInstance(self, *args)
+    
+        
     # prints out the declaration of the component in BNGL (template information)  
     def __str__(self):
         res = self.name + '('
@@ -95,17 +106,17 @@ class MolType:
                 res += ',' 
         
         res += ')'
-        return res        
+        return res 
         
         
-class MolInst:
-    def __init__(self, molecule_type: MolType, components=[]):
+class MoleculeInstance:
+    def __init__(self, molecule_type: MoleculeType, *args):
         self.molecule_type = molecule_type
         
         self.components = []
-        for ci in components:
-            if type(ci) != CompInst and type(ci) != CompPattern:
-                raise ValueError('Only objects of CompInst or CompPattern can be passed as MolInst components.')        
+        for ci in args:
+            if type(ci) != ComponentInstance:
+                raise ValueError('Only objects of ComponentInstance can be passed as MoleculeInstance components.')        
             self.components.append(ci)
 
     # prints out speicifc instance information                
@@ -119,37 +130,30 @@ class MolInst:
                 res += ',' 
         
         res += ')'
-        return res        
-           
-           
-class MolPattern(MolInst):
-    pass
-
-
+        return res             
+        
+        
 # used in reactions as reactants and products as a matching pattern       
-class CplxInst:
-    def __init__(self, molecule_insts):
-        self.molecule_insts = []
-        for mi in molecule_insts:
-            if type(mi) != MolInst and type(mi) != MolPattern:
-                raise ValueError('Only objects of MolInst or MolPattern can be passed as Complex constructor arguments.')        
-            self.molecule_insts.append(mi)
+class ComplexInstance:
+    def __init__(self, *args):
+        self.molecule_types = []
+        
+        for v in args:
+            if type(v) != MoleculeInstance:
+                raise ValueError('Only objects of MoleculeInstance can be passed as Complex constructor arguments.')        
+            self.molecule_types.append(v)
             
             
     def __str__(self):      
         res = ''
         
-        num_molecule_insts = len(self.molecule_insts)
-        for i in range(num_molecule_insts):
-            res += str(self.molecule_insts[i])
-            if i != num_molecule_insts-1:
+        num_molecule_types = len(self.molecule_types)
+        for i in range(num_molecule_types):
+            res += str(self.molecule_types[i])
+            if i != num_molecule_types-1:
                 res += '.' 
         return res
         
-            
-class CplxPattern(CplxInst):
-    pass            
-            
             
 class RxnRule:
     def __init__(self, name, fwd_rate, rev_rate, reactants, products):
@@ -173,49 +177,56 @@ class RxnRule:
             res += "  " + str(p) + "\n"
             
         return res
-        
-# -------------------------  definition of molecule types and reactions --------------
     
+# -------------------------  definition of molecule types and reactions --------------
+                
 # -------------------------  CaM --------------    
 
-C = CompType(   
+C = ComponentType(   
     states = [0,1,2]
 )
 
-print("CompType declaration:")
+print("ComponentType declaration:")
 print(C)   
 print("")
 
-N = CompType(
+N = ComponentType(
     states = [0,1,2]
 )
-ng = CompType()
-camkii = CompType()
+ng = ComponentType()
+camkii = ComponentType()
 
-#  CaM(C~0~1~2,N~0~1~2,ng,camkii)
-CaM = MolType(
-    diff_const = 1e-6,
-    components = [C, N, ng, camkii]
+
+
+Y286 = ComponentType(
+    states = ['0','P']
+)
+
+
+CaM = MoleculeType(
+    diff_const =10.0,
+    components = [C, N]
 )
 
 # -------------------------  CaMKII --------------
 
 
-d = CompType() # no states  
-l = CompType()
-r = CompType()
-Y286 = CompType(
-    states = ['0','P']
-)
-S306 = CompType(
-    states = ['0','P']
-)
-cam = CompType()
 
-# CaMKII(d,r,l,Y286~0~P,S306~0~P,cam)
-CaMKII = MolType(
-    diff_const = 1e-6,
-    components = [d, r, l, Y286, S306] # we are using directly molecule types here, no need to instatiate anything
+d = ComponentType() # no states  
+l = ComponentType()
+r = ComponentType()
+Y286 = ComponentType(
+    states = ['0','P']
+)
+S306 = ComponentType(
+    states = ['0','P']
+)
+cam = ComponentType()
+
+
+CaMKII = MoleculeType(
+    diff_const =10.0,
+    components = [d, r, l, Y286, S306]    
 )
     
 print("Molecule type declaration:")
@@ -226,32 +237,24 @@ print("Molecule type declaration:")
 print(CaMKII)
 print("")
 
-# -------------------------  example of mol inst --------------
-
-# an instance - we already need to specify states and list all components
-mol_type_inst = MolInst( CaMKII, [ CompInst(d), CompInst(r), CompInst(l), CompInst(Y286, 0), CompInst(S306, 0), CompInst(cam) ] )
+mol_type_inst = CaMKII.inst( d.inst(), r.inst(), l.inst(), Y286.inst(0), S306.inst(0), cam.inst() )
 
 print("Molecule type instance:")
 print(mol_type_inst)
 print("")
 
-# -------------------------  example of cplx inst --------------
-
 # this is already an instance of a complex
-# can be used in releases (seed species in BNGL)
-# the bond should be visible from the declaration
-cplx = CplxInst( 
-    [
-        MolInst( CaMKII, [CompInst(d), CompInst(r), CompInst(l, bond=1), CompInst(Y286, 0), CompInst(S306, 0), CompInst(cam)] ) ,
-        MolInst( CaMKII, [CompInst(d), CompInst(r, bond=1), CompInst(l), CompInst(Y286, 0), CompInst(S306, 0), CompInst(cam)] )
-    ]
+# serves as a pattern when used in a reaction
+cplx = ComplexInstance( 
+    # Y286('0') means Y286~0
+    CaMKII.inst( d.inst(), r.inst(), l.inst(bond=1), Y286.inst(0), S306.inst(0), cam.inst() ),
+    CaMKII.inst( d.inst(), r.inst(bond=1), l.inst(), Y286.inst(0), S306.inst(0), cam.inst() )
 )
 
 print("Complex instance:")
 print(cplx)
 print("")
 
-a = CompPattern(l)
 
 V = 0.125*1e-15 # um^3 -> liters
 NA = 6.022e23/1e6
@@ -267,22 +270,24 @@ rxn = RxnRule(
     
     # component patter is used with the meaning that when no state is specified, any state is fine
     reactants=[
-        CplxPattern( [
-            MolPattern( CaMKII, [CompPattern(l), CompPattern(r), CompPattern(Y286, '0'), CompPattern(cam, bond=BOND_PLUS)] )  
-        ] ),
-        CplxPattern( [
-            MolPattern( CaMKII, [CompPattern(l), CompPattern(r), CompPattern(cam, bond=BOND_PLUS)] )  
-        ] ),
-    ],
+        ComplexInstance( 
+            CaMKII.inst( l.inst(), r.inst(), Y286.inst('0'), cam.inst(bond=BOND_PLUS) ) 
+        ),
+        ComplexInstance( 
+            CaMKII.inst( l.inst(), r.inst(), cam.inst(bond=BOND_PLUS) ) 
+        )
+    ], 
     products=[
-        CplxPattern( [
-            MolPattern( CaMKII, [CompPattern(l, bond=1), CompPattern(r), CompPattern(Y286, '0'), CompPattern(cam, bond=BOND_PLUS)] ),
-            MolPattern( CaMKII, [CompPattern(l), CompPattern(r, bond=1), CompPattern(cam, bond=BOND_PLUS)] )
-        ] )
+        ComplexInstance( 
+            CaMKII.inst( l.inst(bond=1), r.inst(), Y286.inst('0'), cam.inst(bond=BOND_PLUS) ),
+            CaMKII.inst( l.inst(), r.inst(bond=1), cam.inst(bond=BOND_PLUS) )
+        )
     ]
 )
+
 
 print("Reaction rule:")
 print(rxn)
 print("")
+
 

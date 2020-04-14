@@ -279,8 +279,10 @@ rxn = RxnRule(
     ], 
     products=[
         ComplexInstance( 
-            CaMKII.inst( l.inst(bond=1), r.inst(), Y286.inst('0'), cam.inst(bond=BOND_PLUS) ),
-            CaMKII.inst( l.inst(), r.inst(bond=1), cam.inst(bond=BOND_PLUS) )
+            # default: bond=UNBOUND, if component is not listed - bond=ANY
+            # state if not listed = ANY
+            CaMKII.inst( l.inst(1, bond=1), r.inst(), Y286.inst('0'), cam.inst(bond=BOUND) ), 
+            CaMKII.inst( l.inst(), r.inst(bond=1), cam.inst(bond=BOUND) )
         )
     ]
 )
